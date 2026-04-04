@@ -753,11 +753,7 @@ select.form-input { cursor: pointer; }
               <div style="margin-top:16px">
                 <table class="data-table">
                   <thead><tr><th>菜品</th><th>分类</th><th>主要食材</th><th>热量</th><th>操作</th></tr></thead>
-                  <tbody>
-                    <tr><td>红烧肉</td><td><span class="tag info">荤菜</span></td><td>猪肉 100g</td><td>350 kcal</td><td><button class="btn btn-sm btn-outline">删除</button></td></tr>
-                    <tr><td>炒白菜</td><td><span class="tag success">素菜</span></td><td>白菜 150g</td><td>65 kcal</td><td><button class="btn btn-sm btn-outline">删除</button></td></tr>
-                    <tr><td>紫菜蛋花汤</td><td><span class="tag warning">汤类</span></td><td>鸡蛋 50g、紫菜5g</td><td>90 kcal</td><td><button class="btn btn-sm btn-outline">删除</button></td></tr>
-                    <tr><td>米饭</td><td><span class="tag gray">主食</span></td><td>大米 150g</td><td>173 kcal</td><td><button class="btn btn-sm btn-outline">删除</button></td></tr>
+                  <tbody id="addedRecipeList">
                   </tbody>
                 </table>
               </div>
@@ -785,7 +781,7 @@ select.form-input { cursor: pointer; }
                   <div class="card-body" style="font-size:12px;color:var(--text-sub)">
                     <div>共 128 套标准食谱</div>
                     <div style="margin-top:6px">按学段 / 季节 / 主题分类</div>
-                    <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%">浏览选择</button>
+                    <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%" onclick="openRecipeSelect('builtin','系统内置食谱')">浏览选择</button>
                   </div>
                 </div>
                 <div class="card" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)'">
@@ -795,7 +791,7 @@ select.form-input { cursor: pointer; }
                   <div class="card-body" style="font-size:12px;color:var(--text-sub)">
                     <div>共 36 套推荐食谱</div>
                     <div style="margin-top:6px">营养均衡 · 官方认证</div>
-                    <button class="btn btn-success btn-sm" style="margin-top:12px;width:100%">浏览选择</button>
+                    <button class="btn btn-success btn-sm" style="margin-top:12px;width:100%" onclick="openRecipeSelect('gov','教育局推荐食谱')">浏览选择</button>
                   </div>
                 </div>
                 <div class="card" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)'">
@@ -805,7 +801,7 @@ select.form-input { cursor: pointer; }
                   <div class="card-body" style="font-size:12px;color:var(--text-sub)">
                     <div>共 286 套历史记录</div>
                     <div style="margin-top:6px">按年份 / 学期筛选</div>
-                    <button class="btn btn-warning btn-sm" style="margin-top:12px;width:100%">浏览选择</button>
+                    <button class="btn btn-warning btn-sm" style="margin-top:12px;width:100%" onclick="openRecipeSelect('history','学校历史食谱')">浏览选择</button>
                   </div>
                 </div>
               </div>
@@ -1615,6 +1611,55 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 
+<!-- ==================== 食谱选择弹窗 ==================== -->
+<div class="modal-overlay" id="modal-recipe-select" onclick="closeModal(event,'modal-recipe-select')">
+  <div class="modal" style="width:900px;max-width:95vw" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="recipeSelectTitle">📚 选择食谱</div>
+      <div class="modal-close" onclick="closeModalById('modal-recipe-select')">×</div>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <!-- 食谱分类筛选 -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <select class="form-input" style="width:140px" id="recipeFilterType" onchange="filterRecipeList()">
+          <option value="">全部分类</option>
+          <option value="小学">小学食谱</option>
+          <option value="初中">初中食谱</option>
+          <option value="高中">高中食谱</option>
+        </select>
+        <select class="form-input" style="width:120px" id="recipeFilterSeason" onchange="filterRecipeList()">
+          <option value="">四季通用</option>
+          <option value="春">春季</option>
+          <option value="夏">夏季</option>
+          <option value="秋">秋季</option>
+          <option value="冬">冬季</option>
+        </select>
+        <input type="text" class="form-input" style="flex:1" placeholder="搜索食谱名称…" id="recipeSearchInput" oninput="filterRecipeList()">
+      </div>
+      <!-- 食谱列表 -->
+      <div id="recipeSelectList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-recipe-select')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 食谱详情弹窗 -->
+<div class="modal-overlay" id="modal-recipe-detail" onclick="closeModal(event,'modal-recipe-detail')">
+  <div class="modal" style="width:700px;max-width:95vw" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="recipeDetailTitle">食谱详情</div>
+      <div class="modal-close" onclick="closeModalById('modal-recipe-detail')">×</div>
+    </div>
+    <div class="modal-body" id="recipeDetailContent" style="max-height:60vh;overflow-y:auto"></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-recipe-detail')">取消</button>
+      <button class="btn btn-primary" onclick="importRecipeToList()">✅ 添加到食谱</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== MODALS ==================== -->
 <div class="modal-overlay" id="modal-recipe" onclick="closeModal(event,'modal-recipe')">
   <div class="modal" onclick="event.stopPropagation()">
@@ -1720,6 +1765,189 @@ function showPage(id) {
   // 每次切换页面时更新日期和二维码批次
   initDates();
   if (id === 'qrcode') generateAllQRCodes();
+}
+
+// ===== 食谱选择功能 =====
+let currentRecipeSource = '';
+let currentRecipeType = '';
+let selectedRecipe = null;
+let addedRecipes = JSON.parse(sessionStorage.getItem('addedRecipes') || '[]');
+
+// 食谱数据
+const recipeDatabase = {
+  builtin: [
+    { id: 'B001', name: '小学生春季标准午餐A', type: '小学', season: '春', calories: 650, protein: 28, fat: 18, carbs: 85, meals: 850, dishes: [{ name: '糖醋排骨', type: '荤菜', ingredient: '猪小排 120g', cal: 280 }, { name: '蒜蓉西兰花', type: '素菜', ingredient: '西兰花 150g', cal: 55 }, { name: '番茄鸡蛋汤', type: '汤类', ingredient: '番茄 80g、鸡蛋 40g', cal: 85 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'B002', name: '小学生春季标准午餐B', type: '小学', season: '春', calories: 620, protein: 25, fat: 16, carbs: 88, meals: 850, dishes: [{ name: '红烧鸡腿', type: '荤菜', ingredient: '鸡腿 130g', cal: 260 }, { name: '炒时蔬', type: '素菜', ingredient: '青菜 160g', cal: 48 }, { name: '紫菜蛋花汤', type: '汤类', ingredient: '紫菜 5g、鸡蛋 30g', cal: 72 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'B003', name: '小学生夏季清淡午餐A', type: '小学', season: '夏', calories: 580, protein: 26, fat: 12, carbs: 90, meals: 850, dishes: [{ name: '清蒸鲈鱼', type: '荤菜', ingredient: '鲈鱼 100g', cal: 95 }, { name: '凉拌黄瓜', type: '素菜', ingredient: '黄瓜 150g', cal: 35 }, { name: '冬瓜排骨汤', type: '汤类', ingredient: '冬瓜 100g、排骨 30g', cal: 110 }, { name: '米饭', type: '主食', ingredient: '大米 180g', cal: 208 }] },
+    { id: 'B004', name: '小学生夏季清淡午餐B', type: '小学', season: '夏', calories: 600, protein: 28, fat: 14, carbs: 86, meals: 850, dishes: [{ name: '宫保鸡丁', type: '荤菜', ingredient: '鸡胸肉 100g、花生 15g', cal: 220 }, { name: '清炒苦瓜', type: '素菜', ingredient: '苦瓜 120g', cal: 38 }, { name: '绿豆汤', type: '汤类', ingredient: '绿豆 30g', cal: 95 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'B005', name: '小学生秋季营养午餐A', type: '小学', season: '秋', calories: 680, protein: 30, fat: 20, carbs: 88, meals: 850, dishes: [{ name: '土豆烧牛肉', type: '荤菜', ingredient: '牛肉 80g、土豆 100g', cal: 295 }, { name: '醋溜白菜', type: '素菜', ingredient: '白菜 150g', cal: 52 }, { name: '萝卜丝鲫鱼汤', type: '汤类', ingredient: '白萝卜 60g、鲫鱼 50g', cal: 105 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'B006', name: '小学生冬季暖胃午餐A', type: '小学', season: '冬', calories: 720, protein: 32, fat: 22, carbs: 95, meals: 850, dishes: [{ name: '羊肉炖萝卜', type: '荤菜', ingredient: '羊肉 100g、白萝卜 80g', cal: 310 }, { name: '素炒藕片', type: '素菜', ingredient: '莲藕 130g', cal: 68 }, { name: '白菜豆腐汤', type: '汤类', ingredient: '白菜 80g、豆腐 50g', cal: 75 }, { name: '米饭', type: '主食', ingredient: '大米 220g', cal: 255 }] },
+    { id: 'B007', name: '初中生标准午餐A', type: '初中', season: '春', calories: 780, protein: 35, fat: 22, carbs: 105, meals: 800, dishes: [{ name: '东坡肘子', type: '荤菜', ingredient: '猪肘 150g', cal: 380 }, { name: '清炒莴笋', type: '素菜', ingredient: '莴笋 150g', cal: 45 }, { name: '玉米排骨汤', type: '汤类', ingredient: '玉米 50g、排骨 40g', cal: 120 }, { name: '米饭', type: '主食', ingredient: '大米 250g', cal: 290 }] },
+    { id: 'B008', name: '初中生标准午餐B', type: '初中', season: '春', calories: 750, protein: 33, fat: 20, carbs: 102, meals: 800, dishes: [{ name: '香煎带鱼', type: '荤菜', ingredient: '带鱼 130g', cal: 240 }, { name: '干煸四季豆', type: '素菜', ingredient: '四季豆 140g', cal: 58 }, { name: '西红柿蛋汤', type: '汤类', ingredient: '西红柿 80g、鸡蛋 50g', cal: 95 }, { name: '米饭', type: '主食', ingredient: '大米 250g', cal: 290 }] },
+    { id: 'B009', name: '高中生增强午餐A', type: '高中', season: '春', calories: 850, protein: 40, fat: 25, carbs: 115, meals: 750, dishes: [{ name: '黑椒牛柳', type: '荤菜', ingredient: '牛里脊 140g', cal: 280 }, { name: '蚝油生菜', type: '素菜', ingredient: '生菜 160g', cal: 42 }, { name: '山药炖鸡汤', type: '汤类', ingredient: '山药 60g、鸡块 60g', cal: 145 }, { name: '米饭', type: '主食', ingredient: '大米 280g', cal: 324 }] },
+    { id: 'B010', name: '高中生增强午餐B', type: '高中', season: '秋', calories: 820, protein: 38, fat: 24, carbs: 110, meals: 750, dishes: [{ name: '水煮鱼片', type: '荤菜', ingredient: '草鱼 150g', cal: 195 }, { name: '清炒芥蓝', type: '素菜', ingredient: '芥蓝 150g', cal: 48 }, { name: '莲藕排骨汤', type: '汤类', ingredient: '莲藕 80g、排骨 50g', cal: 155 }, { name: '米饭', type: '主食', ingredient: '大米 280g', cal: 324 }] }
+  ],
+  gov: [
+    { id: 'G001', name: '教育局推荐小学春季A套餐', type: '小学', season: '春', calories: 640, protein: 28, fat: 17, carbs: 85, meals: 850, dishes: [{ name: '可乐鸡翅', type: '荤菜', ingredient: '鸡翅 120g', cal: 245 }, { name: '菠菜粉丝', type: '素菜', ingredient: '菠菜 140g、粉丝 20g', cal: 72 }, { name: '虾皮紫菜汤', type: '汤类', ingredient: '虾皮 5g、紫菜 5g', cal: 42 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'G002', name: '教育局推荐小学春季B套餐', type: '小学', season: '春', calories: 660, protein: 30, fat: 19, carbs: 88, meals: 850, dishes: [{ name: '番茄牛腩', type: '荤菜', ingredient: '牛肉 100g、番茄 80g', cal: 275 }, { name: '炒三丝', type: '素菜', ingredient: '土豆丝 60g、胡萝卜丝 50g、青椒丝 40g', cal: 68 }, { name: '青菜豆腐汤', type: '汤类', ingredient: '青菜 60g、豆腐 40g', cal: 58 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'G003', name: '教育局推荐初中营养套餐', type: '初中', season: '夏', calories: 760, protein: 34, fat: 21, carbs: 100, meals: 800, dishes: [{ name: '红烧狮子头', type: '荤菜', ingredient: '猪肉馅 120g', cal: 295 }, { name: '凉拌木耳', type: '素菜', ingredient: '木耳 100g', cal: 35 }, { name: '冬瓜虾皮汤', type: '汤类', ingredient: '冬瓜 100g、虾皮 5g', cal: 48 }, { name: '米饭', type: '主食', ingredient: '大米 240g', cal: 278 }] },
+    { id: 'G004', name: '教育局推荐中学标准餐', type: '初中', season: '秋', calories: 800, protein: 36, fat: 23, carbs: 105, meals: 800, dishes: [{ name: '糖醋里脊', type: '荤菜', ingredient: '猪里脊 130g', cal: 305 }, { name: '香菇青菜', type: '素菜', ingredient: '香菇 40g、青菜 120g', cal: 58 }, { name: '西湖牛肉羹', type: '汤类', ingredient: '牛肉 30g、豆腐 50g、蛋清 20g', cal: 95 }, { name: '米饭', type: '主食', ingredient: '大米 250g', cal: 290 }] }
+  ],
+  history: [
+    { id: 'H001', name: '2026年3月第4周午餐', type: '小学', season: '春', calories: 635, protein: 27, fat: 18, carbs: 84, meals: 850, dishes: [{ name: '红烧肉', type: '荤菜', ingredient: '猪肉 100g', cal: 295 }, { name: '炒白菜', type: '素菜', ingredient: '白菜 150g', cal: 48 }, { name: '紫菜蛋花汤', type: '汤类', ingredient: '紫菜 5g、鸡蛋 40g', cal: 72 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'H002', name: '2026年3月第3周午餐', type: '小学', season: '春', calories: 620, protein: 26, fat: 16, carbs: 86, meals: 850, dishes: [{ name: '黄焖鸡块', type: '荤菜', ingredient: '鸡肉 120g、土豆 60g', cal: 265 }, { name: '素烧茄子', type: '素菜', ingredient: '茄子 150g', cal: 52 }, { name: '番茄蛋汤', type: '汤类', ingredient: '番茄 80g、鸡蛋 35g', cal: 78 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'H003', name: '2026年3月第2周午餐', type: '小学', season: '春', calories: 650, protein: 28, fat: 19, carbs: 87, meals: 850, dishes: [{ name: '红烧排骨', type: '荤菜', ingredient: '猪排骨 130g', cal: 310 }, { name: '蚝油生菜', type: '素菜', ingredient: '生菜 150g', cal: 38 }, { name: '玉米排骨汤', type: '汤类', ingredient: '玉米 50g、排骨 35g', cal: 105 }, { name: '米饭', type: '主食', ingredient: '大米 200g', cal: 232 }] },
+    { id: 'H004', name: '2026年2月第4周午餐', type: '小学', season: '冬', calories: 700, protein: 30, fat: 22, carbs: 92, meals: 850, dishes: [{ name: '萝卜炖牛腩', type: '荤菜', ingredient: '牛肉 100g、白萝卜 80g', cal: 285 }, { name: '酸辣土豆丝', type: '素菜', ingredient: '土豆 140g', cal: 98 }, { name: '白菜粉丝汤', type: '汤类', ingredient: '白菜 60g、粉丝 20g', cal: 52 }, { name: '米饭', type: '主食', ingredient: '大米 210g', cal: 243 }] }
+  ]
+};
+
+// 打开食谱选择弹窗
+function openRecipeSelect(source, title) {
+  currentRecipeSource = source;
+  document.getElementById('recipeSelectTitle').textContent = '📚 ' + title;
+  document.getElementById('recipeFilterType').value = '';
+  document.getElementById('recipeFilterSeason').value = '';
+  document.getElementById('recipeSearchInput').value = '';
+  filterRecipeList();
+  openModalById('modal-recipe-select');
+}
+
+// 筛选食谱列表
+function filterRecipeList() {
+  const type = document.getElementById('recipeFilterType').value;
+  const season = document.getElementById('recipeFilterSeason').value;
+  const search = document.getElementById('recipeSearchInput').value.toLowerCase();
+  
+  let recipes = recipeDatabase[currentRecipeSource] || [];
+  
+  if (type) recipes = recipes.filter(r => r.type === type);
+  if (season) recipes = recipes.filter(r => r.season === season || r.season === '春' && season === '春' || r.season === '夏' && season === '夏' || r.season === '秋' && season === '秋' || r.season === '冬' && season === '冬');
+  if (search) recipes = recipes.filter(r => r.name.toLowerCase().includes(search) || r.dishes.some(d => d.name.toLowerCase().includes(search)));
+  
+  const container = document.getElementById('recipeSelectList');
+  container.innerHTML = recipes.map(r => `
+    <div class="card" style="cursor:pointer;transition:all 0.2s" onclick="showRecipeDetail('${r.id}')">
+      <div class="card-head" style="background:${currentRecipeSource === 'builtin' ? '#f0f7ff' : currentRecipeSource === 'gov' ? '#f6ffed' : '#fffbe6'}">
+        <div class="card-title" style="font-size:13px">${r.name}</div>
+      </div>
+      <div class="card-body" style="font-size:12px">
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <span class="tag info">${r.type}</span>
+          <span class="tag ${r.season === '春' ? 'success' : r.season === '夏' ? 'warning' : r.season === '秋' ? 'info' : 'gray'}">${r.season}季</span>
+        </div>
+        <div style="color:var(--text-sub)">
+          <div>热量：${r.calories} kcal | 蛋白质：${r.protein}g</div>
+          <div style="margin-top:4px">适用：${r.meals}人</div>
+          <div style="margin-top:4px;color:var(--primary)">${r.dishes.length}个菜品 ▶</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  if (recipes.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-sub)">未找到符合条件的食谱</div>';
+  }
+}
+
+// 显示食谱详情
+function showRecipeDetail(id) {
+  const recipe = Object.values(recipeDatabase).flat().find(r => r.id === id);
+  if (!recipe) return;
+  
+  selectedRecipe = recipe;
+  document.getElementById('recipeDetailTitle').textContent = recipe.name;
+  
+  const dishesHtml = recipe.dishes.map(d => `
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <span class="tag ${d.type === '荤菜' ? 'info' : d.type === '素菜' ? 'success' : d.type === '汤类' ? 'warning' : 'gray'}" style="margin-right:8px">${d.type}</span>
+        <strong>${d.name}</strong>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:4px">${d.ingredient}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:600;color:var(--primary)">${d.cal}</div>
+        <div style="font-size:11px;color:var(--text-sub)">kcal</div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.getElementById('recipeDetailContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+      <div style="background:#f0f7ff;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--primary)">${recipe.calories}</div>
+        <div style="font-size:11px;color:var(--text-sub)">总热量(kcal)</div>
+      </div>
+      <div style="background:#f6ffed;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--success)">${recipe.protein}g</div>
+        <div style="font-size:11px;color:var(--text-sub)">蛋白质</div>
+      </div>
+      <div style="background:#fff7e6;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:#fa8c16">${recipe.fat}g</div>
+        <div style="font-size:11px;color:var(--text-sub)">脂肪</div>
+      </div>
+      <div style="background:#f9f0ff;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:#722ed1">${recipe.carbs}g</div>
+        <div style="font-size:11px;color:var(--text-sub)">碳水</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--text-sub);margin-bottom:12px">📋 菜品清单（共${recipe.dishes.length}个菜品 | 适用${recipe.meals}人）</div>
+    ${dishesHtml}
+  `;
+  
+  closeModalById('modal-recipe-select');
+  openModalById('modal-recipe-detail');
+}
+
+// 添加食谱到列表
+function importRecipeToList() {
+  if (!selectedRecipe) return;
+  
+  // 将菜品添加到已添加列表
+  selectedRecipe.dishes.forEach(dish => {
+    const exists = addedRecipes.some(r => r.name === dish.name);
+    if (!exists) {
+      addedRecipes.push({
+        name: dish.name,
+        type: dish.type,
+        ingredient: dish.ingredient,
+        cal: dish.cal
+      });
+    }
+  });
+  
+  sessionStorage.setItem('addedRecipes', JSON.stringify(addedRecipes));
+  renderAddedRecipes();
+  
+  closeModalById('modal-recipe-detail');
+  showToast('已添加 ' + selectedRecipe.dishes.length + ' 个菜品到食谱', 'success');
+}
+
+// 渲染已添加的菜品列表
+function renderAddedRecipes() {
+  const tbody = document.getElementById('addedRecipeList');
+  if (!tbody) return;
+  
+  if (addedRecipes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:20px">暂无菜品，请从上方选择食谱或单个录入</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = addedRecipes.map((r, i) => `
+    <tr>
+      <td><strong>${r.name}</strong></td>
+      <td><span class="tag ${r.type === '荤菜' ? 'info' : r.type === '素菜' ? 'success' : r.type === '汤类' ? 'warning' : 'gray'}">${r.type}</span></td>
+      <td>${r.ingredient}</td>
+      <td>${r.cal} kcal</td>
+      <td><button class="btn btn-sm btn-outline" onclick="removeAddedRecipe(${i})">删除</button></td>
+    </tr>
+  `).join('');
+}
+
+// 删除已添加的菜品
+function removeAddedRecipe(index) {
+  addedRecipes.splice(index, 1);
+  sessionStorage.setItem('addedRecipes', JSON.stringify(addedRecipes));
+  renderAddedRecipes();
 }
 
 // ===== Date =====
@@ -1849,6 +2077,7 @@ function getWeekOfYear(date) {
 // 页面加载时初始化日期
 document.addEventListener('DOMContentLoaded', function() {
   initDates();
+  renderAddedRecipes();
 });
 
 // ===== Tabs =====
