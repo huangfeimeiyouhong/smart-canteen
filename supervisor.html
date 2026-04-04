@@ -141,6 +141,18 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
 .tag.gray { background:#f5f5f5; color:#999; }
 .tag.green { background:var(--primary-light); color:var(--primary); }
 
+/* 可编辑标签 */
+.editable-tag { cursor:pointer; transition:all 0.2s; user-select:none; }
+.editable-tag:hover { transform:scale(1.05); box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.editable-tag:active { transform:scale(0.98); }
+
+/* 保存按钮有未保存更改时 */
+.btn.has-changes { animation:pulse 1s infinite; }
+@keyframes pulse {
+  0%, 100% { box-shadow:0 0 0 0 rgba(0,135,90,0.4); }
+  50% { box-shadow:0 0 0 6px rgba(0,135,90,0); }
+}
+
 .btn { padding:7px 16px; border-radius:6px; font-size:13px; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:5px; font-family:inherit; transition:all 0.2s; }
 .btn-primary { background:var(--primary); color:#fff; }
 .btn-primary:hover { background:var(--primary-dark); }
@@ -376,13 +388,14 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
     <!-- ==================== SCHOOLS ==================== -->
     <div class="page" id="page-schools">
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-        <input type="text" class="form-input" style="width:220px" placeholder="搜索学校名称…">
-        <select class="form-input" style="width:130px"><option>全部分组</option><option>小学组</option><option>中学组</option><option>幼儿园组</option></select>
-        <select class="form-input" style="width:130px"><option>全部评级</option><option>优秀</option><option>良好</option><option>一般</option><option>待改进</option></select>
-        <select class="form-input" style="width:130px"><option>全部状态</option><option>有预警</option><option>正常</option></select>
+        <input type="text" id="schoolSearchInput" class="form-input" style="width:220px" placeholder="搜索学校名称…" oninput="filterSchools()">
+        <select id="schoolGroupFilter" class="form-input" style="width:130px" onchange="filterSchools()"><option value="">全部分组</option><option>小学组</option><option>中学组</option><option>幼儿园组</option></select>
+        <select id="schoolRatingFilter" class="form-input" style="width:130px" onchange="filterSchools()"><option value="">全部评级</option><option>优秀</option><option>良好</option><option>一般</option><option>待改进</option></select>
+        <select id="schoolStatusFilter" class="form-input" style="width:130px" onchange="filterSchools()"><option value="">全部状态</option><option value="warning">有预警</option><option value="normal">正常</option></select>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
-        <div class="school-card" onclick="openSchoolDetail('实验小学')">
+      <div id="schoolCardsContainer">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px" id="schoolCardsGrid">
+        <div class="school-card" data-school="实验小学" data-group="小学组" data-rating="优秀" data-status="warning" onclick="openSchoolDetail('实验小学')">
           <div class="sc-head"><div class="sc-name">🏫 实验小学</div><div class="sc-score excellent">92</div></div>
           <div class="sc-meta">
             <span>小学组 · 850人</span>
@@ -397,47 +410,43 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
             <span class="tag green">台账完整</span>
           </div>
         </div>
-        <div class="school-card" onclick="openSchoolDetail('第一中学')">
+        <div class="school-card" data-school="第一中学" data-group="中学组" data-rating="优秀" data-status="warning" onclick="openSchoolDetail('第一中学')">
           <div class="sc-head"><div class="sc-name">🏫 第一中学</div><div class="sc-score excellent">90</div></div>
           <div class="sc-meta"><span>中学组 · 1200人</span><span>预警：<span style="color:var(--warning)">2条</span></span></div>
           <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>90/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:90%;background:#52c41a"></div></div></div>
           <div style="margin-top:10px;display:flex;gap:6px"><span class="tag success">优秀</span></div>
         </div>
-        <div class="school-card" onclick="openSchoolDetail('希望小学')">
+        <div class="school-card" data-school="希望小学" data-group="小学组" data-rating="良好" data-status="warning" onclick="openSchoolDetail('希望小学')">
           <div class="sc-head"><div class="sc-name">🏫 希望小学</div><div class="sc-score good">88</div></div>
           <div class="sc-meta"><span>小学组 · 620人</span><span>预警：<span style="color:var(--warning)">3条</span></span></div>
           <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>88/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:88%;background:#1677ff"></div></div></div>
           <div style="margin-top:10px;display:flex;gap:6px"><span class="tag info">良好</span><span class="tag warning">留样待补</span></div>
         </div>
-        <div class="school-card" onclick="openSchoolDetail('育才中学')">
+        <div class="school-card" data-school="育才中学" data-group="中学组" data-rating="良好" data-status="warning" onclick="openSchoolDetail('育才中学')">
           <div class="sc-head"><div class="sc-name">🏫 育才中学</div><div class="sc-score good">86</div></div>
           <div class="sc-meta"><span>中学组 · 980人</span><span>预警：<span style="color:var(--danger)">4条</span></span></div>
           <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>86/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:86%;background:#1677ff"></div></div></div>
           <div style="margin-top:10px;display:flex;gap:6px"><span class="tag info">良好</span><span class="tag danger">健康证过期</span></div>
         </div>
-        <div class="school-card">
+        <div class="school-card" data-school="阳光幼儿园" data-group="幼儿园组" data-rating="良好" data-status="warning" onclick="openSchoolDetail('阳光幼儿园')">
           <div class="sc-head"><div class="sc-name">🏫 阳光幼儿园</div><div class="sc-score good">85</div></div>
           <div class="sc-meta"><span>幼儿园组 · 380人</span><span>预警：<span style="color:var(--warning)">2条</span></span></div>
           <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>85/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:85%;background:#1677ff"></div></div></div>
           <div style="margin-top:10px"><span class="tag info">良好</span></div>
         </div>
-        <div class="school-card">
+        <div class="school-card" data-school="朝阳小学" data-group="小学组" data-rating="一般" data-status="warning" onclick="openSchoolDetail('朝阳小学')">
           <div class="sc-head"><div class="sc-name">🏫 朝阳小学</div><div class="sc-score warning">76</div></div>
           <div class="sc-meta"><span>小学组 · 450人</span><span>预警：<span style="color:var(--danger)">6条</span></span></div>
           <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>76/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:76%;background:#faad14"></div></div></div>
           <div style="margin-top:10px"><span class="tag warning">一般</span><span class="tag danger" style="margin-left:5px">多项预警</span></div>
         </div>
-        <div class="school-card">
+        <div class="school-card" data-school="新城中学" data-group="中学组" data-rating="一般" data-status="warning" onclick="openSchoolDetail('新城中学')">
           <div class="sc-head"><div class="sc-name">🏫 新城中学</div><div class="sc-score good">83</div></div>
           <div class="sc-meta"><span>中学组 · 760人</span><span>预警：<span style="color:var(--warning)">3条</span></span></div>
           <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>83/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:83%;background:#faad14"></div></div></div>
           <div style="margin-top:10px"><span class="tag warning">一般</span></div>
         </div>
-        <div class="school-card" style="border:2px dashed #d9d9d9;cursor:default;align-items:center;display:flex;justify-content:center;min-height:150px;flex-direction:column;gap:8px">
-          <div style="font-size:28px">+</div>
-          <div style="font-size:13px;color:var(--text-sub)">还有21所学校</div>
-          <button class="btn btn-outline btn-sm">查看全部</button>
-        </div>
+      </div>
       </div>
     </div>
 
@@ -452,14 +461,14 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
       <div id="config-tabs">
         <div class="tab-content active" id="cfg-group">
           <div class="card">
-            <div class="card-head"><div class="card-title">🏫 学校分组配置</div><button class="btn btn-primary btn-sm">+ 新增分组</button></div>
+            <div class="card-head"><div class="card-title">🏫 学校分组配置</div><button class="btn btn-primary btn-sm" onclick="addNewGroup()">+ 新增分组</button></div>
             <div class="card-body" style="padding:0">
               <table class="data-table">
                 <thead><tr><th>分组名称</th><th>适用学段</th><th>学校数量</th><th>管理要求</th><th>操作</th></tr></thead>
                 <tbody>
-                  <tr><td>小学组</td><td>小学（6-12岁）</td><td>12所</td><td>营养均衡要求、每日留样2份</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
-                  <tr><td>中学组</td><td>初中+高中（13-18岁）</td><td>10所</td><td>高热量配比、台账每日更新</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
-                  <tr><td>幼儿园组</td><td>幼儿（3-6岁）</td><td>6所</td><td>精细化营养配比、禁用高盐食材</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
+                  <tr><td>小学组</td><td>小学（6-12岁）</td><td>12所</td><td>营养均衡要求、每日留样2份</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td></tr>
+                  <tr><td>中学组</td><td>初中+高中（13-18岁）</td><td>10所</td><td>高热量配比、台账每日更新</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td></tr>
+                  <tr><td>幼儿园组</td><td>幼儿（3-6岁）</td><td>6所</td><td>精细化营养配比、禁用高盐食材</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td></tr>
                 </tbody>
               </table>
             </div>
@@ -467,17 +476,23 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
         </div>
         <div class="tab-content" id="cfg-ledger">
           <div class="card">
-            <div class="card-head"><div class="card-title">📋 台账填报配置</div><div style="font-size:12px;color:var(--text-sub)">配置各分组必填台账项目</div></div>
+            <div class="card-head">
+              <div>
+                <div class="card-title">📋 台账填报配置</div>
+                <div style="font-size:12px;color:var(--text-sub);margin-top:4px">点击必填/选填标签可切换状态，配置完成后请保存</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveLedgerConfig()">💾 保存配置</button>
+            </div>
             <div class="card-body" style="padding:0">
               <table class="data-table">
                 <thead><tr><th>台账名称</th><th>小学组</th><th>中学组</th><th>幼儿园组</th><th>填报频率</th></tr></thead>
                 <tbody>
-                  <tr><td>食谱公示</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每日</td></tr>
-                  <tr><td>晨检台账</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每日</td></tr>
-                  <tr><td>留样台账</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每餐</td></tr>
-                  <tr><td>餐具消毒</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每日</td></tr>
-                  <tr><td>陪餐记录</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag info">选填</span></td><td>每日</td></tr>
-                  <tr><td>废弃处置</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag info">选填</span></td><td>每次</td></tr>
+                  <tr data-ledger="食谱公示"><td>食谱公示</td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="小学" data-ledger="食谱公示">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="中学" data-ledger="食谱公示">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="幼儿园" data-ledger="食谱公示">必填</span></td><td>每日</td></tr>
+                  <tr data-ledger="晨检台账"><td>晨检台账</td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="小学" data-ledger="晨检台账">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="中学" data-ledger="晨检台账">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="幼儿园" data-ledger="晨检台账">必填</span></td><td>每日</td></tr>
+                  <tr data-ledger="留样台账"><td>留样台账</td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="小学" data-ledger="留样台账">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="中学" data-ledger="留样台账">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="幼儿园" data-ledger="留样台账">必填</span></td><td>每餐</td></tr>
+                  <tr data-ledger="餐具消毒"><td>餐具消毒</td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="小学" data-ledger="餐具消毒">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="中学" data-ledger="餐具消毒">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="幼儿园" data-ledger="餐具消毒">必填</span></td><td>每日</td></tr>
+                  <tr data-ledger="陪餐记录"><td>陪餐记录</td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="小学" data-ledger="陪餐记录">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="中学" data-ledger="陪餐记录">必填</span></td><td><span class="tag info editable-tag" onclick="toggleLedgerTag(this)" data-group="幼儿园" data-ledger="陪餐记录">选填</span></td><td>每日</td></tr>
+                  <tr data-ledger="废弃处置"><td>废弃处置</td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="小学" data-ledger="废弃处置">必填</span></td><td><span class="tag success editable-tag" onclick="toggleLedgerTag(this)" data-group="中学" data-ledger="废弃处置">必填</span></td><td><span class="tag info editable-tag" onclick="toggleLedgerTag(this)" data-group="幼儿园" data-ledger="废弃处置">选填</span></td><td>每次</td></tr>
                 </tbody>
               </table>
             </div>
@@ -502,14 +517,14 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 </div>
               </div>
               <div style="margin-top:16px;display:flex;justify-content:flex-end">
-                <button class="btn btn-primary">保存配置</button>
+                <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
               </div>
             </div>
           </div>
         </div>
         <div class="tab-content" id="cfg-product">
           <div class="card">
-            <div class="card-head"><div class="card-title">📦 采购标品目录</div><button class="btn btn-primary btn-sm">+ 添加标品</button></div>
+            <div class="card-head"><div class="card-title">📦 采购标品目录</div><button class="btn btn-primary btn-sm" onclick="addProduct()">+ 添加标品</button></div>
             <div class="card-body" style="padding:0">
               <table class="data-table">
                 <thead><tr><th>品类</th><th>标品名称</th><th>参考单价（元）</th><th>参考单位</th><th>适用分组</th><th>状态</th></tr></thead>
@@ -535,7 +550,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
           <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
             <select class="form-input" style="width:180px"><option>全部学校</option><option>实验小学</option><option>第一中学</option><option>希望小学</option></select>
             <input type="date" class="form-input" style="width:160px" value="2026-04-03">
-            <button class="btn btn-primary">🔍 一键调取</button>
+            <button class="btn btn-primary" onclick="doFetchData()">🔍 一键调取</button>
           </div>
           <div class="alert success">✅ 已调取：实验小学 2026-04-03 相关资料</div>
           <div class="grid-3">
@@ -544,7 +559,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
               <div class="card-body" style="padding:12px">
                 <div style="font-size:12px;color:var(--text-sub)">2026-04-03 实验小学日报</div>
                 <div style="font-size:12px;margin-top:6px">食谱：已公示 ✓<br>晨检：8人完成 ✓<br>留样：待录入 ⚠</div>
-                <button class="btn btn-sm btn-outline" style="margin-top:10px;width:100%">📄 查看详情</button>
+                <button class="btn btn-sm btn-outline" style="margin-top:10px;width:100%" onclick="viewFetchDetail('日报')">📄 查看详情</button>
               </div>
             </div>
             <div class="card" style="border:1px solid #b7eb8f">
@@ -552,7 +567,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
               <div class="card-body" style="padding:12px">
                 <div style="font-size:12px;color:var(--text-sub)">第14周 (3/30-4/3)</div>
                 <div style="font-size:12px;margin-top:6px">营养评级：A ✓<br>食材成本：¥28,640<br>预警：4条</div>
-                <button class="btn btn-sm btn-outline" style="margin-top:10px;width:100%">📄 查看详情</button>
+                <button class="btn btn-sm btn-outline" style="margin-top:10px;width:100%" onclick="viewFetchDetail('周报')">📄 查看详情</button>
               </div>
             </div>
             <div class="card" style="border:1px solid #91caff">
@@ -560,7 +575,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
               <div class="card-body" style="padding:12px">
                 <div style="font-size:12px;color:var(--text-sub)">2026年4月</div>
                 <div style="font-size:12px;margin-top:6px">台账总数：375条<br>完整率：96.5%<br>待补录：2条</div>
-                <button class="btn btn-sm btn-accent" style="margin-top:10px;width:100%">📂 进入资料柜</button>
+                <button class="btn btn-sm btn-accent" style="margin-top:10px;width:100%" onclick="enterCabinet()">📂 进入资料柜</button>
               </div>
             </div>
           </div>
@@ -573,47 +588,36 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
       <div class="card" style="margin-bottom:16px">
         <div class="card-head">
           <div class="card-title">🏢 供应商信息管理</div>
-          <div style="display:flex;gap:8px">
-            <input type="text" class="form-input" style="width:200px" placeholder="搜索供应商…">
-            <button class="btn btn-outline btn-sm">筛选</button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-input" id="supplierTypeFilter" style="width:130px;padding:6px 10px">
+              <option value="">全部类型</option>
+              <option>肉类</option>
+              <option>蔬菜水果</option>
+              <option>粮油调味</option>
+              <option>蛋类</option>
+              <option>水产</option>
+            </select>
+            <select class="form-input" id="supplierStatusFilter" style="width:120px;padding:6px 10px">
+              <option value="">全部状态</option>
+              <option value="normal">票证齐全</option>
+              <option value="warning">待补票证</option>
+            </select>
+            <input type="text" id="supplierSearchInput" class="form-input" style="width:160px" placeholder="搜索供应商…" onkeyup="if(event.key==='Enter')filterSupplier()">
+            <button class="btn btn-outline btn-sm" onclick="filterSupplier()">🔍 筛选</button>
+            <button class="btn btn-outline btn-sm" onclick="resetSupplierFilter()">重置</button>
           </div>
         </div>
         <div class="card-body" style="padding:0">
           <table class="data-table">
             <thead><tr><th>供应商名称</th><th>供货类型</th><th>供货学校</th><th>营业执照</th><th>食品经营许可</th><th>今日配送</th><th>票证状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr>
-                <td>鲜肉直供中心</td>
-                <td>肉类</td>
-                <td>8所学校</td>
-                <td><span class="tag success">有效 (2027-06)</span></td>
-                <td><span class="tag success">有效</span></td>
-                <td>猪肉 450kg / 鸡肉 200kg</td>
-                <td><span class="tag success">票证齐全</span></td>
-                <td><button class="btn btn-sm btn-outline">查看详情</button></td>
-              </tr>
-              <tr>
-                <td>绿鲜蔬菜基地</td>
-                <td>蔬菜水果</td>
-                <td>15所学校</td>
-                <td><span class="tag success">有效 (2026-12)</span></td>
-                <td><span class="tag success">有效</span></td>
-                <td>菠菜 300kg / 白菜 250kg</td>
-                <td><span class="tag warning">2张待补</span></td>
-                <td><button class="btn btn-sm btn-outline">查看详情</button></td>
-              </tr>
-              <tr>
-                <td>优品粮油配送</td>
-                <td>粮油调味</td>
-                <td>22所学校</td>
-                <td><span class="tag success">有效 (2028-03)</span></td>
-                <td><span class="tag success">有效</span></td>
-                <td>大米 500kg / 食用油 200L</td>
-                <td><span class="tag success">票证齐全</span></td>
-                <td><button class="btn btn-sm btn-outline">查看详情</button></td>
-              </tr>
+            <tbody id="supplierTableBody">
+              <!-- 由 renderSupplierTable() 动态渲染 -->
             </tbody>
           </table>
+          <div id="supplierNoResult" style="display:none;text-align:center;padding:40px;color:var(--text-sub)">
+            <div style="font-size:32px;margin-bottom:8px">🔍</div>
+            <div>未找到符合条件的供应商</div>
+          </div>
         </div>
       </div>
     </div>
@@ -633,7 +637,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
             <select class="form-input" style="width:140px;padding:6px 10px"><option>全部类型</option><option>食安预警</option><option>价格预警</option><option>成本预警</option></select>
             <select class="form-input" style="width:130px;padding:6px 10px"><option>全部学校</option><option>实验小学</option><option>育才中学</option></select>
             <select class="form-input" style="width:110px;padding:6px 10px"><option>全部状态</option><option>待处理</option><option>催办中</option><option>已处理</option></select>
-            <button class="btn btn-warning btn-sm">📣 批量催办</button>
+            <button class="btn btn-warning btn-sm" onclick="batchUrge()">📣 批量催办</button>
           </div>
         </div>
         <div class="card-body" style="padding:0">
@@ -648,9 +652,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 <td><span class="tag danger">待处理</span></td>
                 <td>
                   <div style="display:flex;gap:5px">
-                    <button class="btn btn-sm btn-warning">催办</button>
-                    <button class="btn btn-sm btn-outline">查看</button>
-                    <button class="btn btn-sm btn-outline">关闭</button>
+                    <button class="btn btn-sm btn-warning" onclick="urgeWarning(this)">催办</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewWarningDetail(this)">查看</button>
+                    <button class="btn btn-sm btn-outline" onclick="closeWarning(this)">关闭</button>
                   </div>
                 </td>
               </tr>
@@ -662,9 +666,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 <td><span class="tag warning">催办中</span></td>
                 <td>
                   <div style="display:flex;gap:5px">
-                    <button class="btn btn-sm btn-outline">再催办</button>
-                    <button class="btn btn-sm btn-outline">查看</button>
-                    <button class="btn btn-sm btn-outline">关闭</button>
+                    <button class="btn btn-sm btn-outline" onclick="urgeWarning(this)">再催办</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewWarningDetail(this)">查看</button>
+                    <button class="btn btn-sm btn-outline" onclick="closeWarning(this)">关闭</button>
                   </div>
                 </td>
               </tr>
@@ -676,9 +680,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 <td><span class="tag warning">待处理</span></td>
                 <td>
                   <div style="display:flex;gap:5px">
-                    <button class="btn btn-sm btn-warning">催办</button>
-                    <button class="btn btn-sm btn-outline">查看</button>
-                    <button class="btn btn-sm btn-outline">关闭</button>
+                    <button class="btn btn-sm btn-warning" onclick="urgeWarning(this)">催办</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewWarningDetail(this)">查看</button>
+                    <button class="btn btn-sm btn-outline" onclick="closeWarning(this)">关闭</button>
                   </div>
                 </td>
               </tr>
@@ -690,7 +694,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 <td><span class="tag gray">已处理</span></td>
                 <td>
                   <div style="display:flex;gap:5px">
-                    <button class="btn btn-sm btn-outline">查看</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewWarningDetail(this)">查看</button>
                   </div>
                 </td>
               </tr>
@@ -702,9 +706,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 <td><span class="tag danger">待处理</span></td>
                 <td>
                   <div style="display:flex;gap:5px">
-                    <button class="btn btn-sm btn-warning">催办</button>
-                    <button class="btn btn-sm btn-outline">查看</button>
-                    <button class="btn btn-sm btn-outline">关闭</button>
+                    <button class="btn btn-sm btn-warning" onclick="urgeWarning(this)">催办</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewWarningDetail(this)">查看</button>
+                    <button class="btn btn-sm btn-outline" onclick="closeWarning(this)">关闭</button>
                   </div>
                 </td>
               </tr>
@@ -722,7 +726,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
           <div style="display:flex;gap:8px">
             <select class="form-input" style="width:140px;padding:6px 10px"><option>2025-2026学年</option><option>上学年</option></select>
             <select class="form-input" style="width:110px;padding:6px 10px"><option>按月统计</option><option>按学期统计</option></select>
-            <button class="btn btn-outline btn-sm">📤 导出</button>
+            <button class="btn btn-outline btn-sm" onclick="exportCostData()">📤 导出</button>
           </div>
         </div>
         <div class="card-body">
@@ -762,7 +766,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
           <div class="card-title">📰 日报 - 2026年4月3日</div>
           <div style="display:flex;gap:8px">
             <input type="date" class="form-input" style="width:160px;padding:6px 10px" value="2026-04-03">
-            <button class="btn btn-primary btn-sm">🔄 生成日报</button>
+            <button class="btn btn-primary btn-sm" onclick="generateDailyReport()">🔄 生成日报</button>
             <button class="btn btn-outline btn-sm" onclick="exportSupervisorDailyPDF()">📤 导出PDF</button>
           </div>
         </div>
@@ -809,7 +813,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
           <div class="card-title">📅 周报 - 第14周（3/30-4/3）</div>
           <div style="display:flex;gap:8px">
             <select class="form-input" style="width:200px;padding:6px 10px"><option>第14周（3/30-4/3）</option><option>第13周（3/23-3/27）</option></select>
-            <button class="btn btn-primary btn-sm">🔄 生成周报</button>
+            <button class="btn btn-primary btn-sm" onclick="generateWeeklyReport()">🔄 生成周报</button>
             <button class="btn btn-outline btn-sm">📤 导出</button>
           </div>
         </div>
@@ -877,7 +881,7 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
           <div class="card-title">📆 月报 - 2026年3月</div>
           <div style="display:flex;gap:8px">
             <select class="form-input" style="width:140px;padding:6px 10px"><option>2026年3月</option><option>2026年2月</option><option>2026年1月</option></select>
-            <button class="btn btn-primary btn-sm">🔄 生成月报</button>
+            <button class="btn btn-primary btn-sm" onclick="generateMonthlyReport()">🔄 生成月报</button>
             <button class="btn btn-outline btn-sm" onclick="exportSupervisorWeeklyPDF()">📤 导出PDF</button>
           </div>
         </div>
@@ -963,6 +967,38 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
 </div>
 
 <script>
+// ===== Toast 提示函数 =====
+function showToast(message, type = 'info') {
+  const toast = document.getElementById('toastMsg') || createToast();
+  toast.textContent = message;
+  toast.className = 'toast toast-' + type + ' show';
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+function createToast() {
+  const t = document.createElement('div');
+  t.id = 'toastMsg';
+  t.className = 'toast';
+  document.body.appendChild(t);
+  return t;
+}
+
+// ===== Toast 样式 =====
+const toastStyle = document.createElement('style');
+toastStyle.textContent = `
+.toast {
+  position: fixed; top: 80px; right: 24px; z-index: 99999;
+  padding: 12px 20px; border-radius: 8px; font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15); transform: translateX(120%);
+  transition: transform 0.3s ease; max-width: 320px;
+}
+.toast.show { transform: translateX(0); }
+.toast-success { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+.toast-error { background: #fff1f0; color: #cf1322; border: 1px solid #ffccc7; }
+.toast-warning { background: #fffbe6; color: #d46b08; border: 1px solid #ffe58f; }
+.toast-info { background: #e6f4ff; color: #0958d9; border: 1px solid #91caff; }
+`;
+document.head.appendChild(toastStyle);
+
 const pages = {
   'overview':'监管总览','schools':'学校列表','config':'分类配置',
   'data-fetch':'一键调取资料','supplier':'供应商信息',
@@ -1052,7 +1088,46 @@ function initDates() {
 // 页面加载时初始化日期
 document.addEventListener('DOMContentLoaded', function() {
   initDates();
+  renderSupplierTable();
 });
+
+// 渲染供应商表格
+function renderSupplierTable() {
+  const tbody = document.getElementById('supplierTableBody');
+  if (!tbody) return;
+  
+  const supplierNames = ['鲜肉直供中心', '绿鲜蔬菜基地', '优品粮油配送', '放心蛋品供应商', '鲜活水产批发'];
+  const deliveryInfo = {
+    '鲜肉直供中心': '猪肉 450kg / 鸡肉 200kg',
+    '绿鲜蔬菜基地': '菠菜 300kg / 白菜 250kg',
+    '优品粮油配送': '大米 500kg / 食用油 200L',
+    '放心蛋品供应商': '鸡蛋 500个 / 鸭蛋 100个',
+    '鲜活水产批发': '草鱼 200kg / 虾 80kg'
+  };
+  const ticketStatus = {
+    '鲜肉直供中心': { text: '票证齐全', cls: 'success' },
+    '绿鲜蔬菜基地': { text: '2张待补', cls: 'warning' },
+    '优品粮油配送': { text: '票证齐全', cls: 'success' },
+    '放心蛋品供应商': { text: '票证齐全', cls: 'success' },
+    '鲜活水产批发': { text: '1张待补', cls: 'warning' }
+  };
+  
+  tbody.innerHTML = supplierNames.map(name => {
+    const data = supplierData[name];
+    const t = ticketStatus[name];
+    const hasPending = data.tickets.some(t => t.status === '待补录');
+    return `<tr data-type="${data.type}" data-status="${hasPending ? 'warning' : 'normal'}">
+      <td>${name}</td>
+      <td><span class="tag">${data.type}</span></td>
+      <td>${data.schools.length}所学校</td>
+      <td><span class="tag success">${data.license.text}</span></td>
+      <td><span class="tag ${data.foodLicense.status}">${data.foodLicense.text}</span></td>
+      <td>${deliveryInfo[name]}</td>
+      <td><span class="tag ${t.cls}">${t.text}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="viewSupplierDetail('${name}')">查看详情</button></td>
+    </tr>`;
+  }).join('');
+}
 
 function switchTab(el, cid, tid) {
   const parent = el.closest('.tabs')||el.parentElement;
@@ -1164,6 +1239,678 @@ function doChangePwd() {
   msg.textContent = '✅ 密码修改成功！'; msg.style.color = 'var(--success)'; msg.style.display = 'block';
   setTimeout(() => { document.getElementById('modalChangePwd').style.display = 'none'; }, 1500);
 }
+
+// ===== 学校列表筛选 =====
+function filterSchools() {
+  const keyword = document.getElementById('schoolSearchInput').value.toLowerCase();
+  const group = document.getElementById('schoolGroupFilter').value;
+  const rating = document.getElementById('schoolRatingFilter').value;
+  const status = document.getElementById('schoolStatusFilter').value;
+  
+  const cards = document.querySelectorAll('.school-card[data-school]');
+  let visibleCount = 0;
+  
+  cards.forEach(card => {
+    const school = card.dataset.school.toLowerCase();
+    const cardGroup = card.dataset.group;
+    const cardRating = card.dataset.rating;
+    const cardStatus = card.dataset.status;
+    
+    let match = school.includes(keyword);
+    if (group && cardGroup !== group) match = false;
+    if (rating && cardRating !== rating) match = false;
+    if (status === 'warning' && cardStatus !== 'warning') match = false;
+    if (status === 'normal') match = false;
+    
+    card.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+  
+  if (visibleCount === 0) {
+    showToast('未找到匹配的学校', 'warning');
+  }
+}
+
+// ===== 配置页面功能 =====
+
+// 新增分组 - 打开弹窗
+function addNewGroup() {
+  openModal('modal-add-group');
+  document.getElementById('groupForm').reset();
+  document.getElementById('groupFormTitle').textContent = '新增分组';
+  document.getElementById('groupForm').dataset.mode = 'add';
+}
+
+// 编辑分组 - 打开弹窗并填充数据
+function editGroup(btn) {
+  const row = btn.closest('tr');
+  const cells = row.cells;
+  
+  openModal('modal-add-group');
+  document.getElementById('groupForm').dataset.mode = 'edit';
+  document.getElementById('groupForm').dataset.editRow = row.rowIndex;
+  document.getElementById('groupFormTitle').textContent = '编辑分组';
+  
+  document.getElementById('groupName').value = cells[0].textContent;
+  document.getElementById('groupStage').value = cells[1].textContent;
+  document.getElementById('groupCount').value = cells[2].textContent.replace('所', '');
+  document.getElementById('groupReq').value = cells[3].textContent;
+}
+
+// 保存分组（新增/编辑）
+function submitGroupForm() {
+  const form = document.getElementById('groupForm');
+  const mode = form.dataset.mode;
+  
+  const name = document.getElementById('groupName').value.trim();
+  const stage = document.getElementById('groupStage').value.trim();
+  const count = document.getElementById('groupCount').value.trim();
+  const req = document.getElementById('groupReq').value.trim();
+  
+  if (!name || !stage || !count || !req) {
+    showToast('请填写完整信息', 'warning');
+    return;
+  }
+  
+  if (mode === 'add') {
+    const tbody = document.querySelector('#cfg-group tbody');
+    const newRow = tbody.insertRow();
+    newRow.innerHTML = `
+      <td>${name}</td>
+      <td>${stage}</td>
+      <td>${count}所</td>
+      <td>${req}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td>
+    `;
+    showToast(`✅ 分组「${name}」添加成功`, 'success');
+  } else {
+    const rowIndex = parseInt(form.dataset.editRow);
+    const tbody = document.querySelector('#cfg-group tbody');
+    const row = tbody.rows[rowIndex - 1];
+    row.cells[0].textContent = name;
+    row.cells[1].textContent = stage;
+    row.cells[2].textContent = count + '所';
+    row.cells[3].textContent = req;
+    showToast(`✅ 分组「${name}」信息已更新`, 'success');
+  }
+  
+  closeModalById('modal-add-group');
+}
+
+// 保存配置
+function saveConfig() {
+  const inputs = document.querySelectorAll('#cfg-warning input[type="number"]');
+  const config = {};
+  let valid = true;
+  
+  inputs.forEach(input => {
+    const label = input.closest('.form-item').querySelector('label');
+    const labelText = label ? label.textContent : '';
+    const value = input.value;
+    
+    if (!value || parseFloat(value) <= 0) {
+      valid = false;
+      input.style.borderColor = 'var(--danger)';
+    } else {
+      input.style.borderColor = '';
+      config[labelText] = parseFloat(value);
+    }
+  });
+  
+  if (!valid) {
+    showToast('请填写正确的配置值', 'warning');
+    return;
+  }
+  
+  // 保存到localStorage
+  localStorage.setItem('supervisorConfig', JSON.stringify(config));
+  
+  // 更新预警数量显示（如果有变化的阈值）
+  if (config['健康证提前预警天数']) {
+    document.querySelector('#page-overview .stat-trend').textContent = '按新阈值监控';
+  }
+  
+  showToast('✅ 预警阈值配置已保存！', 'success');
+}
+
+// 添加标品 - 打开弹窗
+function addProduct() {
+  openModal('modal-add-product');
+  document.getElementById('productForm').reset();
+}
+
+// 提交标品表单
+function submitProductForm() {
+  const category = document.getElementById('productCategory').value.trim();
+  const name = document.getElementById('productName').value.trim();
+  const price = document.getElementById('productPrice').value.trim();
+  const unit = document.getElementById('productUnit').value.trim();
+  const group = document.getElementById('productGroup').value;
+  
+  if (!category || !name || !price || !unit) {
+    showToast('请填写完整信息', 'warning');
+    return;
+  }
+  
+  const tbody = document.querySelector('#cfg-product tbody');
+  const newRow = tbody.insertRow();
+  newRow.innerHTML = `
+    <td>${category}</td>
+    <td>${name}</td>
+    <td>¥${parseFloat(price).toFixed(2)}</td>
+    <td>/${unit}</td>
+    <td>${group || '全部'}</td>
+    <td><span class="tag success">启用</span></td>
+  `;
+  
+  closeModalById('modal-add-product');
+  showToast(`✅ 标品「${name}」添加成功`, 'success');
+}
+
+// ===== 供应商管理功能 =====
+
+// 供应商数据（模拟）
+// 学校列表：实验小学、第一中学、希望小学、育才中学、阳光幼儿园、朝阳小学、新城中学
+const supplierData = {
+  '鲜肉直供中心': {
+    type: '肉类',
+    contact: '李经理 138-0000-1234',
+    schools: ['实验小学', '育才中学', '阳光幼儿园'],
+    license: { text: '有效 (2027-06)', status: 'success' },
+    foodLicense: { text: '有效', status: 'success' },
+    tickets: [
+      { date: '2026-04-03', type: '送货单', no: 'SH20260403001', status: '已完成' },
+      { date: '2026-04-03', type: '检疫证明', no: 'JZ20260403001', status: '已完成' },
+      { date: '2026-04-03', type: '产品合格证', no: 'HG20260403001', status: '已完成' }
+    ]
+  },
+  '绿鲜蔬菜基地': {
+    type: '蔬菜水果',
+    contact: '王经理 139-0000-5678',
+    schools: ['实验小学', '第一中学', '希望小学', '育才中学', '阳光幼儿园', '朝阳小学', '新城中学'],
+    license: { text: '有效 (2026-12)', status: 'success' },
+    foodLicense: { text: '有效', status: 'success' },
+    tickets: [
+      { date: '2026-04-03', type: '送货单', no: 'SH20260403002', status: '已完成' },
+      { date: '2026-04-03', type: '农药残留检测', no: 'NK20260403002', status: '待补录' },
+      { date: '2026-04-03', type: '产地证明', no: 'CD20260403002', status: '待补录' }
+    ]
+  },
+  '优品粮油配送': {
+    type: '粮油调味',
+    contact: '张经理 137-0000-9012',
+    schools: ['实验小学', '第一中学', '希望小学', '育才中学', '阳光幼儿园', '朝阳小学', '新城中学'],
+    license: { text: '有效 (2028-03)', status: 'success' },
+    foodLicense: { text: '有效', status: 'success' },
+    tickets: [
+      { date: '2026-04-03', type: '送货单', no: 'SH20260403003', status: '已完成' },
+      { date: '2026-04-03', type: '产品检测报告', no: 'JC20260403003', status: '已完成' }
+    ]
+  },
+  '放心蛋品供应商': {
+    type: '蛋类',
+    contact: '赵经理 136-0000-3456',
+    schools: ['实验小学', '希望小学', '阳光幼儿园', '朝阳小学'],
+    license: { text: '有效 (2027-09)', status: 'success' },
+    foodLicense: { text: '有效', status: 'success' },
+    tickets: [
+      { date: '2026-04-03', type: '送货单', no: 'SH20260403004', status: '已完成' },
+      { date: '2026-04-03', type: '检疫证明', no: 'JZ20260403004', status: '已完成' }
+    ]
+  },
+  '鲜活水产批发': {
+    type: '水产',
+    contact: '刘经理 135-0000-7890',
+    schools: ['第一中学', '希望小学', '育才中学', '新城中学'],
+    license: { text: '有效 (2027-03)', status: 'success' },
+    foodLicense: { text: '即将到期 (2026-04-15)', status: 'warning' },
+    tickets: [
+      { date: '2026-04-03', type: '送货单', no: 'SH20260403005', status: '已完成' },
+      { date: '2026-04-03', type: '检疫证明', no: 'JZ20260403005', status: '待补录' }
+    ]
+  }
+};
+
+// 筛选供应商
+function filterSupplier() {
+  const typeFilter = document.getElementById('supplierTypeFilter').value;
+  const statusFilter = document.getElementById('supplierStatusFilter').value;
+  const searchText = document.getElementById('supplierSearchInput').value.toLowerCase();
+  
+  const rows = document.querySelectorAll('#supplierTableBody tr');
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    const type = row.dataset.type;
+    const status = row.dataset.status;
+    const name = row.cells[0].textContent.toLowerCase();
+    
+    const matchType = !typeFilter || type === typeFilter;
+    const matchStatus = !statusFilter || status === statusFilter;
+    const matchSearch = !searchText || name.includes(searchText);
+    
+    if (matchType && matchStatus && matchSearch) {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  
+  // 显示/隐藏无结果提示
+  const noResult = document.getElementById('supplierNoResult');
+  noResult.style.display = visibleCount === 0 ? 'block' : 'none';
+  
+  if (visibleCount > 0) {
+    showToast(`筛选完成：找到 ${visibleCount} 条结果`, 'success');
+  } else {
+    showToast('未找到符合条件的供应商', 'warning');
+  }
+}
+
+// 重置筛选
+function resetSupplierFilter() {
+  document.getElementById('supplierTypeFilter').value = '';
+  document.getElementById('supplierStatusFilter').value = '';
+  document.getElementById('supplierSearchInput').value = '';
+  
+  const rows = document.querySelectorAll('#supplierTableBody tr');
+  rows.forEach(row => row.style.display = '');
+  document.getElementById('supplierNoResult').style.display = 'none';
+  
+  showToast('筛选条件已重置', 'info');
+}
+
+// 查看供应商详情
+function viewSupplierDetail(name) {
+  const data = supplierData[name];
+  if (!data) {
+    showToast('未找到该供应商信息', 'error');
+    return;
+  }
+  
+  openModal('modal-supplier-detail');
+  document.getElementById('supplierDetailTitle').textContent = `🏢 ${name}`;
+  document.getElementById('supplierName').textContent = name;
+  document.getElementById('supplierType').innerHTML = `<span class="tag">${data.type}</span>`;
+  document.getElementById('supplierContact').textContent = data.contact;
+  document.getElementById('supplierSchoolCount').textContent = `${data.schools.length} 所学校`;
+  document.getElementById('supplierLicense').innerHTML = `<span class="tag ${data.license.status}">${data.license.text}</span>`;
+  document.getElementById('supplierFoodLicense').innerHTML = `<span class="tag ${data.foodLicense.status}">${data.foodLicense.text}</span>`;
+  
+  // 渲染供货学校列表
+  const schoolList = document.getElementById('supplierSchoolList');
+  schoolList.innerHTML = data.schools.map(s => `<span class="tag" style="background:#f5f5f5;color:#666">${s}</span>`).join('');
+  
+  // 保存当前供应商名
+  document.getElementById('modal-supplier-detail').dataset.supplierName = name;
+}
+
+// 查看供应商票证
+function viewSupplierTickets() {
+  const name = document.getElementById('modal-supplier-detail').dataset.supplierName;
+  const data = supplierData[name];
+  if (!data) return;
+  
+  document.getElementById('ticketSupplierName').textContent = name;
+  
+  const tbody = document.getElementById('ticketTableBody');
+  tbody.innerHTML = data.tickets.map(t => `
+    <tr>
+      <td>${t.date}</td>
+      <td>${t.type}</td>
+      <td>${t.no}</td>
+      <td><span class="tag ${t.status === '已完成' ? 'success' : 'warning'}">${t.status}</span></td>
+    </tr>
+  `).join('');
+  
+  openModal('modal-supplier-tickets');
+}
+
+// 导出供应商信息
+function exportSupplierInfo() {
+  const name = document.getElementById('modal-supplier-detail').dataset.supplierName;
+  const data = supplierData[name];
+  if (!data) return;
+  
+  showToast(`📥 正在导出 ${name} 信息...`, 'info');
+  
+  setTimeout(() => {
+    const content = `${name} 供应商信息
+=====================
+
+基本信息
+--------
+供货类型：${data.type}
+联系人：${data.contact}
+供货学校数：${data.schools.length}所
+
+证照信息
+--------
+营业执照：${data.license.text}
+食品经营许可证：${data.foodLicense.text}
+
+供货学校
+--------
+${data.schools.join('、')}
+
+导出时间：${new Date().toLocaleDateString()}
+`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name}_供应商信息.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ 供应商信息导出成功', 'success');
+  }, 800);
+}
+
+// ===== 台账配置功能 =====
+
+// 切换台账必填/选填状态
+function toggleLedgerTag(el) {
+  const current = el.textContent;
+  const group = el.dataset.group;
+  const ledger = el.dataset.ledger;
+  
+  if (current === '必填') {
+    el.textContent = '选填';
+    el.className = 'tag info editable-tag';
+    showToast(`已设置「${ledger}」-${group}为选填`, 'info');
+  } else {
+    el.textContent = '必填';
+    el.className = 'tag success editable-tag';
+    showToast(`已设置「${ledger}」-${group}为必填`, 'info');
+  }
+  
+  // 标记有未保存的更改
+  el.closest('.card').querySelector('.btn-primary').classList.add('has-changes');
+}
+
+// 保存台账配置
+function saveLedgerConfig() {
+  const config = {};
+  const rows = document.querySelectorAll('#cfg-ledger tbody tr');
+  
+  rows.forEach(row => {
+    const ledgerName = row.dataset.ledger;
+    config[ledgerName] = {};
+    
+    const tags = row.querySelectorAll('.editable-tag');
+    tags.forEach(tag => {
+      const group = tag.dataset.group;
+      config[ledgerName][group] = tag.textContent === '必填' ? 1 : 0;
+    });
+  });
+  
+  // 保存到localStorage
+  localStorage.setItem('ledgerConfig', JSON.stringify(config));
+  
+  // 移除更改标记
+  document.querySelector('#cfg-ledger .btn-primary').classList.remove('has-changes');
+  
+  showToast('✅ 台账填报配置已保存！', 'success');
+}
+
+// ===== 一键调取功能 =====
+
+// 调取数据时的加载状态
+let fetchLoading = false;
+
+function doFetchData() {
+  if (fetchLoading) return;
+  
+  const schoolSelect = document.querySelector('#page-data-fetch select');
+  const dateInput = document.querySelector('#page-data-fetch input[type="date"]');
+  const school = schoolSelect.value;
+  const date = dateInput.value;
+  
+  if (school === '全部学校') {
+    showToast('请选择具体学校', 'warning');
+    return;
+  }
+  
+  fetchLoading = true;
+  const btn = document.querySelector('#page-data-fetch .btn-primary');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ 调取中...';
+  btn.disabled = true;
+  
+  // 更新提示信息
+  const alertEl = document.querySelector('#page-data-fetch .alert');
+  alertEl.className = 'alert info';
+  alertEl.innerHTML = `📡 正在调取 ${school} ${date} 的相关资料...`;
+  
+  // 模拟调取过程
+  setTimeout(() => {
+    alertEl.className = 'alert success';
+    alertEl.innerHTML = `✅ 已调取：${school} ${date} 相关资料<br><span style="font-size:12px;color:var(--text-sub)">包含食谱、晨检、留样、票证等数据</span>`;
+    
+    // 更新日报卡片
+    const dailyCard = document.querySelector('#page-data-fetch .card:nth-child(2) .card:nth-child(1)');
+    const dailySubtitle = dailyCard.querySelector('[style*="font-size:12px"]');
+    if (dailySubtitle) {
+      dailySubtitle.textContent = `${date} ${school}日报`;
+    }
+    
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    fetchLoading = false;
+    
+    showToast(`✅ ${school} 资料调取成功！`, 'success');
+  }, 1500);
+}
+
+// 查看日报/周报详情 - 打开详情模态框
+function viewFetchDetail(type) {
+  const schoolSelect = document.querySelector('#page-data-fetch select');
+  const school = schoolSelect.value === '全部学校' ? '实验小学' : schoolSelect.value;
+  const dateInput = document.querySelector('#page-data-fetch input[type="date"]');
+  const date = dateInput.value;
+  
+  if (type === '日报') {
+    openModal('modal-daily-detail');
+    // 填充日报详情数据
+    document.getElementById('detailSchool').textContent = school;
+    document.getElementById('detailDate').textContent = date;
+    document.getElementById('detailRecipe').textContent = '早餐：馒头+鸡蛋+牛奶 | 午餐：红烧肉+青菜+米饭 | 晚餐：鱼香肉丝+番茄蛋汤';
+    document.getElementById('detailMorning').textContent = '全部完成（12人）';
+    document.getElementById('detailSample').textContent = '已完成（早、午、晚各1份）';
+    document.getElementById('detailDisinfect').textContent = '已完成';
+  } else {
+    openModal('modal-weekly-detail');
+    // 填充周报详情数据
+    document.getElementById('weeklySchool').textContent = school;
+    document.getElementById('weeklyWeek').textContent = '第14周（3/30-4/3）';
+    document.getElementById('weeklyNutrition').textContent = 'A级';
+    document.getElementById('weeklyCost').textContent = '¥28,640';
+    document.getElementById('weeklyWarnings').textContent = '4条';
+    document.getElementById('weeklyComplete').textContent = '96.5%';
+  }
+}
+
+// 进入资料柜 - 显示资料柜内容
+function enterCabinet() {
+  openModal('modal-cabinet');
+  showToast('📂 正在加载电子资料柜...', 'info');
+  
+  // 模拟加载完成
+  setTimeout(() => {
+    const fileCount = document.querySelectorAll('#cabinetFileList .cabinet-item').length;
+    showToast(`✅ 电子资料柜已加载，共${fileCount}份文件`, 'success');
+  }, 500);
+}
+
+// 筛选资料柜文件
+function filterCabinetFiles(category) {
+  const items = document.querySelectorAll('#cabinetFileList .cabinet-item');
+  items.forEach(item => {
+    if (category === 'all' || item.dataset.category === category) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+// 下载资料柜文件
+function downloadFile(filename) {
+  showToast(`📥 正在下载：${filename}`, 'info');
+  setTimeout(() => {
+    // 模拟下载
+    const blob = new Blob([`这是 ${filename} 的内容模拟数据`], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast(`✅ ${filename} 下载完成`, 'success');
+  }, 800);
+}
+
+// ===== 供应商功能 =====
+
+// ===== 预警管理功能 =====
+function batchUrge() {
+  const selectedRows = document.querySelectorAll('#page-warnings tbody tr');
+  let count = 0;
+  selectedRows.forEach(row => {
+    const status = row.querySelector('.tag.danger, .tag.warning');
+    if (status && (status.textContent.includes('待处理') || status.textContent.includes('催办中'))) {
+      count++;
+    }
+  });
+  if (count === 0) {
+    showToast('没有待催办的预警', 'warning');
+    return;
+  }
+  showToast(`正在向 ${count} 所学校发送催办通知...`, 'info');
+  setTimeout(() => showToast(`✅ 已向 ${count} 所学校发送催办通知`, 'success'), 1200);
+}
+function urgeWarning(btn) {
+  const row = btn.closest('tr');
+  const school = row.cells[1].textContent;
+  const type = row.cells[2].textContent;
+  btn.disabled = true;
+  btn.textContent = '已催办';
+  showToast(`✅ 已向 ${school} 发送${type}催办通知`, 'success');
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = '再催办';
+  }, 3000);
+}
+function viewWarningDetail(btn) {
+  const row = btn.closest('tr');
+  const school = row.cells[1].textContent;
+  const type = row.cells[2].textContent;
+  const content = row.cells[3].textContent;
+  showToast(`📋 ${school} - ${type}\n${content}`, 'info');
+}
+function closeWarning(btn) {
+  const row = btn.closest('tr');
+  const school = row.cells[1].textContent;
+  const type = row.cells[2].textContent;
+  row.style.opacity = '0.5';
+  row.querySelectorAll('button').forEach(b => b.disabled = true);
+  showToast(`✅ ${school} - ${type} 预警已关闭`, 'success');
+}
+
+// ===== 成本监管功能 =====
+function exportCostData() {
+  showToast('正在导出成本数据...', 'info');
+  setTimeout(() => showToast('✅ 成本数据已导出为Excel', 'success'), 1000);
+}
+
+// ===== 报表生成功能 =====
+function generateDailyReport() {
+  showToast('正在生成日报...', 'info');
+  setTimeout(() => showToast('✅ 日报生成完成！数据已更新', 'success'), 1500);
+}
+function generateWeeklyReport() {
+  showToast('正在生成周报...', 'info');
+  setTimeout(() => showToast('✅ 周报生成完成！数据已更新', 'success'), 1500);
+}
+function generateMonthlyReport() {
+  showToast('正在生成月报...', 'info');
+  setTimeout(() => showToast('✅ 月报生成完成！数据已更新', 'success'), 1500);
+}
+
+// 导出日报详情
+function exportDailyDetail() {
+  const school = document.getElementById('detailSchool').textContent;
+  const date = document.getElementById('detailDate').textContent;
+  showToast(`📥 正在导出 ${school} ${date} 日报...`, 'info');
+  
+  setTimeout(() => {
+    const content = `${school} 日报\n日期：${date}\n\n食谱：${document.getElementById('detailRecipe').textContent}\n晨检：${document.getElementById('detailMorning').textContent}\n留样：${document.getElementById('detailSample').textContent}\n消毒：${document.getElementById('detailDisinfect').textContent}`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${school}_日报_${date}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ 日报导出成功', 'success');
+  }, 1000);
+}
+
+// 导出周报详情
+function exportWeeklyDetail() {
+  const school = document.getElementById('weeklySchool').textContent;
+  const week = document.getElementById('weeklyWeek').textContent;
+  showToast(`📥 正在导出 ${school} ${week} 周报...`, 'info');
+  
+  setTimeout(() => {
+    const content = `${school} 周报\n周期：${week}\n\n营养评级：${document.getElementById('weeklyNutrition').textContent}\n食材成本：${document.getElementById('weeklyCost').textContent}\n本周预警：${document.getElementById('weeklyWarnings').textContent}\n台账完整率：${document.getElementById('weeklyComplete').textContent}`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${school}_周报_${week.replace('第', '').replace('（', '_').replace('）', '')}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ 周报导出成功', 'success');
+  }, 1000);
+}
+
+// 打包下载资料柜全部文件
+function downloadAllCabinet() {
+  const items = document.querySelectorAll('#cabinetFileList .cabinet-item');
+  let count = items.length;
+  
+  showToast(`📦 正在打包 ${count} 个文件...`, 'info');
+  
+  setTimeout(() => {
+    // 模拟打包下载（实际下载一个文本文件列表）
+    const fileList = [];
+    items.forEach(item => {
+      const name = item.querySelector('div div').textContent;
+      const btn = item.querySelector('button');
+      fileList.push(name);
+    });
+    
+    const content = '智慧食堂电子资料柜\n====================\n\n文件清单：\n' + fileList.map((f, i) => `${i+1}. ${f}`).join('\n');
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `电子资料柜_202604.zip`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showToast(`✅ 已打包下载 ${count} 个文件`, 'success');
+  }, 1500);
+}
 </script>
   <!-- 退出登录确认弹窗 -->
   <div id="modalLogoutConfirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center">
@@ -1212,6 +1959,320 @@ function doChangePwd() {
       <div id="pdfExportText" style="font-size:15px;font-weight:500;margin-bottom:12px">正在生成PDF...</div>
       <div style="width:200px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin:0 auto">
         <div id="pdfProgressBar" style="width:0%;height:100%;background:#00875a;transition:width 0.3s"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑分组弹窗 -->
+  <div class="modal-overlay" id="modal-add-group" onclick="closeModal(event,'modal-add-group')">
+    <div class="modal" style="width:500px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title" id="groupFormTitle">新增分组</div>
+        <div class="modal-close" onclick="closeModalById('modal-add-group')">×</div>
+      </div>
+      <div class="modal-body">
+        <form id="groupForm" data-mode="add">
+          <div class="form-item" style="margin-bottom:14px">
+            <label>分组名称</label>
+            <input type="text" id="groupName" class="form-input" placeholder="例如：职高组" style="width:100%">
+          </div>
+          <div class="form-item" style="margin-bottom:14px">
+            <label>适用学段</label>
+            <input type="text" id="groupStage" class="form-input" placeholder="例如：高中（15-18岁）" style="width:100%">
+          </div>
+          <div class="form-item" style="margin-bottom:14px">
+            <label>学校数量</label>
+            <input type="number" id="groupCount" class="form-input" placeholder="输入数字" style="width:100%" min="1">
+          </div>
+          <div class="form-item" style="margin-bottom:14px">
+            <label>管理要求</label>
+            <textarea id="groupReq" class="form-input" placeholder="填写管理要求" style="width:100%;height:80px;resize:vertical"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModalById('modal-add-group')">取消</button>
+        <button class="btn btn-primary" onclick="submitGroupForm()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加标品弹窗 -->
+  <div class="modal-overlay" id="modal-add-product" onclick="closeModal(event,'modal-add-product')">
+    <div class="modal" style="width:500px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">📦 添加采购标品</div>
+        <div class="modal-close" onclick="closeModalById('modal-add-product')">×</div>
+      </div>
+      <div class="modal-body">
+        <form id="productForm">
+          <div class="form-row">
+            <div class="form-item">
+              <label>品类</label>
+              <select id="productCategory" class="form-input" style="width:100%">
+                <option value="">请选择</option>
+                <option>肉类</option>
+                <option>蔬菜</option>
+                <option>水果</option>
+                <option>粮油</option>
+                <option>调味</option>
+                <option>蛋类</option>
+                <option>水产</option>
+                <option>豆制品</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label>参考单价（元）</label>
+              <input type="number" id="productPrice" class="form-input" placeholder="例如：25.00" step="0.01" style="width:100%">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>标品名称</label>
+              <input type="text" id="productName" class="form-input" placeholder="例如：五花肉（冷鲜）" style="width:100%">
+            </div>
+            <div class="form-item">
+              <label>参考单位</label>
+              <select id="productUnit" class="form-input" style="width:100%">
+                <option value="">请选择</option>
+                <option>kg（千克）</option>
+                <option>g（克）</option>
+                <option>袋</option>
+                <option>箱</option>
+                <option>桶</option>
+                <option>L（升）</option>
+                <option>个</option>
+                <option>托</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-item">
+            <label>适用分组</label>
+            <select id="productGroup" class="form-input" style="width:100%">
+              <option value="全部">全部</option>
+              <option>小学组</option>
+              <option>中学组</option>
+              <option>幼儿园组</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModalById('modal-add-product')">取消</button>
+        <button class="btn btn-primary" onclick="submitProductForm()">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日报详情弹窗 -->
+  <div class="modal-overlay" id="modal-daily-detail" onclick="closeModal(event,'modal-daily-detail')">
+    <div class="modal" style="width:600px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">📰 日报详情</div>
+        <div class="modal-close" onclick="closeModalById('modal-daily-detail')">×</div>
+      </div>
+      <div class="modal-body">
+        <div style="background:#f0fff5;border-radius:8px;padding:14px;margin-bottom:16px">
+          <div style="font-weight:600;color:var(--primary);margin-bottom:4px"><span id="detailSchool">实验小学</span> — <span id="detailDate">2026-04-03</span></div>
+          <div style="font-size:12px;color:var(--text-sub)">日报详细数据</div>
+        </div>
+        <table class="data-table">
+          <tr><td style="width:100px;font-weight:500;color:var(--text-sub)">食谱公示</td><td id="detailRecipe">早餐：馒头+鸡蛋+牛奶 | 午餐：红烧肉+青菜+米饭</td></tr>
+          <tr><td style="font-weight:500;color:var(--text-sub)">晨检记录</td><td id="detailMorning"><span style="color:var(--success)">✅ 全部完成（12人）</span></td></tr>
+          <tr><td style="font-weight:500;color:var(--text-sub)">留样记录</td><td id="detailSample"><span style="color:var(--success)">✅ 已完成（早、午、晚各1份）</span></td></tr>
+          <tr><td style="font-weight:500;color:var(--text-sub)">餐具消毒</td><td id="detailDisinfect"><span style="color:var(--success)">✅ 已完成</span></td></tr>
+          <tr><td style="font-weight:500;color:var(--text-sub)">陪餐记录</td><td><span style="color:var(--success)">✅ 校长陪餐</span></td></tr>
+          <tr><td style="font-weight:500;color:var(--text-sub)">废弃处置</td><td><span style="color:var(--text-sub)">无废弃</span></td></tr>
+        </table>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModalById('modal-daily-detail')">关闭</button>
+        <button class="btn btn-primary" onclick="exportDailyDetail()">导出日报</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 周报详情弹窗 -->
+  <div class="modal-overlay" id="modal-weekly-detail" onclick="closeModal(event,'modal-weekly-detail')">
+    <div class="modal" style="width:600px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">📅 周报详情 — <span id="weeklySchool">实验小学</span></div>
+        <div class="modal-close" onclick="closeModalById('modal-weekly-detail')">×</div>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:16px">
+          <div class="grid-3" style="gap:12px">
+            <div style="background:#f0fff4;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--success)">A级</div>
+              <div style="font-size:11px;color:var(--text-sub)">营养评级</div>
+            </div>
+            <div style="background:#fff7e6;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--warning)">¥28,640</div>
+              <div style="font-size:11px;color:var(--text-sub)">本周食材成本</div>
+            </div>
+            <div style="background:#fff1f0;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--danger)">4条</div>
+              <div style="font-size:11px;color:var(--text-sub)">本周预警</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+          <p><strong>周报周期：</strong><span id="weeklyWeek">第14周（3/30-4/3）</span></p>
+          <p><strong>食谱公示率：</strong>100%（本周5天全部公示）</p>
+          <p><strong>台账完整率：</strong><span id="weeklyComplete">96.5%</span></p>
+          <p><strong>食材入库：</strong>肉类 420kg / 蔬菜 680kg / 粮油 280kg</p>
+          <p><strong>陪餐次数：</strong>5次（行政陪餐比例 100%）</p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModalById('modal-weekly-detail')">关闭</button>
+        <button class="btn btn-primary" onclick="exportWeeklyDetail()">导出周报</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 供应商详情弹窗 -->
+  <div class="modal-overlay" id="modal-supplier-detail" onclick="closeModal(event,'modal-supplier-detail')">
+    <div class="modal" style="width:650px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title" id="supplierDetailTitle">🏢 供应商详情</div>
+        <div class="modal-close" onclick="closeModalById('modal-supplier-detail')">×</div>
+      </div>
+      <div class="modal-body">
+        <!-- 基本信息 -->
+        <div style="margin-bottom:20px">
+          <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text-sub)">基本信息</div>
+          <div class="grid-2" style="gap:12px">
+            <div class="form-item"><label>供应商名称</label><div id="supplierName" style="padding:8px 0;font-weight:500">-</div></div>
+            <div class="form-item"><label>供货类型</label><div id="supplierType" style="padding:8px 0">-</div></div>
+            <div class="form-item"><label>联系人</label><div id="supplierContact" style="padding:8px 0">李经理 138-0000-1234</div></div>
+            <div class="form-item"><label>供货学校数</label><div id="supplierSchoolCount" style="padding:8px 0">-</div></div>
+          </div>
+        </div>
+        
+        <!-- 证照信息 -->
+        <div style="margin-bottom:20px">
+          <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text-sub)">证照信息</div>
+          <div class="grid-2" style="gap:12px">
+            <div class="form-item"><label>营业执照</label><div id="supplierLicense" style="padding:8px 0">-</div></div>
+            <div class="form-item"><label>食品经营许可证</label><div id="supplierFoodLicense" style="padding:8px 0">-</div></div>
+            <div class="form-item"><label>健康证有效期</label><div style="padding:8px 0">2026-12-31</div></div>
+            <div class="form-item"><label>最近配送</label><div style="padding:8px 0">2026-04-03</div></div>
+          </div>
+        </div>
+        
+        <!-- 供货学校列表 -->
+        <div style="margin-bottom:20px">
+          <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text-sub)">供货学校</div>
+          <div id="supplierSchoolList" style="display:flex;flex-wrap:wrap;gap:8px">
+          </div>
+        </div>
+        
+        <!-- 配送统计 -->
+        <div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text-sub)">本周配送统计</div>
+          <div class="grid-3" style="gap:12px">
+            <div style="background:#f0fff4;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--success)">1,850kg</div>
+              <div style="font-size:11px;color:var(--text-sub)">本周配送量</div>
+            </div>
+            <div style="background:#e6f0ff;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--accent)">28次</div>
+              <div style="font-size:11px;color:var(--text-sub)">配送次数</div>
+            </div>
+            <div style="background:#fff7e6;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--warning)">98.5%</div>
+              <div style="font-size:11px;color:var(--text-sub)">准时率</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModalById('modal-supplier-detail')">关闭</button>
+        <button class="btn btn-outline" onclick="viewSupplierTickets()">📄 查看票证</button>
+        <button class="btn btn-primary" onclick="exportSupplierInfo()">导出信息</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 供应商票证弹窗 -->
+  <div class="modal-overlay" id="modal-supplier-tickets" onclick="closeModal(event,'modal-supplier-tickets')">
+    <div class="modal" style="width:600px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">📄 <span id="ticketSupplierName">供应商</span> 票证记录</div>
+        <div class="modal-close" onclick="closeModalById('modal-supplier-tickets')">×</div>
+      </div>
+      <div class="modal-body" style="padding:0">
+        <table class="data-table">
+          <thead><tr><th>日期</th><th>票证类型</th><th>票证编号</th><th>状态</th></tr></thead>
+          <tbody id="ticketTableBody">
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModalById('modal-supplier-tickets')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 电子资料柜弹窗 -->
+  <div class="modal-overlay" id="modal-cabinet" onclick="closeModal(event,'modal-cabinet')">
+    <div class="modal" style="width:700px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">🗄️ 电子资料柜 — 2026年4月</div>
+        <div class="modal-close" onclick="closeModalById('modal-cabinet')">×</div>
+      </div>
+      <div class="modal-body" style="padding:16px">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="filterCabinetFiles('all')">全部</button>
+          <button class="btn btn-outline btn-sm" onclick="filterCabinetFiles('recipe')">📋 食谱</button>
+          <button class="btn btn-outline btn-sm" onclick="filterCabinetFiles('morning')">🌡️ 晨检</button>
+          <button class="btn btn-outline btn-sm" onclick="filterCabinetFiles('sample')">🧪 留样</button>
+          <button class="btn btn-outline btn-sm" onclick="filterCabinetFiles('ticket')">📄 票证</button>
+          <button class="btn btn-outline btn-sm" onclick="filterCabinetFiles('cost')">💰 成本</button>
+        </div>
+        <div id="cabinetFileList" style="max-height:400px;overflow-y:auto">
+          <div class="cabinet-item" data-category="recipe" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">📋</span>
+            <div style="flex:1"><div style="font-weight:500">食谱公示 - 第14周</div><div style="font-size:12px;color:var(--text-sub)">2026-03-30 至 2026-04-03</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('食谱公示_第14周.pdf')">下载</button>
+          </div>
+          <div class="cabinet-item" data-category="morning" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">🌡️</span>
+            <div style="flex:1"><div style="font-weight:500">晨检记录汇总</div><div style="font-size:12px;color:var(--text-sub)">2026-04-03 共12条</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('晨检记录_20260403.pdf')">下载</button>
+          </div>
+          <div class="cabinet-item" data-category="sample" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">🧪</span>
+            <div style="flex:1"><div style="font-weight:500">留样记录表</div><div style="font-size:12px;color:var(--text-sub)">2026-04-03 共6份</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('留样记录_20260403.pdf')">下载</button>
+          </div>
+          <div class="cabinet-item" data-category="ticket" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">📄</span>
+            <div style="flex:1"><div style="font-weight:500">本周采购票证</div><div style="font-size:12px;color:var(--text-sub)">共45张票证文件</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('票证_第14周.zip')">下载</button>
+          </div>
+          <div class="cabinet-item" data-category="cost" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">💰</span>
+            <div style="flex:1"><div style="font-weight:500">本周食材采购明细</div><div style="font-size:12px;color:var(--text-sub)">2026-04-03 采购金额 ¥8,420</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('采购明细_20260403.xlsx')">下载</button>
+          </div>
+          <div class="cabinet-item" data-category="recipe" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">📋</span>
+            <div style="flex:1"><div style="font-weight:500">营养分析报告</div><div style="font-size:12px;color:var(--text-sub)">第14周营养达标分析</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('营养分析_第14周.pdf')">下载</button>
+          </div>
+          <div class="cabinet-item" data-category="sample" style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px">
+            <span style="font-size:20px">🧪</span>
+            <div style="flex:1"><div style="font-weight:500">留样现场照片</div><div style="font-size:12px;color:var(--text-sub)">2026-04-03 共12张</div></div>
+            <button class="btn btn-sm btn-outline" onclick="downloadFile('留样照片_20260403.zip')">下载</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <div style="flex:1;font-size:12px;color:var(--text-sub)">共7份文件</div>
+        <button class="btn btn-outline" onclick="closeModalById('modal-cabinet')">关闭</button>
+        <button class="btn btn-primary" onclick="downloadAllCabinet()">打包下载全部</button>
       </div>
     </div>
   </div>
