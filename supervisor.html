@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教育局监管端 - 智慧食堂监管平台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<style>
+:root {
+  --primary: #00875a;
+  --primary-light: #e6fff5;
+  --primary-dark: #006644;
+  --accent: #1677ff;
+  --success: #52c41a;
+  --warning: #faad14;
+  --danger: #ff4d4f;
+  --bg: #f0f2f5;
+  --card: #fff;
+  --text: #1a1a2e;
+  --text-sub: #666;
+  --border: #e8e8e8;
+  --sidebar-bg: #003d29;
+  --sidebar-text: rgba(255,255,255,0.7);
+  --header-h: 60px;
+  --sidebar-w: 230px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); }
+
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  position: fixed; left: 0; top: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo .logo-icon { font-size: 26px; }
+.sidebar-logo .logo-text { font-size: 13px; color: #fff; font-weight: 600; line-height: 1.3; }
+.sidebar-logo .logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.sidebar-org {
+  margin: 8px;
+  padding: 12px 14px;
+  background: rgba(0,135,90,0.25);
+  border-radius: 8px;
+  border: 1px solid rgba(0,135,90,0.5);
+}
+.sidebar-org .org-name { font-size: 13px; color: #fff; font-weight: 500; }
+.sidebar-org .org-role { font-size: 11px; color: #00c97a; margin-top: 2px; }
+.nav-group { padding: 6px 0; }
+.nav-group-title {
+  padding: 6px 16px;
+  font-size: 11px; color: rgba(255,255,255,0.3);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer; color: var(--sidebar-text);
+  font-size: 13px; transition: all 0.2s; position: relative;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active { background: rgba(0,135,90,0.3); color: #fff; }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: #00c97a; border-radius: 0 2px 2px 0;
+}
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-badge { margin-left:auto; background:var(--danger); color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; }
+
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+.header {
+  height: var(--header-h); background: #fff;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.breadcrumb { font-size: 14px; color: var(--text-sub); }
+.breadcrumb span { color: var(--text); font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.btn-back { padding:6px 14px; background:var(--bg); border:1px solid var(--border); border-radius:6px; font-size:13px; cursor:pointer; color:var(--text-sub); text-decoration:none; display:flex; align-items:center; gap:5px; }
+.btn-back:hover { background:#e0fff5; color:var(--primary); }
+.avatar { width:32px; height:32px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; cursor:pointer; flex-shrink:0; }
+.user-menu-wrap { position:relative; }
+.user-info-btn { display:flex; align-items:center; gap:8px; padding:4px 8px; border-radius:8px; cursor:pointer; border:none; background:transparent; transition:background 0.2s; }
+.user-info-btn:hover { background:#f0f0f0; }
+.user-name { font-size:13px; font-weight:500; color:var(--text); }
+.user-role { font-size:11px; color:var(--text-sub); }
+.user-dropdown { display:none; position:absolute; right:0; top:calc(100% + 6px); background:#fff; border:1px solid var(--border); border-radius:8px; min-width:160px; box-shadow:0 4px 16px rgba(0,0,0,0.1); z-index:1000; overflow:hidden; }
+.user-dropdown.show { display:block; }
+.user-dropdown-item { padding:10px 16px; font-size:13px; color:var(--text); cursor:pointer; display:flex; align-items:center; gap:8px; transition:background 0.15s; }
+.user-dropdown-item:hover { background:#f5f5f5; }
+.user-dropdown-item.danger { color:var(--danger); }
+.user-dropdown-divider { height:1px; background:var(--border); margin:4px 0; }
+.date { font-size:13px; color:var(--text-sub); }
+
+.content { flex: 1; padding: 24px; overflow-y: auto; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Reusable Components */
+.card { background:var(--card); border-radius:10px; border:1px solid var(--border); overflow:hidden; }
+.card-head { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:15px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
+.card-body { padding:20px; }
+
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+.stat-card { background:var(--card); border-radius:10px; border:1px solid var(--border); padding:18px 20px; display:flex; align-items:center; gap:14px; }
+.stat-icon { width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.stat-icon.green { background:#e6fff5; }
+.stat-icon.blue { background:#e6f0ff; }
+.stat-icon.orange { background:#fff7e6; }
+.stat-icon.red { background:#fff1f0; }
+.stat-val { font-size:26px; font-weight:700; }
+.stat-name { font-size:12px; color:var(--text-sub); margin-top:2px; }
+.stat-trend { font-size:12px; margin-top:4px; }
+.stat-trend.up { color:var(--success); }
+.stat-trend.down { color:var(--danger); }
+
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th, .data-table td { padding:11px 14px; border-bottom:1px solid var(--border); text-align:left; }
+.data-table th { font-size:12px; color:var(--text-sub); font-weight:500; background:#fafafa; }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr:hover td { background:#f8fff8; }
+
+.tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500; }
+.tag.success { background:#f0fff4; color:var(--success); }
+.tag.warning { background:#fff7e6; color:var(--warning); }
+.tag.danger { background:#fff1f0; color:var(--danger); }
+.tag.info { background:#e6f0ff; color:var(--accent); }
+.tag.gray { background:#f5f5f5; color:#999; }
+.tag.green { background:var(--primary-light); color:var(--primary); }
+
+.btn { padding:7px 16px; border-radius:6px; font-size:13px; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:5px; font-family:inherit; transition:all 0.2s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-accent { background:var(--accent); color:#fff; }
+.btn-accent:hover { background:#0958d9; }
+.btn-outline { background:#fff; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { border-color:var(--primary); color:var(--primary); }
+.btn-warning { background:var(--warning); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-sm { padding:4px 10px; font-size:12px; }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; }
+
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px; }
+.form-item { display:flex; flex-direction:column; gap:5px; }
+.form-item label { font-size:12px; color:var(--text-sub); }
+.form-input { padding:8px 11px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; outline:none; background:#fff; }
+.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 2px rgba(0,135,90,0.1); }
+
+.progress-bar { height:8px; background:#f0f0f0; border-radius:4px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:4px; transition:width 0.5s; }
+
+.alert { padding:12px 16px; border-radius:8px; margin-bottom:12px; display:flex; align-items:flex-start; gap:10px; font-size:13px; }
+.alert.danger { background:#fff1f0; border:1px solid #ffccc7; color:#cf1322; }
+.alert.warning { background:#fffbe6; border:1px solid #ffe58f; color:#d46b08; }
+.alert.success { background:#f6ffed; border:1px solid #b7eb8f; color:#389e0d; }
+.alert.info { background:#e6f4ff; border:1px solid #91caff; color:#0958d9; }
+
+.tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:20px; }
+.tab-item { padding:10px 20px; cursor:pointer; font-size:13px; color:var(--text-sub); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; }
+.tab-item:hover { color:var(--primary); }
+.tab-item.active { color:var(--primary); border-bottom-color:var(--primary); font-weight:500; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; display:none; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal { background:#fff; border-radius:12px; width:700px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-size:16px; font-weight:600; }
+.modal-close { cursor:pointer; font-size:20px; color:var(--text-sub); line-height:1; }
+.modal-body { padding:20px; }
+.modal-foot { padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+
+/* School Card for overview */
+.school-card {
+  background:#fff; border:1px solid var(--border); border-radius:10px;
+  padding:16px; cursor:pointer; transition:all 0.2s;
+}
+.school-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(0,135,90,0.12); transform:translateY(-2px); }
+.school-card .sc-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.school-card .sc-name { font-size:14px; font-weight:600; }
+.school-card .sc-score { font-size:22px; font-weight:700; }
+.school-card .sc-score.excellent { color:var(--success); }
+.school-card .sc-score.good { color:var(--accent); }
+.school-card .sc-score.warning { color:var(--warning); }
+.school-card .sc-meta { font-size:12px; color:var(--text-sub); display:flex; flex-direction:column; gap:5px; }
+.school-card .sc-bar { margin-top:10px; }
+.school-card .sc-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text-sub); margin-bottom:3px; }
+
+/* Ranking */
+.rank-num { width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+.rank-1 { background:#ffd700; color:#7a5c00; }
+.rank-2 { background:#c0c0c0; color:#555; }
+.rank-3 { background:#cd7f32; color:#fff; }
+.rank-other { background:#f0f0f0; color:#999; }
+
+/* Notification */
+.notif-dot { width:7px; height:7px; background:var(--danger); border-radius:50%; display:inline-block; margin-left:5px; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Quick Action */
+.quick-action {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; padding:16px 12px;
+  background:#fff; border:1px solid var(--border); border-radius:10px;
+  cursor:pointer; transition:all 0.2s; text-align:center; min-height:100px;
+}
+.quick-action:hover { border-color:var(--primary); background:var(--primary-light); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,135,90,0.12); }
+.quick-action .qa-icon { font-size:28px; }
+.quick-action .qa-label { font-size:12px; color:var(--text); font-weight:500; }
+
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#d0d0d0; border-radius:3px; }
+
+/* Cost Heatmap */
+.cost-table { width:100%; border-collapse:collapse; font-size:12px; }
+.cost-table th, .cost-table td { padding:8px 12px; border:1px solid var(--border); text-align:center; }
+.cost-table th { background:#fafafa; font-weight:500; }
+.cost-level-1 { background:#e6fff5; color:#00875a; }
+.cost-level-2 { background:#fffbe6; color:#d46b08; }
+.cost-level-3 { background:#fff1f0; color:#cf1322; }
+</style>
+</head>
+<body>
+<div class="app">
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">🏛️</span>
+    <div>
+      <div class="logo-text">智慧食堂监管平台</div>
+      <div class="logo-sub">教育局监管端</div>
+    </div>
+  </div>
+  <div class="sidebar-org">
+    <div class="org-name">🏛️ XX市教育局</div>
+    <div class="org-role">食安监管处 · 张处长</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">首页</div>
+    <div class="nav-item active" onclick="showPage('overview')"><span class="nav-icon">📊</span> 监管总览</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">学校管理</div>
+    <div class="nav-item" onclick="showPage('schools')"><span class="nav-icon">🏫</span> 学校列表</div>
+    <div class="nav-item" onclick="showPage('config')"><span class="nav-icon">⚙️</span> 分类配置</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">数据调取</div>
+    <div class="nav-item" onclick="showPage('data-fetch')"><span class="nav-icon">📂</span> 一键调取资料</div>
+    <div class="nav-item" onclick="showPage('supplier')"><span class="nav-icon">🏢</span> 供应商信息</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">预警监管</div>
+    <div class="nav-item" onclick="showPage('warnings')">
+      <span class="nav-icon">⚠️</span> 预警管理
+      <span class="nav-badge">12</span>
+    </div>
+    <div class="nav-item" onclick="showPage('cost-monitor')"><span class="nav-icon">💰</span> 食材成本监管</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">报表中心</div>
+    <div class="nav-item" onclick="showPage('daily-report')"><span class="nav-icon">📰</span> 日报</div>
+    <div class="nav-item" onclick="showPage('weekly-report')"><span class="nav-icon">📅</span> 周报</div>
+    <div class="nav-item" onclick="showPage('monthly-report')"><span class="nav-icon">📆</span> 月报</div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="header">
+    <div class="header-left">
+      <a href="supervisor.html" class="btn-back">← 返回工作台</a>
+      <div class="breadcrumb" id="breadcrumb">首页 / <span>监管总览</span></div>
+    </div>
+    <div class="header-right">
+      <div class="date" id="headerDate"></div>
+      <div class="user-menu-wrap">
+        <div class="user-info-btn" onclick="toggleUserMenu(this)">
+          <div class="avatar">张</div>
+          <div>
+            <div class="user-name">张管理员</div>
+            <div class="user-role">区教育局管理员</div>
+          </div>
+          <span style="font-size:10px;color:var(--text-sub)">▼</span>
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="user-dropdown-item" onclick="showChangePwd()">🔒 修改密码</div>
+          <div class="user-dropdown-divider"></div>
+          <div class="user-dropdown-item danger" onclick="logout()">🚪 退出登录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ==================== OVERVIEW ==================== -->
+    <div class="page active" id="page-overview">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon green">🏫</div><div><div class="stat-val">28</div><div class="stat-name">监管学校总数</div><div class="stat-trend up">全部在线</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">⚠️</div><div><div class="stat-val" style="color:var(--danger)">12</div><div class="stat-name">待处理预警</div><div class="stat-trend down">需及时处理</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">📊</div><div><div class="stat-val" style="color:var(--accent)">88.6</div><div class="stat-name">全区平均食安评分</div><div class="stat-trend up">较上月+1.8↑</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">💰</div><div><div class="stat-val">75.3%</div><div class="stat-name">全区平均成本占比</div><div class="stat-trend up">处于合理区间</div></div></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><div class="card-title">⚡ 快捷操作</div></div>
+        <div class="card-body">
+          <div class="grid-4">
+            <div class="quick-action" onclick="showPage('data-fetch')"><div class="qa-icon">📂</div><div class="qa-label">一键调取学校资料</div></div>
+            <div class="quick-action" onclick="showPage('warnings')"><div class="qa-icon">⚠️</div><div class="qa-label">查看全部预警 <span class="notif-dot"></span></div></div>
+            <div class="quick-action" onclick="showPage('monthly-report')"><div class="qa-icon">📆</div><div class="qa-label">生成本月月报</div></div>
+            <div class="quick-action" onclick="showPage('cost-monitor')"><div class="qa-icon">💰</div><div class="qa-label">成本监管分析</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-head"><div class="card-title">🏆 本月评分排行（前10）</div><button class="btn btn-sm btn-outline" onclick="showPage('schools')">查看全部</button></div>
+          <div class="card-body" style="padding:0">
+            <table class="data-table">
+              <thead><tr><th>排名</th><th>学校</th><th>评分</th><th>预警数</th><th>评级</th></tr></thead>
+              <tbody>
+                <tr><td><span class="rank-num rank-1">1</span></td><td>实验小学</td><td style="color:var(--success);font-weight:700">92</td><td>1</td><td><span class="tag success">优秀</span></td></tr>
+                <tr><td><span class="rank-num rank-2">2</span></td><td>第一中学</td><td style="color:var(--success);font-weight:700">90</td><td>2</td><td><span class="tag success">优秀</span></td></tr>
+                <tr><td><span class="rank-num rank-3">3</span></td><td>希望小学</td><td style="color:var(--accent);font-weight:700">88</td><td>3</td><td><span class="tag info">良好</span></td></tr>
+                <tr><td><span class="rank-num rank-other">4</span></td><td>育才中学</td><td style="color:var(--accent);font-weight:700">86</td><td>2</td><td><span class="tag info">良好</span></td></tr>
+                <tr><td><span class="rank-num rank-other">5</span></td><td>阳光幼儿园</td><td style="color:var(--accent);font-weight:700">85</td><td>4</td><td><span class="tag info">良好</span></td></tr>
+                <tr><td><span class="rank-num rank-other">…</span></td><td colspan="4" style="color:var(--text-sub);font-size:12px">更多学校 →</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">⚠️ 今日预警汇总</div><button class="btn btn-sm btn-outline" onclick="showPage('warnings')">全部处理</button></div>
+          <div class="card-body" style="padding:14px">
+            <div class="alert danger">🚨 健康证过期：实验小学（1人）、育才中学（2人）</div>
+            <div class="alert warning">⚠️ 食材临期：5所学校有食材临期预警</div>
+            <div class="alert warning">⚠️ 价格预警：猪肉价格异常，影响3所学校</div>
+            <div class="alert info">ℹ️ 留样未完成：第三小学今日午餐留样未录入</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">📊 全区各校评分分布</div></div>
+          <div class="card-body"><canvas id="scoreDistChart" height="200"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">📈 全区食安评分趋势（近6月）</div></div>
+          <div class="card-body"><canvas id="trendChart" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SCHOOLS ==================== -->
+    <div class="page" id="page-schools">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" class="form-input" style="width:220px" placeholder="搜索学校名称…">
+        <select class="form-input" style="width:130px"><option>全部分组</option><option>小学组</option><option>中学组</option><option>幼儿园组</option></select>
+        <select class="form-input" style="width:130px"><option>全部评级</option><option>优秀</option><option>良好</option><option>一般</option><option>待改进</option></select>
+        <select class="form-input" style="width:130px"><option>全部状态</option><option>有预警</option><option>正常</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div class="school-card" onclick="openSchoolDetail('实验小学')">
+          <div class="sc-head"><div class="sc-name">🏫 实验小学</div><div class="sc-score excellent">92</div></div>
+          <div class="sc-meta">
+            <span>小学组 · 850人</span>
+            <span>预警：<span style="color:var(--danger)">1条</span></span>
+          </div>
+          <div class="sc-bar">
+            <div class="sc-bar-label"><span>食安评分</span><span>92/100</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:92%;background:#52c41a"></div></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:6px">
+            <span class="tag success">优秀</span>
+            <span class="tag green">台账完整</span>
+          </div>
+        </div>
+        <div class="school-card" onclick="openSchoolDetail('第一中学')">
+          <div class="sc-head"><div class="sc-name">🏫 第一中学</div><div class="sc-score excellent">90</div></div>
+          <div class="sc-meta"><span>中学组 · 1200人</span><span>预警：<span style="color:var(--warning)">2条</span></span></div>
+          <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>90/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:90%;background:#52c41a"></div></div></div>
+          <div style="margin-top:10px;display:flex;gap:6px"><span class="tag success">优秀</span></div>
+        </div>
+        <div class="school-card" onclick="openSchoolDetail('希望小学')">
+          <div class="sc-head"><div class="sc-name">🏫 希望小学</div><div class="sc-score good">88</div></div>
+          <div class="sc-meta"><span>小学组 · 620人</span><span>预警：<span style="color:var(--warning)">3条</span></span></div>
+          <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>88/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:88%;background:#1677ff"></div></div></div>
+          <div style="margin-top:10px;display:flex;gap:6px"><span class="tag info">良好</span><span class="tag warning">留样待补</span></div>
+        </div>
+        <div class="school-card" onclick="openSchoolDetail('育才中学')">
+          <div class="sc-head"><div class="sc-name">🏫 育才中学</div><div class="sc-score good">86</div></div>
+          <div class="sc-meta"><span>中学组 · 980人</span><span>预警：<span style="color:var(--danger)">4条</span></span></div>
+          <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>86/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:86%;background:#1677ff"></div></div></div>
+          <div style="margin-top:10px;display:flex;gap:6px"><span class="tag info">良好</span><span class="tag danger">健康证过期</span></div>
+        </div>
+        <div class="school-card">
+          <div class="sc-head"><div class="sc-name">🏫 阳光幼儿园</div><div class="sc-score good">85</div></div>
+          <div class="sc-meta"><span>幼儿园组 · 380人</span><span>预警：<span style="color:var(--warning)">2条</span></span></div>
+          <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>85/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:85%;background:#1677ff"></div></div></div>
+          <div style="margin-top:10px"><span class="tag info">良好</span></div>
+        </div>
+        <div class="school-card">
+          <div class="sc-head"><div class="sc-name">🏫 朝阳小学</div><div class="sc-score warning">76</div></div>
+          <div class="sc-meta"><span>小学组 · 450人</span><span>预警：<span style="color:var(--danger)">6条</span></span></div>
+          <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>76/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:76%;background:#faad14"></div></div></div>
+          <div style="margin-top:10px"><span class="tag warning">一般</span><span class="tag danger" style="margin-left:5px">多项预警</span></div>
+        </div>
+        <div class="school-card">
+          <div class="sc-head"><div class="sc-name">🏫 新城中学</div><div class="sc-score good">83</div></div>
+          <div class="sc-meta"><span>中学组 · 760人</span><span>预警：<span style="color:var(--warning)">3条</span></span></div>
+          <div class="sc-bar"><div class="sc-bar-label"><span>食安评分</span><span>83/100</span></div><div class="progress-bar"><div class="progress-fill" style="width:83%;background:#faad14"></div></div></div>
+          <div style="margin-top:10px"><span class="tag warning">一般</span></div>
+        </div>
+        <div class="school-card" style="border:2px dashed #d9d9d9;cursor:default;align-items:center;display:flex;justify-content:center;min-height:150px;flex-direction:column;gap:8px">
+          <div style="font-size:28px">+</div>
+          <div style="font-size:13px;color:var(--text-sub)">还有21所学校</div>
+          <button class="btn btn-outline btn-sm">查看全部</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CONFIG ==================== -->
+    <div class="page" id="page-config">
+      <div class="tabs">
+        <div class="tab-item active" onclick="switchTab(this,'config-tabs','cfg-group')">学校分组配置</div>
+        <div class="tab-item" onclick="switchTab(this,'config-tabs','cfg-ledger')">台账配置</div>
+        <div class="tab-item" onclick="switchTab(this,'config-tabs','cfg-warning')">预警管理配置</div>
+        <div class="tab-item" onclick="switchTab(this,'config-tabs','cfg-product')">采购标品目录</div>
+      </div>
+      <div id="config-tabs">
+        <div class="tab-content active" id="cfg-group">
+          <div class="card">
+            <div class="card-head"><div class="card-title">🏫 学校分组配置</div><button class="btn btn-primary btn-sm">+ 新增分组</button></div>
+            <div class="card-body" style="padding:0">
+              <table class="data-table">
+                <thead><tr><th>分组名称</th><th>适用学段</th><th>学校数量</th><th>管理要求</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr><td>小学组</td><td>小学（6-12岁）</td><td>12所</td><td>营养均衡要求、每日留样2份</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
+                  <tr><td>中学组</td><td>初中+高中（13-18岁）</td><td>10所</td><td>高热量配比、台账每日更新</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
+                  <tr><td>幼儿园组</td><td>幼儿（3-6岁）</td><td>6所</td><td>精细化营养配比、禁用高盐食材</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="cfg-ledger">
+          <div class="card">
+            <div class="card-head"><div class="card-title">📋 台账填报配置</div><div style="font-size:12px;color:var(--text-sub)">配置各分组必填台账项目</div></div>
+            <div class="card-body" style="padding:0">
+              <table class="data-table">
+                <thead><tr><th>台账名称</th><th>小学组</th><th>中学组</th><th>幼儿园组</th><th>填报频率</th></tr></thead>
+                <tbody>
+                  <tr><td>食谱公示</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每日</td></tr>
+                  <tr><td>晨检台账</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每日</td></tr>
+                  <tr><td>留样台账</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每餐</td></tr>
+                  <tr><td>餐具消毒</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td>每日</td></tr>
+                  <tr><td>陪餐记录</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag info">选填</span></td><td>每日</td></tr>
+                  <tr><td>废弃处置</td><td><span class="tag success">必填</span></td><td><span class="tag success">必填</span></td><td><span class="tag info">选填</span></td><td>每次</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="cfg-warning">
+          <div class="card">
+            <div class="card-head"><div class="card-title">⚠️ 预警阈值配置</div></div>
+            <div class="card-body">
+              <div class="grid-2" style="gap:16px">
+                <div>
+                  <div style="font-size:13px;font-weight:500;margin-bottom:10px">食品安全预警</div>
+                  <div class="form-item" style="margin-bottom:10px"><label>健康证提前预警天数</label><input type="number" class="form-input" value="30" placeholder="天数"></div>
+                  <div class="form-item" style="margin-bottom:10px"><label>食材临期预警天数</label><input type="number" class="form-input" value="3" placeholder="天数"></div>
+                  <div class="form-item"><label>留样未录入预警时间（小时）</label><input type="number" class="form-input" value="4"></div>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:500;margin-bottom:10px">价格与成本预警</div>
+                  <div class="form-item" style="margin-bottom:10px"><label>价格涨幅预警阈值（%）</label><input type="number" class="form-input" value="15"></div>
+                  <div class="form-item" style="margin-bottom:10px"><label>成本占比预警阈值（%）</label><input type="number" class="form-input" value="85"></div>
+                  <div class="form-item"><label>人均成本上限（元）</label><input type="number" class="form-input" value="12"></div>
+                </div>
+              </div>
+              <div style="margin-top:16px;display:flex;justify-content:flex-end">
+                <button class="btn btn-primary">保存配置</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="cfg-product">
+          <div class="card">
+            <div class="card-head"><div class="card-title">📦 采购标品目录</div><button class="btn btn-primary btn-sm">+ 添加标品</button></div>
+            <div class="card-body" style="padding:0">
+              <table class="data-table">
+                <thead><tr><th>品类</th><th>标品名称</th><th>参考单价（元）</th><th>参考单位</th><th>适用分组</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>肉类</td><td>猪里脊肉（冰鲜）</td><td>¥20.00</td><td>/kg</td><td>全部</td><td><span class="tag success">启用</span></td></tr>
+                  <tr><td>蔬菜</td><td>菠菜（新鲜）</td><td>¥4.00</td><td>/kg</td><td>全部</td><td><span class="tag success">启用</span></td></tr>
+                  <tr><td>粮油</td><td>大米（5kg/袋）</td><td>¥28.00</td><td>/袋</td><td>全部</td><td><span class="tag success">启用</span></td></tr>
+                  <tr><td>调味</td><td>食用盐（500g）</td><td>¥2.50</td><td>/包</td><td>全部</td><td><span class="tag success">启用</span></td></tr>
+                  <tr><td>蛋类</td><td>鸡蛋（30枚/托）</td><td>¥20.00</td><td>/托</td><td>全部</td><td><span class="tag success">启用</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== DATA FETCH ==================== -->
+    <div class="page" id="page-data-fetch">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><div class="card-title">📂 一键调取学校资料</div></div>
+        <div class="card-body">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+            <select class="form-input" style="width:180px"><option>全部学校</option><option>实验小学</option><option>第一中学</option><option>希望小学</option></select>
+            <input type="date" class="form-input" style="width:160px" value="2026-04-03">
+            <button class="btn btn-primary">🔍 一键调取</button>
+          </div>
+          <div class="alert success">✅ 已调取：实验小学 2026-04-03 相关资料</div>
+          <div class="grid-3">
+            <div class="card" style="border:1px solid #b7eb8f">
+              <div class="card-head" style="background:#f6ffed;padding:10px 14px"><div class="card-title" style="font-size:13px">📰 今日日报</div></div>
+              <div class="card-body" style="padding:12px">
+                <div style="font-size:12px;color:var(--text-sub)">2026-04-03 实验小学日报</div>
+                <div style="font-size:12px;margin-top:6px">食谱：已公示 ✓<br>晨检：8人完成 ✓<br>留样：待录入 ⚠</div>
+                <button class="btn btn-sm btn-outline" style="margin-top:10px;width:100%">📄 查看详情</button>
+              </div>
+            </div>
+            <div class="card" style="border:1px solid #b7eb8f">
+              <div class="card-head" style="background:#f6ffed;padding:10px 14px"><div class="card-title" style="font-size:13px">📅 本周周报</div></div>
+              <div class="card-body" style="padding:12px">
+                <div style="font-size:12px;color:var(--text-sub)">第14周 (3/30-4/3)</div>
+                <div style="font-size:12px;margin-top:6px">营养评级：A ✓<br>食材成本：¥28,640<br>预警：4条</div>
+                <button class="btn btn-sm btn-outline" style="margin-top:10px;width:100%">📄 查看详情</button>
+              </div>
+            </div>
+            <div class="card" style="border:1px solid #91caff">
+              <div class="card-head" style="background:#e6f4ff;padding:10px 14px"><div class="card-title" style="font-size:13px">🗄️ 电子资料柜</div></div>
+              <div class="card-body" style="padding:12px">
+                <div style="font-size:12px;color:var(--text-sub)">2026年4月</div>
+                <div style="font-size:12px;margin-top:6px">台账总数：375条<br>完整率：96.5%<br>待补录：2条</div>
+                <button class="btn btn-sm btn-accent" style="margin-top:10px;width:100%">📂 进入资料柜</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SUPPLIER ==================== -->
+    <div class="page" id="page-supplier">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div class="card-title">🏢 供应商信息管理</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="form-input" style="width:200px" placeholder="搜索供应商…">
+            <button class="btn btn-outline btn-sm">筛选</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>供应商名称</th><th>供货类型</th><th>供货学校</th><th>营业执照</th><th>食品经营许可</th><th>今日配送</th><th>票证状态</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>鲜肉直供中心</td>
+                <td>肉类</td>
+                <td>8所学校</td>
+                <td><span class="tag success">有效 (2027-06)</span></td>
+                <td><span class="tag success">有效</span></td>
+                <td>猪肉 450kg / 鸡肉 200kg</td>
+                <td><span class="tag success">票证齐全</span></td>
+                <td><button class="btn btn-sm btn-outline">查看详情</button></td>
+              </tr>
+              <tr>
+                <td>绿鲜蔬菜基地</td>
+                <td>蔬菜水果</td>
+                <td>15所学校</td>
+                <td><span class="tag success">有效 (2026-12)</span></td>
+                <td><span class="tag success">有效</span></td>
+                <td>菠菜 300kg / 白菜 250kg</td>
+                <td><span class="tag warning">2张待补</span></td>
+                <td><button class="btn btn-sm btn-outline">查看详情</button></td>
+              </tr>
+              <tr>
+                <td>优品粮油配送</td>
+                <td>粮油调味</td>
+                <td>22所学校</td>
+                <td><span class="tag success">有效 (2028-03)</span></td>
+                <td><span class="tag success">有效</span></td>
+                <td>大米 500kg / 食用油 200L</td>
+                <td><span class="tag success">票证齐全</span></td>
+                <td><button class="btn btn-sm btn-outline">查看详情</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== WARNINGS ==================== -->
+    <div class="page" id="page-warnings">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon red">🚨</div><div><div class="stat-val" style="color:var(--danger)">3</div><div class="stat-name">健康证过期</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">⏰</div><div><div class="stat-val" style="color:var(--warning)">5</div><div class="stat-name">食材临期预警</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">💰</div><div><div class="stat-val" style="color:var(--warning)">3</div><div class="stat-name">价格预警</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">🧪</div><div><div class="stat-val" style="color:var(--warning)">1</div><div class="stat-name">留样未完成</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">⚠️ 全区预警管理</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-input" style="width:140px;padding:6px 10px"><option>全部类型</option><option>食安预警</option><option>价格预警</option><option>成本预警</option></select>
+            <select class="form-input" style="width:130px;padding:6px 10px"><option>全部学校</option><option>实验小学</option><option>育才中学</option></select>
+            <select class="form-input" style="width:110px;padding:6px 10px"><option>全部状态</option><option>待处理</option><option>催办中</option><option>已处理</option></select>
+            <button class="btn btn-warning btn-sm">📣 批量催办</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>预警时间</th><th>学校</th><th>预警类型</th><th>预警内容</th><th>紧急程度</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>2026-04-03</td><td>实验小学</td>
+                <td><span class="tag danger">健康证</span></td>
+                <td>张厨师健康证过期2天</td>
+                <td><span class="tag danger">紧急</span></td>
+                <td><span class="tag danger">待处理</span></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-sm btn-warning">催办</button>
+                    <button class="btn btn-sm btn-outline">查看</button>
+                    <button class="btn btn-sm btn-outline">关闭</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026-04-03</td><td>育才中学</td>
+                <td><span class="tag danger">健康证</span></td>
+                <td>李师傅、王师傅健康证过期</td>
+                <td><span class="tag danger">紧急</span></td>
+                <td><span class="tag warning">催办中</span></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-sm btn-outline">再催办</button>
+                    <button class="btn btn-sm btn-outline">查看</button>
+                    <button class="btn btn-sm btn-outline">关闭</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026-04-03</td><td>希望小学</td>
+                <td><span class="tag warning">食材临期</span></td>
+                <td>豆腐（10kg）2天后到期</td>
+                <td><span class="tag warning">较急</span></td>
+                <td><span class="tag warning">待处理</span></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-sm btn-warning">催办</button>
+                    <button class="btn btn-sm btn-outline">查看</button>
+                    <button class="btn btn-sm btn-outline">关闭</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026-04-03</td><td>实验小学</td>
+                <td><span class="tag info">价格预警</span></td>
+                <td>猪肉采购价¥24，超基准价20%</td>
+                <td><span class="tag info">提醒</span></td>
+                <td><span class="tag gray">已处理</span></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-sm btn-outline">查看</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026-04-03</td><td>第三小学</td>
+                <td><span class="tag warning">留样预警</span></td>
+                <td>今日午餐留样未录入</td>
+                <td><span class="tag warning">较急</span></td>
+                <td><span class="tag danger">待处理</span></td>
+                <td>
+                  <div style="display:flex;gap:5px">
+                    <button class="btn btn-sm btn-warning">催办</button>
+                    <button class="btn btn-sm btn-outline">查看</button>
+                    <button class="btn btn-sm btn-outline">关闭</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== COST MONITOR ==================== -->
+    <div class="page" id="page-cost-monitor">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div class="card-title">💰 食材成本监管</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-input" style="width:140px;padding:6px 10px"><option>2025-2026学年</option><option>上学年</option></select>
+            <select class="form-input" style="width:110px;padding:6px 10px"><option>按月统计</option><option>按学期统计</option></select>
+            <button class="btn btn-outline btn-sm">📤 导出</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="grid-2" style="margin-bottom:16px;align-items:start">
+            <div>
+              <div style="font-size:13px;font-weight:500;margin-bottom:12px">全区各校本月人均食材成本（元）</div>
+              <canvas id="costCompareChart" height="180"></canvas>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div style="font-size:13px;font-weight:500;margin-bottom:12px;align-self:flex-start">食材成本品类占比</div>
+              <canvas id="costPieChart" width="300" height="300"></canvas>
+            </div>
+          </div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:12px">各校本学期成本统计</div>
+          <table class="cost-table">
+            <thead><tr><th>学校</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th><th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>学期均值</th></tr></thead>
+            <tbody>
+              <tr><td>实验小学</td><td class="cost-level-1">6.2</td><td class="cost-level-1">6.4</td><td class="cost-level-1">6.5</td><td class="cost-level-2">7.1</td><td class="cost-level-1">6.3</td><td class="cost-level-1">6.5</td><td class="cost-level-1">6.7</td><td class="cost-level-2">6.9</td><td>6.58</td></tr>
+              <tr><td>第一中学</td><td class="cost-level-1">7.1</td><td class="cost-level-2">7.8</td><td class="cost-level-1">7.2</td><td class="cost-level-2">7.9</td><td class="cost-level-1">7.0</td><td class="cost-level-1">7.3</td><td class="cost-level-2">7.6</td><td class="cost-level-2">7.8</td><td>7.46</td></tr>
+              <tr><td>朝阳小学</td><td class="cost-level-2">6.9</td><td class="cost-level-3">9.2</td><td class="cost-level-2">7.4</td><td class="cost-level-3">8.8</td><td class="cost-level-2">7.2</td><td class="cost-level-3">9.0</td><td class="cost-level-3">8.5</td><td class="cost-level-3">8.8</td><td>8.23</td></tr>
+              <tr><td>希望小学</td><td class="cost-level-1">5.8</td><td class="cost-level-1">6.0</td><td class="cost-level-1">5.9</td><td class="cost-level-1">6.3</td><td class="cost-level-1">5.9</td><td class="cost-level-1">6.1</td><td class="cost-level-1">6.2</td><td class="cost-level-1">6.4</td><td>6.08</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;display:flex;gap:16px;font-size:12px;color:var(--text-sub)">
+            <span><span style="display:inline-block;width:12px;height:12px;background:#e6fff5;border:1px solid #b7eb8f;border-radius:2px;margin-right:4px"></span>合理 (&lt;7元)</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#fffbe6;border:1px solid #ffe58f;border-radius:2px;margin-right:4px"></span>偏高 (7-9元)</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#fff1f0;border:1px solid #ffccc7;border-radius:2px;margin-right:4px"></span>超标 (&gt;9元)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== DAILY REPORT ==================== -->
+    <div class="page" id="page-daily-report">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📰 日报 - 2026年4月3日</div>
+          <div style="display:flex;gap:8px">
+            <input type="date" class="form-input" style="width:160px;padding:6px 10px" value="2026-04-03">
+            <button class="btn btn-primary btn-sm">🔄 生成日报</button>
+            <button class="btn btn-outline btn-sm" onclick="exportSupervisorDailyPDF()">📤 导出PDF</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="background:#f0fff5;border-left:4px solid var(--primary);padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:20px">
+            <div style="font-size:15px;font-weight:600;color:var(--primary)">XX市教育局学校食堂日报 — 2026年4月3日（周五）</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px">覆盖学校 28 所 | 生成时间：18:00</div>
+          </div>
+          <div class="grid-3" style="gap:16px">
+            <div style="background:#f0fff4;border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:700;color:var(--success)">26/28</div>
+              <div style="font-size:12px;color:var(--text-sub);margin-top:4px">食谱已公示</div>
+            </div>
+            <div style="background:#fff7e6;border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:700;color:var(--warning)">12</div>
+              <div style="font-size:12px;color:var(--text-sub);margin-top:4px">待处理预警</div>
+            </div>
+            <div style="background:#e6f4ff;border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:700;color:var(--accent)">25/28</div>
+              <div style="font-size:12px;color:var(--text-sub);margin-top:4px">留样已完成</div>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">今日各校状态汇总</div>
+            <table class="data-table">
+              <thead><tr><th>学校</th><th>食谱公示</th><th>晨检</th><th>留样</th><th>餐具消毒</th><th>预警数</th><th>状态</th></tr></thead>
+              <tbody>
+                <tr><td>实验小学</td><td>✅</td><td>✅</td><td>⚠️ 待录入</td><td>✅</td><td><span style="color:var(--danger)">1</span></td><td><span class="tag warning">注意</span></td></tr>
+                <tr><td>第一中学</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>0</td><td><span class="tag success">正常</span></td></tr>
+                <tr><td>希望小学</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td><span style="color:var(--warning)">2</span></td><td><span class="tag warning">注意</span></td></tr>
+                <tr><td>第三小学</td><td>✅</td><td>✅</td><td>❌ 未录入</td><td>✅</td><td><span style="color:var(--danger)">2</span></td><td><span class="tag danger">异常</span></td></tr>
+                <tr><td>育才中学</td><td>✅</td><td>✅</td><td>✅</td><td>⚠️ 待填写</td><td><span style="color:var(--danger)">3</span></td><td><span class="tag danger">异常</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== WEEKLY REPORT ==================== -->
+    <div class="page" id="page-weekly-report">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📅 周报 - 第14周（3/30-4/3）</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-input" style="width:200px;padding:6px 10px"><option>第14周（3/30-4/3）</option><option>第13周（3/23-3/27）</option></select>
+            <button class="btn btn-primary btn-sm">🔄 生成周报</button>
+            <button class="btn btn-outline btn-sm">📤 导出</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="background:#f0fff5;border-left:4px solid var(--primary);padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:20px">
+            <div style="font-size:15px;font-weight:600;color:var(--primary)">XX市教育局学校食堂周报 — 第14周（2026年3月30日-4月3日）</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px">覆盖28所学校 | 自动汇总生成</div>
+          </div>
+          <div class="grid-2" style="gap:16px">
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px">一、食谱公示与营养分析汇总</div>
+              <table class="data-table">
+                <thead><tr><th>指标</th><th>本周</th><th>上周</th><th>变化</th></tr></thead>
+                <tbody>
+                  <tr><td>食谱公示率</td><td>96.4%</td><td>94.2%</td><td style="color:var(--success)">+2.2%↑</td></tr>
+                  <tr><td>营养A级达标率</td><td>85.7%</td><td>82.1%</td><td style="color:var(--success)">+3.6%↑</td></tr>
+                  <tr><td>营养B级学校</td><td>4所</td><td>5所</td><td style="color:var(--success)">减少1所</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px">二、食材采购入库出库汇总</div>
+              <table class="data-table">
+                <thead><tr><th>类别</th><th>入库总量</th><th>出库总量</th><th>期末库存</th></tr></thead>
+                <tbody>
+                  <tr><td>肉类</td><td>8,400kg</td><td>7,850kg</td><td>550kg</td></tr>
+                  <tr><td>蔬菜</td><td>12,600kg</td><td>12,400kg</td><td>200kg</td></tr>
+                  <tr><td>粮油</td><td>5,200kg</td><td>4,800kg</td><td>400kg</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px">三、票证数据</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+                本周各校共上传票证 <strong>426</strong> 张，票证完整率 <strong>94.8%</strong>，待补传 <strong>22</strong> 张，已催办处理中。
+              </div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px">四、食堂日常预警汇总</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+                本周全区共产生预警 <strong>38</strong> 条：已处理 <strong>26</strong> 条（68.4%），催办中 <strong>8</strong> 条，待处理 <strong>4</strong> 条。健康证类预警需重点关注。
+              </div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px">五、食材成本分析</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+                全区本周食材总成本 <strong>¥826,400</strong>，日均 <strong>¥165,280</strong>，人均日成本 <strong>¥6.89</strong>（按24,000人计）。较上周上涨2.8%，猪肉价格上涨为主因，已发出价格预警3条。
+              </div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px">六、留样与陪餐</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+                全区应留样 <strong>280</strong> 份，实际完成 <strong>272</strong> 份（97.1%）。本周各校陪餐 <strong>140</strong> 次，行政陪餐比例96.4%，符合要求。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MONTHLY REPORT ==================== -->
+    <div class="page" id="page-monthly-report">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📆 月报 - 2026年3月</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-input" style="width:140px;padding:6px 10px"><option>2026年3月</option><option>2026年2月</option><option>2026年1月</option></select>
+            <button class="btn btn-primary btn-sm">🔄 生成月报</button>
+            <button class="btn btn-outline btn-sm" onclick="exportSupervisorWeeklyPDF()">📤 导出PDF</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="background:#f0fff5;border-left:4px solid var(--primary);padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:20px">
+            <div style="font-size:15px;font-weight:600;color:var(--primary)">XX市教育局学校食堂月报 — 2026年3月</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px">统计周期：2026-03-01 至 2026-03-31 | 覆盖28所学校</div>
+          </div>
+          <div class="grid-2" style="gap:16px;margin-bottom:16px">
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">📊 月度核心指标</div></div>
+              <div class="card-body" style="padding:14px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div style="background:#f0fff4;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--success)">88.6</div><div style="font-size:11px;color:var(--text-sub)">全区平均评分</div></div>
+                  <div style="background:#e6f4ff;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent)">94.2%</div><div style="font-size:11px;color:var(--text-sub)">食谱公示率</div></div>
+                  <div style="background:#fff7e6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--warning)">138</div><div style="font-size:11px;color:var(--text-sub)">本月预警总数</div></div>
+                  <div style="background:#f0fff4;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--success)">84.1%</div><div style="font-size:11px;color:var(--text-sub)">预警处理率</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">📈 月度评分趋势</div></div>
+              <div class="card-body" style="padding:14px"><canvas id="monthlyScoreChart" height="140"></canvas></div>
+            </div>
+          </div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">各校本月综合评分</div>
+          <table class="data-table">
+            <thead><tr><th>学校</th><th>分组</th><th>食谱公示率</th><th>台账完整率</th><th>预警处理率</th><th>综合评分</th><th>评级</th><th>较上月</th></tr></thead>
+            <tbody>
+              <tr><td>实验小学</td><td>小学组</td><td>100%</td><td>96.5%</td><td>80%</td><td style="color:var(--success);font-weight:700">92</td><td><span class="tag success">优秀</span></td><td style="color:var(--success)">+3↑</td></tr>
+              <tr><td>第一中学</td><td>中学组</td><td>98%</td><td>97.2%</td><td>88%</td><td style="color:var(--success);font-weight:700">90</td><td><span class="tag success">优秀</span></td><td style="color:var(--success)">+1↑</td></tr>
+              <tr><td>希望小学</td><td>小学组</td><td>96%</td><td>93.8%</td><td>75%</td><td style="color:var(--accent);font-weight:700">88</td><td><span class="tag info">良好</span></td><td style="color:var(--success)">+2↑</td></tr>
+              <tr><td>朝阳小学</td><td>小学组</td><td>86%</td><td>82.1%</td><td>62%</td><td style="color:var(--warning);font-weight:700">76</td><td><span class="tag warning">一般</span></td><td style="color:var(--danger)">-2↓</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- School Detail Modal -->
+<div class="modal-overlay" id="modal-school" onclick="closeModal(event,'modal-school')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="schoolModalTitle">学校详情</div>
+      <div class="modal-close" onclick="closeModalById('modal-school')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="tabs">
+        <div class="tab-item active" onclick="switchTab(this,'school-tabs','st-overview')">概览</div>
+        <div class="tab-item" onclick="switchTab(this,'school-tabs','st-ledger')">电子资料柜</div>
+        <div class="tab-item" onclick="switchTab(this,'school-tabs','st-warning')">预警记录</div>
+        <div class="tab-item" onclick="switchTab(this,'school-tabs','st-report')">周报</div>
+      </div>
+      <div id="school-tabs">
+        <div class="tab-content active" id="st-overview">
+          <div class="grid-2" style="gap:12px">
+            <div style="background:#f5f5f5;border-radius:8px;padding:12px"><div style="font-size:12px;color:var(--text-sub)">本月综合评分</div><div style="font-size:24px;font-weight:700;color:var(--success)">92</div></div>
+            <div style="background:#f5f5f5;border-radius:8px;padding:12px"><div style="font-size:12px;color:var(--text-sub)">待处理预警</div><div style="font-size:24px;font-weight:700;color:var(--danger)">1</div></div>
+          </div>
+        </div>
+        <div class="tab-content" id="st-ledger">
+          <div class="alert info">📂 点击查看该校电子资料柜，可调取台账资料</div>
+          <button class="btn btn-primary">进入电子资料柜</button>
+        </div>
+        <div class="tab-content" id="st-warning">
+          <div class="alert danger">🚨 健康证过期：张厨师（2026-03-30 到期）</div>
+        </div>
+        <div class="tab-content" id="st-report">
+          <div class="alert success">✅ 第14周周报已上报，点击查看详情</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-school')">关闭</button>
+      <button class="btn btn-warning">发送催办通知</button>
+      <button class="btn btn-primary">进入学校管理端</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const pages = {
+  'overview':'监管总览','schools':'学校列表','config':'分类配置',
+  'data-fetch':'一键调取资料','supplier':'供应商信息',
+  'warnings':'预警管理','cost-monitor':'食材成本监管',
+  'daily-report':'日报','weekly-report':'周报','monthly-report':'月报'
+};
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+id+"'")) n.classList.add('active');
+  });
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>'+pages[id]+'</span>';
+  setTimeout(initCharts, 100);
+  // 每次切换页面时更新日期
+  initDates();
+}
+function updateDate() {
+  const d = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  document.getElementById('headerDate').textContent = d;
+}
+updateDate();
+
+// 初始化所有动态日期
+function initDates() {
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const monthStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月';
+  
+  // 设置所有日期输入框
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.value = today;
+  });
+  
+  // 更新日期下拉选项
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const yestStr = yesterday.toISOString().slice(0, 10);
+  
+  document.querySelectorAll('select option').forEach(opt => {
+    let text = opt.textContent;
+    text = text.replace(/2026-04-03/g, today);
+    text = text.replace(/2026-04-02/g, yestStr);
+    text = text.replace(/\d{4}年\d+月/g, monthStr);
+    opt.textContent = text;
+  });
+  
+  // 动态更新表格中的日期
+  const dateCells = document.querySelectorAll('table td');
+  dateCells.forEach(cell => {
+    const text = cell.textContent;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text.trim())) {
+      cell.textContent = today;
+    }
+  });
+  
+  // 更新日报标题
+  document.querySelectorAll('.card-title').forEach(title => {
+    if (title.textContent.includes('日报') && title.textContent.includes('实验小学')) {
+      const parent = title.closest('.card');
+      if (parent) {
+        const subtitle = parent.querySelector('[style*="font-size:12px"]');
+        if (subtitle) {
+          subtitle.textContent = today + ' 实验小学日报';
+        }
+      }
+    }
+  });
+  
+  // 更新预警日期
+  document.querySelectorAll('#page-warnings td:first-child').forEach(cell => {
+    const text = cell.textContent;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text.trim())) {
+      cell.textContent = today;
+    }
+  });
+  
+  // 更新今日日报标题
+  document.querySelectorAll('[style*="font-size:12px"]').forEach(el => {
+    if (el.textContent.includes('日报')) {
+      el.textContent = el.textContent.replace(/\d{4}-\d{2}-\d{2}/, today);
+    }
+  });
+}
+
+// 页面加载时初始化日期
+document.addEventListener('DOMContentLoaded', function() {
+  initDates();
+});
+
+function switchTab(el, cid, tid) {
+  const parent = el.closest('.tabs')||el.parentElement;
+  parent.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const c=document.getElementById(cid);
+  if(c) c.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+  const t=document.getElementById(tid);
+  if(t) t.classList.add('active');
+}
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(e,id){if(e.target===e.currentTarget)document.getElementById(id).classList.remove('active');}
+function closeModalById(id){document.getElementById(id).classList.remove('active');}
+function openSchoolDetail(name){
+  document.getElementById('schoolModalTitle').textContent=name+' — 学校详情';
+  openModal('modal-school');
+}
+
+let chartsInited={};
+function initCharts(){
+  const ap=document.querySelector('.page.active').id;
+  if(ap==='page-overview'&&!chartsInited['ov']){
+    const c1=document.getElementById('scoreDistChart');
+    if(c1){
+      new Chart(c1,{type:'bar',data:{labels:['优秀(90+)','良好(80-90)','一般(70-80)','待改进(<70)'],datasets:[{data:[5,16,5,2],backgroundColor:['#52c41a','#1677ff','#faad14','#ff4d4f'],borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:5}}}}});
+      chartsInited['ov']=true;
+    }
+    const c2=document.getElementById('trendChart');
+    if(c2){
+      new Chart(c2,{type:'line',data:{labels:['10月','11月','12月','1月','2月','3月'],datasets:[{label:'全区平均评分',data:[82.1,84.3,85.6,85.2,86.8,88.6],borderColor:'#00875a',backgroundColor:'rgba(0,135,90,0.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#00875a'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:75,max:95}}}});
+    }
+  }
+  if(ap==='page-cost-monitor'&&!chartsInited['cm']){
+    const c3=document.getElementById('costCompareChart');
+    if(c3){
+      new Chart(c3,{type:'bar',data:{labels:['实验小学','第一中学','希望小学','育才中学','朝阳小学','阳光幼儿园'],datasets:[{label:'人均成本(元)',data:[6.85,7.6,6.2,7.2,8.8,6.4],backgroundColor:['#52c41a','#faad14','#52c41a','#faad14','#ff4d4f','#52c41a'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'¥'+v}}}}});
+      chartsInited['cm']=true;
+    }
+    const c4=document.getElementById('costPieChart');
+    if(c4){
+      new Chart(c4,{type:'doughnut',data:{labels:['肉类','蔬菜水果','粮油','其他'],datasets:[{data:[38,28,24,10],backgroundColor:['#ff7a45','#52c41a','#faad14','#1677ff']}]},options:{responsive:false,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:12}}}}}});
+    }
+  }
+  if(ap==='page-monthly-report'&&!chartsInited['mr']){
+    const c5=document.getElementById('monthlyScoreChart');
+    if(c5){
+      new Chart(c5,{type:'line',data:{labels:['9月','10月','11月','12月','1月','2月','3月'],datasets:[{label:'平均评分',data:[82.1,83.5,85.6,84.8,85.2,86.8,88.6],borderColor:'#00875a',backgroundColor:'rgba(0,135,90,0.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#00875a'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:75,max:95}}}});
+      chartsInited['mr']=true;
+    }
+  }
+}
+setTimeout(initCharts,300);
+
+// ===== 用户下拉菜单 =====
+function toggleUserMenu(btn) {
+  const dd = document.getElementById('userDropdown');
+  const isOpen = dd.classList.contains('show');
+  dd.classList.toggle('show');
+  if (!isOpen) {
+    document.addEventListener('click', function closeDropdown(e) {
+      if (!btn.parentElement.contains(e.target)) {
+        dd.classList.remove('show');
+        document.removeEventListener('click', closeDropdown);
+      }
+    });
+  }
+}
+
+// ===== 退出登录确认弹窗 =====
+function showLogoutConfirm() {
+  document.getElementById('userDropdown').classList.remove('show');
+  document.getElementById('modalLogoutConfirm').style.display = 'flex';
+}
+function closeLogoutConfirm() {
+  document.getElementById('modalLogoutConfirm').style.display = 'none';
+}
+function confirmLogout() {
+  window.location.href = 'index.html';
+}
+
+// ===== 退出登录 =====
+function logout() {
+  showLogoutConfirm();
+}
+
+// ===== 修改密码 =====
+function showChangePwd() {
+  document.getElementById('userDropdown').classList.remove('show');
+  document.getElementById('modalChangePwd').style.display = 'flex';
+  document.getElementById('oldPwd').value = '';
+  document.getElementById('newPwd').value = '';
+  document.getElementById('confirmPwd').value = '';
+  document.getElementById('pwdMsg').style.display = 'none';
+}
+function doChangePwd() {
+  const oldPwd = document.getElementById('oldPwd').value;
+  const newPwd = document.getElementById('newPwd').value;
+  const confirmPwd = document.getElementById('confirmPwd').value;
+  const msg = document.getElementById('pwdMsg');
+  if (!oldPwd || !newPwd || !confirmPwd) {
+    msg.textContent = '⚠️ 请填写所有字段'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; return;
+  }
+  if (newPwd.length < 6) {
+    msg.textContent = '⚠️ 新密码长度不能少于6位'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; return;
+  }
+  if (newPwd !== confirmPwd) {
+    msg.textContent = '⚠️ 两次输入的新密码不一致'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; return;
+  }
+  msg.textContent = '✅ 密码修改成功！'; msg.style.color = 'var(--success)'; msg.style.display = 'block';
+  setTimeout(() => { document.getElementById('modalChangePwd').style.display = 'none'; }, 1500);
+}
+</script>
+  <!-- 退出登录确认弹窗 -->
+  <div id="modalLogoutConfirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;width:380px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+      <div style="padding:24px 24px 20px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="width:52px;height:52px;background:#fff2f0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px">🚪</div>
+          <div style="font-size:17px;font-weight:600;margin-bottom:8px">确认退出登录</div>
+          <div style="font-size:13px;color:var(--text-sub)">退出后将返回登录页面</div>
+        </div>
+      </div>
+      <div style="display:flex;border-top:1px solid var(--border)">
+        <button onclick="closeLogoutConfirm()" style="flex:1;padding:14px;border:none;background:#fff;font-size:14px;cursor:pointer;color:var(--text);border-right:1px solid var(--border)">取消</button>
+        <button onclick="confirmLogout()" style="flex:1;padding:14px;border:none;background:#fff;font-size:14px;cursor:pointer;color:#ff4d4f;font-weight:500">确认退出</button>
+      </div>
+    </div>
+  </div>
+  <!-- 修改密码弹窗 -->
+  <div id="modalChangePwd" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;width:400px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+      <div style="font-size:16px;font-weight:600;margin-bottom:20px">🔒 修改密码</div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;color:var(--text-sub);margin-bottom:4px">当前密码</div>
+        <input id="oldPwd" type="password" class="form-input" placeholder="请输入当前密码" style="width:100%">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;color:var(--text-sub);margin-bottom:4px">新密码</div>
+        <input id="newPwd" type="password" class="form-input" placeholder="请输入新密码" style="width:100%">
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;color:var(--text-sub);margin-bottom:4px">确认新密码</div>
+        <input id="confirmPwd" type="password" class="form-input" placeholder="请再次输入新密码" style="width:100%">
+      </div>
+      <div id="pwdMsg" style="font-size:12px;margin-bottom:12px;display:none"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-outline" onclick="document.getElementById('modalChangePwd').style.display='none'">取消</button>
+        <button class="btn btn-primary" onclick="doChangePwd()">确认修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF导出进度提示 -->
+  <div id="pdfExportProgress" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;min-width:280px">
+      <div style="font-size:32px;margin-bottom:16px">📄</div>
+      <div id="pdfExportText" style="font-size:15px;font-weight:500;margin-bottom:12px">正在生成PDF...</div>
+      <div style="width:200px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin:0 auto">
+        <div id="pdfProgressBar" style="width:0%;height:100%;background:#00875a;transition:width 0.3s"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ===== 监管端PDF导出功能 =====
+
+// 导出日报PDF
+async function exportSupervisorDailyPDF() {
+  const progressEl = document.getElementById('pdfExportProgress');
+  const textEl = document.getElementById('pdfExportText');
+  const barEl = document.getElementById('pdfProgressBar');
+
+  progressEl.style.display = 'flex';
+  textEl.textContent = '正在生成日报...';
+  barEl.style.width = '30%';
+
+  try {
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    await new Promise(r => setTimeout(r, 300));
+    barEl.style.width = '50%';
+
+    const page = pdfDoc.addPage([595.28, 841.89]);
+    const { width, height } = page.getSize();
+
+    // 标题
+    page.drawRectangle({ x: 0, y: height - 100, width: width, height: 100, color: rgb(0, 0.53, 0.35) });
+    const title = '教育局监管日报';
+    const titleWidth = boldFont.widthOfTextAtSize(title, 24);
+    page.drawText(title, { x: (width - titleWidth) / 2, y: height - 60, size: 24, font: boldFont, color: rgb(1, 1, 1) });
+
+    barEl.style.width = '70%';
+    await new Promise(r => setTimeout(r, 300));
+
+    // 日报内容
+    const contentY = height - 180;
+    page.drawText('报告日期：2026年4月3日', { x: 50, y: contentY, size: 12, font: font });
+    page.drawText('数据来源：全区30所学校', { x: 50, y: contentY - 30, size: 12, font: font });
+
+    // 数据表格
+    page.drawText('一、预警统计', { x: 50, y: contentY - 70, size: 14, font: boldFont });
+    page.drawText('• 待处理预警：8 条', { x: 60, y: contentY - 95, size: 11, font: font });
+    page.drawText('• 已处理预警：22 条', { x: 60, y: contentY - 115, size: 11, font: font });
+
+    page.drawText('二、食安评分', { x: 50, y: contentY - 150, size: 14, font: boldFont });
+    page.drawText('• 平均评分：96.8 分', { x: 60, y: contentY - 175, size: 11, font: font });
+    page.drawText('• 优秀学校：18 所', { x: 60, y: contentY - 195, size: 11, font: font });
+
+    barEl.style.width = '90%';
+    await new Promise(r => setTimeout(r, 300));
+
+    // 下载
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '教育局日报_20260403.pdf';
+    link.click();
+    URL.revokeObjectURL(url);
+
+    barEl.style.width = '100%';
+    textEl.textContent = '导出成功！';
+    setTimeout(() => { progressEl.style.display = 'none'; }, 1000);
+
+  } catch (error) {
+    console.error('PDF导出失败:', error);
+    textEl.textContent = '导出失败，请重试';
+    progressEl.style.display = 'none';
+  }
+}
+
+// 导出周报PDF
+async function exportSupervisorWeeklyPDF() {
+  const progressEl = document.getElementById('pdfExportProgress');
+  const textEl = document.getElementById('pdfExportText');
+  const barEl = document.getElementById('pdfProgressBar');
+
+  progressEl.style.display = 'flex';
+  textEl.textContent = '正在生成周报...';
+  barEl.style.width = '30%';
+
+  try {
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    await new Promise(r => setTimeout(r, 300));
+    barEl.style.width = '50%';
+
+    const page = pdfDoc.addPage([595.28, 841.89]);
+    const { width, height } = page.getSize();
+
+    // 标题
+    page.drawRectangle({ x: 0, y: height - 100, width: width, height: 100, color: rgb(0, 0.53, 0.35) });
+    const title = '教育局监管周报';
+    const titleWidth = boldFont.widthOfTextAtSize(title, 24);
+    page.drawText(title, { x: (width - titleWidth) / 2, y: height - 60, size: 24, font: boldFont, color: rgb(1, 1, 1) });
+
+    barEl.style.width = '70%';
+    await new Promise(r => setTimeout(r, 300));
+
+    // 周报内容
+    const contentY = height - 180;
+    page.drawText('报告周期：2026年第14周（3月30日 - 4月3日）', { x: 50, y: contentY, size: 12, font: font });
+    page.drawText('一、全区概况', { x: 50, y: contentY - 50, size: 14, font: boldFont });
+    page.drawText('• 学校总数：30 所', { x: 60, y: contentY - 75, size: 11, font: font });
+    page.drawText('• 本周用餐人次：85,650 人次', { x: 60, y: contentY - 95, size: 11, font: font });
+    page.drawText('• 平均食安评分：96.8 分', { x: 60, y: contentY - 115, size: 11, font: font });
+
+    page.drawText('二、预警处置', { x: 50, y: contentY - 150, size: 14, font: boldFont });
+    page.drawText('• 新增预警：12 条', { x: 60, y: contentY - 175, size: 11, font: font });
+    page.drawText('• 已处理：10 条', { x: 60, y: contentY - 195, size: 11, font: font });
+    page.drawText('• 待处理：2 条', { x: 60, y: contentY - 215, size: 11, font: font });
+
+    barEl.style.width = '90%';
+    await new Promise(r => setTimeout(r, 300));
+
+    // 下载
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '教育局周报_2026第14周.pdf';
+    link.click();
+    URL.revokeObjectURL(url);
+
+    barEl.style.width = '100%';
+    textEl.textContent = '导出成功！';
+    setTimeout(() => { progressEl.style.display = 'none'; }, 1000);
+
+  } catch (error) {
+    console.error('PDF导出失败:', error);
+    textEl.textContent = '导出失败，请重试';
+    progressEl.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>

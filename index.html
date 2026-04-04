@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智慧食堂监管平台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Microsoft YaHei', sans-serif; min-height: 100vh; display: flex; overflow: hidden; }
+
+  /* ========== 科技感背景 ========== */
+  .bg-wrap { position: fixed; inset: 0; background: #060e1e; z-index: 0; overflow: hidden; }
+  .bg-wrap::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,100,200,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(0,180,100,0.1) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 0%, rgba(0,80,160,0.12) 0%, transparent 50%);
+  }
+  /* 网格线 */
+  .grid-lines {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,188,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,188,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  /* 动态圆环 */
+  .ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(0,188,255,0.12);
+    animation: ringPulse 6s ease-in-out infinite;
+  }
+  .ring-1 { width: 400px; height: 400px; top: 50%; left: -100px; transform: translateY(-50%); animation-delay: 0s; }
+  .ring-2 { width: 600px; height: 600px; top: 50%; left: -200px; transform: translateY(-50%); animation-delay: 2s; }
+  .ring-3 { width: 300px; height: 300px; bottom: -50px; right: 10%; animation-delay: 1s; border-color: rgba(0,230,118,0.1); }
+  .ring-4 { width: 500px; height: 500px; bottom: -150px; right: -50px; animation-delay: 3s; border-color: rgba(0,230,118,0.08); }
+  @keyframes ringPulse {
+    0%,100% { opacity: 0.4; transform: translateY(-50%) scale(1); }
+    50% { opacity: 1; transform: translateY(-50%) scale(1.05); }
+  }
+  /* 粒子点 */
+  .dot { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(0,188,255,0.5); animation: dotFloat 8s ease-in-out infinite; }
+  .dot:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
+  .dot:nth-child(2) { top: 70%; left: 25%; animation-delay: 1.5s; }
+  .dot:nth-child(3) { top: 30%; left: 60%; animation-delay: 3s; background: rgba(0,230,118,0.5); }
+  .dot:nth-child(4) { top: 80%; left: 70%; animation-delay: 4.5s; background: rgba(0,230,118,0.5); }
+  .dot:nth-child(5) { top: 45%; left: 85%; animation-delay: 2s; }
+  @keyframes dotFloat { 0%,100%{transform:translateY(0);opacity:0.4} 50%{transform:translateY(-20px);opacity:1} }
+  /* 底部数据流动条 */
+  .data-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(0,188,255,0.6), rgba(0,230,118,0.6), transparent); animation: dataFlow 4s linear infinite; }
+  @keyframes dataFlow { 0%{background-position: -100% 0} 100%{background-position: 200% 0} }
+  /* 背景装饰文字 */
+  .bg-deco-text {
+    position: absolute; font-size: 120px; font-weight: 900; color: rgba(255,255,255,0.015);
+    user-select: none; white-space: nowrap;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    letter-spacing: 10px;
+  }
+
+  /* ========== 登录页 ========== */
+  .login-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(6,14,30,0.7); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: rgba(10,22,48,0.85); border: 1px solid rgba(0,188,255,0.25);
+    border-radius: 20px; padding: 40px 44px; width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,100,200,0.1);
+    backdrop-filter: blur(20px);
+  }
+  .login-logo { font-size: 48px; text-align: center; margin-bottom: 6px; }
+  .login-title { font-size: 20px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 4px; }
+  .login-sub { font-size: 12px; color: rgba(255,255,255,0.35); text-align: center; margin-bottom: 30px; }
+  .login-portal-tabs {
+    display: flex; gap: 6px; margin-bottom: 24px;
+    background: rgba(255,255,255,0.04); border-radius: 10px; padding: 4px;
+  }
+  .login-tab {
+    flex: 1; padding: 8px 0; text-align: center; font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.45); border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    border: none; background: transparent;
+  }
+  .login-tab.active { background: rgba(0,188,255,0.2); color: #00bcff; }
+  .login-tab.active-green { background: rgba(0,200,100,0.2); color: #00c864; }
+  .login-field { margin-bottom: 16px; }
+  .login-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; display: block; }
+  .login-input-wrap { position: relative; }
+  .login-input {
+    width: 100%; padding: 11px 14px 11px 40px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+    color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s;
+    font-family: 'Microsoft YaHei', sans-serif;
+  }
+  .login-input:focus { border-color: rgba(0,188,255,0.6); background: rgba(0,188,255,0.05); }
+  .login-input::placeholder { color: rgba(255,255,255,0.2); }
+  .login-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+  .login-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 14px; color: rgba(255,255,255,0.3); }
+  .login-eye:hover { color: rgba(255,255,255,0.6); }
+  .login-btn {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
+    color: #fff; transition: all 0.2s;
+    background: linear-gradient(90deg, #0090e0, #00bcff);
+    font-family: 'Microsoft YaHei', sans-serif;
+  }
+  .login-btn.green { background: linear-gradient(90deg, #00a86b, #00c864); }
+  .login-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,150,220,0.3); }
+  .login-btn.green:hover { box-shadow: 0 6px 20px rgba(0,150,100,0.3); }
+  .login-hint { margin-top: 16px; font-size: 11px; color: rgba(255,255,255,0.25); text-align: center; line-height: 1.6; }
+  .login-error {
+    margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 12px;
+    background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.3);
+    color: #ff6b6b; display: none; text-align: center;
+  }
+
+  /* ========== 入口主页 ========== */
+  .main-wrap { position: relative; z-index: 1; display: none; width: 100%; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 20px; }
+  .main-wrap.show { display: flex; }
+  .logo-wrap { margin-bottom: 20px; text-align: center; }
+  .logo-icon { font-size: 64px; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 20px rgba(0,188,255,0.6)); }
+  .main-title { font-size: 38px; font-weight: 700; color: #fff; letter-spacing: 4px; margin-bottom: 8px; text-shadow: 0 0 30px rgba(0,188,255,0.4); }
+  .main-sub { font-size: 15px; color: rgba(255,255,255,0.5); letter-spacing: 2px; margin-bottom: 60px; }
+  .portals { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+  .portal-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 40px 50px; cursor: pointer;
+    transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 16px;
+    min-width: 220px; backdrop-filter: blur(10px); position: relative; overflow: hidden; text-decoration: none;
+  }
+  .portal-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03));
+    border-radius: 20px;
+  }
+  .portal-card:hover {
+    transform: translateY(-6px); border-color: rgba(0,188,255,0.5);
+    box-shadow: 0 20px 60px rgba(0,188,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    background: rgba(0,188,255,0.08);
+  }
+  .portal-card.green:hover {
+    border-color: rgba(0,230,120,0.5);
+    box-shadow: 0 20px 60px rgba(0,230,120,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    background: rgba(0,230,120,0.08);
+  }
+  .portal-icon { font-size: 48px; }
+  .portal-title { font-size: 20px; font-weight: 600; color: #fff; }
+  .portal-desc { font-size: 13px; color: rgba(255,255,255,0.4); text-align: center; line-height: 1.6; }
+  .portal-btn {
+    margin-top: 8px; padding: 8px 24px; border-radius: 20px; font-size: 13px;
+    font-weight: 500; border: none; cursor: pointer;
+  }
+  .portal-card:not(.green) .portal-btn { background: linear-gradient(90deg, #0090e0, #00bcff); color: #fff; }
+  .portal-card.green .portal-btn { background: linear-gradient(90deg, #00a86b, #00e678); color: #fff; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; background: rgba(0,188,255,0.15); color: #00bcff; border: 1px solid rgba(0,188,255,0.3); margin-top: 6px; }
+  .badge.green { background: rgba(0,230,120,0.15); color: #00e678; border-color: rgba(0,230,120,0.3); }
+  .footer { margin-top: 60px; color: rgba(255,255,255,0.2); font-size: 12px; text-align: center; }
+
+  /* 演示账号提示 */
+  .demo-tip { margin-top: 16px; padding: 10px 16px; background: rgba(0,188,255,0.08); border: 1px solid rgba(0,188,255,0.2); border-radius: 10px; font-size: 12px; color: rgba(255,255,255,0.5); text-align: left; }
+  .demo-tip strong { color: #00bcff; }
+</style>
+</head>
+<body>
+
+<!-- ===== 科技感背景 ===== -->
+<div class="bg-wrap" id="bgWrap">
+  <div class="grid-lines"></div>
+  <div class="ring ring-1"></div>
+  <div class="ring ring-2"></div>
+  <div class="ring ring-3"></div>
+  <div class="ring ring-4"></div>
+  <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  <div class="bg-deco-text">智慧食堂</div>
+  <div class="data-bar"></div>
+</div>
+
+<!-- ===== 登录页 ===== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">🍽️</div>
+    <div class="login-title">智慧食堂监管平台</div>
+    <div class="login-sub">Smart Canteen Supervision Platform</div>
+
+    <!-- 端口切换Tab -->
+    <div class="login-portal-tabs">
+      <button class="login-tab active" id="tabSchool" onclick="switchPortal('school')">🏫 学校端</button>
+      <button class="login-tab" id="tabSupervisor" onclick="switchPortal('supervisor')">🏛️ 监管端</button>
+    </div>
+
+    <!-- 学校端登录表单 -->
+    <div id="formSchool">
+      <div class="login-field">
+        <label class="login-label">账号</label>
+        <div class="login-input-wrap">
+          <span class="login-icon">👤</span>
+          <input type="text" class="login-input" id="schoolUser" placeholder="请输入账号">
+        </div>
+      </div>
+      <div class="login-field">
+        <label class="login-label">密码</label>
+        <div class="login-input-wrap">
+          <span class="login-icon">🔒</span>
+          <input type="password" class="login-input" id="schoolPwd" placeholder="请输入密码">
+          <span class="login-eye" onclick="togglePwd('schoolPwd',this)">👁️</span>
+        </div>
+      </div>
+      <div class="login-error" id="schoolError"></div>
+      <button class="login-btn" onclick="doLogin('school')">登录学校管理端</button>
+    </div>
+
+    <!-- 监管端登录表单 -->
+    <div id="formSupervisor" style="display:none">
+      <div class="login-field">
+        <label class="login-label">账号</label>
+        <div class="login-input-wrap">
+          <span class="login-icon">👤</span>
+          <input type="text" class="login-input" id="supUser" placeholder="请输入账号">
+        </div>
+      </div>
+      <div class="login-field">
+        <label class="login-label">密码</label>
+        <div class="login-input-wrap">
+          <span class="login-icon">🔒</span>
+          <input type="password" class="login-input" id="supPwd" placeholder="请输入密码">
+          <span class="login-eye" onclick="togglePwd('supPwd',this)">👁️</span>
+        </div>
+      </div>
+      <div class="login-error" id="supError"></div>
+      <button class="login-btn green" onclick="doLogin('supervisor')">登录教育局监管端</button>
+    </div>
+
+    <div class="login-hint">智慧食堂监管平台 · 请使用您的账号登录</div>
+  </div>
+</div>
+
+<!-- ===== 入口主页 ===== -->
+<div class="main-wrap" id="mainWrap">
+  <div class="logo-wrap">
+    <span class="logo-icon">🍽️</span>
+    <h1 class="main-title">智慧食堂监管平台</h1>
+    <p class="main-sub">Smart Canteen Supervision Platform</p>
+  </div>
+  <div class="portals">
+    <a href="school.html" class="portal-card" id="cardSchool">
+      <div class="portal-icon">🏫</div>
+      <div class="portal-title">学校管理端</div>
+      <div class="portal-desc">食谱制作 · 采购管理<br>食安台账 · 预警管理</div>
+      <span class="badge">School Portal</span>
+      <button class="portal-btn">进入管理端</button>
+    </a>
+    <a href="supervisor.html" class="portal-card green" id="cardSupervisor">
+      <div class="portal-icon">🏛️</div>
+      <div class="portal-title">教育局监管端</div>
+      <div class="portal-desc">多校监管 · 数据调取<br>预警处理 · 报表中心</div>
+      <span class="badge green">Supervisor Portal</span>
+      <button class="portal-btn">进入监管端</button>
+    </a>
+  </div>
+  <div class="footer">© 2026 智慧食堂监管平台 · 数字化校园食安管理解决方案</div>
+</div>
+
+<script>
+// ===== 密码显示/隐藏 =====
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁️'; }
+}
+
+// ===== 端口切换 =====
+function switchPortal(type) {
+  const tabS = document.getElementById('tabSchool');
+  const tabE = document.getElementById('tabSupervisor');
+  document.getElementById('formSchool').style.display = type === 'school' ? '' : 'none';
+  document.getElementById('formSupervisor').style.display = type === 'supervisor' ? '' : 'none';
+  tabS.className = type === 'school' ? 'login-tab active' : 'login-tab';
+  tabE.className = type === 'supervisor' ? 'login-tab active-green' : 'login-tab';
+}
+
+// ===== 登录验证 =====
+function doLogin(type) {
+  const userId = type === 'school' ? 'schoolUser' : 'supUser';
+  const pwdId  = type === 'school' ? 'schoolPwd' : 'supPwd';
+  const username = document.getElementById(userId).value.trim();
+  const password = document.getElementById(pwdId).value;
+
+  if (!username || !password) {
+    showToast('请输入账号和密码', 'warning'); return;
+  }
+
+  // 记录登录状态
+  sessionStorage.setItem('login_' + type, '1');
+  sessionStorage.setItem('user_' + type, username);
+
+  // 登录成功，跳转对应端
+  window.location.href = type + '.html';
+}
+
+// 回车登录
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay.style.display !== 'none') {
+      const schoolForm = document.getElementById('formSchool');
+      doLogin(schoolForm.style.display !== 'none' ? 'school' : 'supervisor');
+    }
+  }
+});
+
+// ===== 自定义提示弹窗 =====
+function showToast(message, type) {
+  const toast = document.getElementById('customToast');
+  const toastMsg = document.getElementById('toastMessage');
+  toastMsg.textContent = message;
+  toast.className = 'toast-icon ' + (type || 'info');
+  toast.style.display = 'flex';
+  setTimeout(() => { toast.style.display = 'none'; }, 2500);
+}
+</script>
+<style>
+.toast-icon { display: none; position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 99999; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 8px; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: toastIn 0.3s ease; }
+.toast-icon.warning { background: #fff2e6; border: 1px solid #ffbb00; color: #ad6800; }
+.toast-icon.success { background: #f6ffed; border: 1px solid #52c41a; color: #389e0d; }
+.toast-icon.error { background: #fff2f0; border: 1px solid #ff4d4f; color: #cf1322; }
+.toast-icon.info { background: #e6f7ff; border: 1px solid #1677ff; color: #0958d9; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+</style>
+<div id="customToast" class="toast-icon" style="display:none"><span id="toastMessage"></span></div>
+</body>
+</html>
