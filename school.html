@@ -2106,6 +2106,7 @@ function switchTab(el, containerSel, targetId) {
 
 // ===== Modal =====
 function openModal(id) { document.getElementById(id).classList.add('active'); }
+function openModalById(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(e, id) { if (e.target === e.currentTarget) document.getElementById(id).classList.remove('active'); }
 function closeModalById(id) { document.getElementById(id).classList.remove('active'); }
 function openCabinetModal(name) {
