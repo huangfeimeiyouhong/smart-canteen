@@ -283,12 +283,28 @@ function switchPortal(type) {
 function doLogin(type) {
   const userId = type === 'school' ? 'schoolUser' : 'supUser';
   const pwdId  = type === 'school' ? 'schoolPwd' : 'supPwd';
+  const errId  = type === 'school' ? 'schoolError' : 'supError';
   const username = document.getElementById(userId).value.trim();
   const password = document.getElementById(pwdId).value;
+  const errEl = document.getElementById(errId);
 
-  if (!username || !password) {
-    showToast('请输入账号和密码', 'warning'); return;
+  // 账号校验
+  if (type === 'school') {
+    if (username !== 'syxx001') {
+      errEl.textContent = '⚠️ 学校端账号仅限：syxx001';
+      errEl.style.display = 'block';
+      return;
+    }
+  } else {
+    if (username !== 'jyj001') {
+      errEl.textContent = '⚠️ 监管端账号仅限：jyj001';
+      errEl.style.display = 'block';
+      return;
+    }
   }
+
+  // 密码不做校验
+  errEl.style.display = 'none';
 
   // 记录登录状态
   sessionStorage.setItem('login_' + type, '1');
