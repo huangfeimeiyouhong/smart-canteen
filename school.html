@@ -423,6 +423,44 @@ select.form-input { cursor: pointer; }
 .btn-xs { padding: 2px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border); background: #fff; cursor: pointer; }
 .btn-xs:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
 
+/* 出库模态框样式 */
+.outbound-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  background: linear-gradient(135deg, var(--bg-sub) 0%, #fff 100%);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.outbound-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.outbound-label {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+.outbound-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.outbound-hint {
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: var(--bg-sub);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+.outbound-hint span {
+  margin-right: 6px;
+}
+
 /* Tooltip */
 .tooltip { position: relative; display: inline-block; }
 .tooltip-text {
@@ -442,6 +480,38 @@ select.form-input { cursor: pointer; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+/* 信息卡片样式 */
+.info-card {
+  background: var(--bg-sub);
+  border-radius: 8px;
+  padding: 12px;
+}
+.info-label {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+.info-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* 上传区域样式 */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-sub);
+}
+.upload-area:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
 
 /* Responsive adjustments */
 @media (max-width: 1400px) {
@@ -729,26 +799,26 @@ select.form-input { cursor: pointer; }
               <div class="form-row">
                 <div class="form-item">
                   <label>菜品名称</label>
-                  <input type="text" class="form-input" placeholder="如：红烧肉">
+                  <input type="text" class="form-input" id="dishNameInput" placeholder="如：红烧肉">
                 </div>
                 <div class="form-item">
                   <label>菜品分类</label>
-                  <select class="form-input"><option>荤菜</option><option>素菜</option><option>汤类</option><option>主食</option><option>水果</option></select>
+                  <select class="form-input" id="dishTypeInput"><option>荤菜</option><option>素菜</option><option>汤类</option><option>主食</option><option>水果</option></select>
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-item">
                   <label>用料（每份）</label>
-                  <input type="text" class="form-input" placeholder="如：猪肉100g、酱油5ml">
+                  <input type="text" class="form-input" id="dishIngredientInput" placeholder="如：猪肉100g、酱油5ml">
                 </div>
                 <div class="form-item">
                   <label>热量（kcal/份）</label>
-                  <input type="number" class="form-input" placeholder="如：280">
+                  <input type="number" class="form-input" id="dishCalInput" placeholder="如：280">
                 </div>
               </div>
               <div style="display:flex;gap:10px;justify-content:flex-end">
-                <button class="btn btn-outline">重置</button>
-                <button class="btn btn-primary">添加菜品</button>
+                <button class="btn btn-outline" onclick="resetDishForm()">重置</button>
+                <button class="btn btn-primary" onclick="addRecipeToList()">添加菜品</button>
               </div>
               <div style="margin-top:16px">
                 <table class="data-table">
@@ -809,13 +879,13 @@ select.form-input { cursor: pointer; }
             <div class="tab-content" id="tab-weekly">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
                 <div style="display:flex;align-items:center;gap:10px">
-                  <button class="btn btn-outline btn-sm">◀ 上一周</button>
-                  <span style="font-size:14px;font-weight:500">2026年第14周（3/30 - 4/3）</span>
-                  <button class="btn btn-outline btn-sm">下一周 ▶</button>
+                  <button class="btn btn-outline btn-sm" onclick="prevWeek()">◀ 上一周</button>
+                  <span style="font-size:14px;font-weight:500" id="weekTitle">2026年第14周（3/30 - 4/3）</span>
+                  <button class="btn btn-outline btn-sm" onclick="nextWeek()">下一周 ▶</button>
                 </div>
                 <div style="display:flex;gap:8px">
-                  <button class="btn btn-outline btn-sm">📤 导出</button>
-                  <button class="btn btn-primary btn-sm">📢 公示发布</button>
+                  <button class="btn btn-outline btn-sm" onclick="exportWeeklyMenu()">📤 导出</button>
+                  <button class="btn btn-primary btn-sm" onclick="publishWeeklyMenu()">📢 公示发布</button>
                 </div>
               </div>
               <div class="week-menu">
@@ -907,49 +977,45 @@ select.form-input { cursor: pointer; }
       <div class="card" style="margin-bottom:16px">
         <div class="card-head">
           <div class="card-title">💰 食谱成本测算</div>
-          <button class="btn btn-outline btn-sm">📤 导出成本表</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCostTable()">📤 导出成本表</button>
         </div>
         <div class="card-body">
           <div class="form-row">
             <div class="form-item">
               <label>食谱日期</label>
-              <input type="date" class="form-input" value="2026-04-03">
+              <input type="date" class="form-input" id="costDateInput" value="2026-04-03">
             </div>
             <div class="form-item">
               <label>用餐人数</label>
-              <input type="number" class="form-input" value="850" placeholder="请输入人数">
-            </div>
-            <div class="form-item">
-              <label>餐次</label>
-              <select class="form-input"><option>午餐</option><option>早餐</option><option>晚餐</option></select>
+              <input type="number" class="form-input" id="costPersonInput" value="850" placeholder="请输入人数">
             </div>
             <div class="form-item" style="display:flex;align-items:flex-end">
-              <button class="btn btn-primary" style="width:100%">🔄 重新测算</button>
+              <button class="btn btn-primary" style="width:100%" onclick="recalculateCost()">🔄 重新测算</button>
             </div>
           </div>
           <div style="display:flex;gap:16px;margin-bottom:16px">
             <div style="flex:1;background:var(--primary-light);border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:22px;font-weight:700;color:var(--primary)">¥ 6.85</div>
+              <div style="font-size:22px;font-weight:700;color:var(--primary)" id="avgCostDisplay">¥ 6.85</div>
               <div style="font-size:12px;color:var(--text-sub);margin-top:3px">人均食材成本</div>
             </div>
             <div style="flex:1;background:#f6ffed;border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:22px;font-weight:700;color:var(--success)">¥ 5,822.5</div>
+              <div style="font-size:22px;font-weight:700;color:var(--success)" id="totalCostDisplay">¥ 5,822.5</div>
               <div style="font-size:12px;color:var(--text-sub);margin-top:3px">今日总食材成本</div>
             </div>
             <div style="flex:1;background:#fffbe6;border-radius:8px;padding:14px;text-align:center">
-              <div style="font-size:22px;font-weight:700;color:var(--warning)">75.2%</div>
+              <div style="font-size:22px;font-weight:700;color:var(--warning)" id="costRatioDisplay">75.2%</div>
               <div style="font-size:12px;color:var(--text-sub);margin-top:3px">食材成本占比</div>
             </div>
           </div>
-          <table class="data-table">
-            <thead><tr><th>菜品</th><th>食材</th><th>单份用量</th><th>单价（元/kg）</th><th>单份成本</th><th>总成本（850人）</th></tr></thead>
-            <tbody>
+          <table class="data-table" id="costTable">
+            <thead><tr><th>菜品</th><th>食材</th><th>单份用量</th><th>单价（元/kg）</th><th>单份成本</th><th id="totalPersonHeader">总成本（850人）</th></tr></thead>
+            <tbody id="costTableBody">
               <tr><td rowspan="2">红烧肉</td><td>猪肉</td><td>100g</td><td>¥22.0</td><td>¥2.20</td><td>¥1,870</td></tr>
               <tr><td>调料</td><td>少量</td><td>—</td><td>¥0.15</td><td>¥127.5</td></tr>
               <tr><td>炒白菜</td><td>白菜</td><td>150g</td><td>¥2.5</td><td>¥0.38</td><td>¥323</td></tr>
               <tr><td>紫菜蛋花汤</td><td>鸡蛋+紫菜</td><td>60g</td><td>¥12.0</td><td>¥0.72</td><td>¥612</td></tr>
               <tr><td>米饭</td><td>大米</td><td>150g</td><td>¥5.6</td><td>¥0.84</td><td>¥714</td></tr>
-              <tr style="background:#f0f7ff;font-weight:600"><td colspan="4">合计</td><td>¥4.29</td><td>¥3,646.5</td></tr>
+              <tr style="background:#f0f7ff;font-weight:600"><td colspan="4">合计</td><td>¥4.29</td><td id="totalCostValue">¥3,646.5</td></tr>
             </tbody>
           </table>
         </div>
@@ -960,7 +1026,7 @@ select.form-input { cursor: pointer; }
     <div class="page" id="page-purchase">
       <div style="display:flex;gap:10px;margin-bottom:16px">
         <button class="btn btn-primary" onclick="openModal('modal-purchase')">+ 新增采购单</button>
-        <button class="btn btn-outline">📤 导出台账</button>
+        <button class="btn btn-outline" onclick="exportPurchaseLedger()">📤 导出台账</button>
         <input type="date" class="form-input" style="width:160px;padding:7px 11px" value="2026-04-03">
         <select class="form-input" style="width:140px">
           <option>全部供应商</option>
@@ -1001,21 +1067,21 @@ select.form-input { cursor: pointer; }
         <div class="card-head">
           <div class="card-title">📦 库存管理</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-sm btn-outline">入库操作</button>
-            <button class="btn btn-sm btn-outline">出库操作</button>
-            <button class="btn btn-sm btn-primary">+ 新增库存</button>
+            <button class="btn btn-sm btn-outline" onclick="openInboundModal()">入库操作</button>
+            <button class="btn btn-sm btn-outline" onclick="openOutboundModal()">出库操作</button>
+            <button class="btn btn-sm btn-primary" onclick="openAddInventoryModal()">+ 新增库存</button>
           </div>
         </div>
         <div class="card-body" style="padding:0">
           <table class="data-table">
             <thead><tr><th>食材名称</th><th>分类</th><th>当前库存</th><th>库存单位</th><th>最低预警</th><th>入库记录</th><th>有效期</th><th>状态</th><th>操作</th></tr></thead>
             <tbody>
-              <tr><td>猪里脊肉</td><td>肉类</td><td>35.5 kg</td><td>kg</td><td>10 kg</td><td>2026-04-03</td><td>2026-04-05</td><td><span class="tag success">正常</span></td><td><button class="btn btn-sm btn-outline">出库</button></td></tr>
-              <tr><td>菠菜</td><td>蔬菜</td><td>18.0 kg</td><td>kg</td><td>5 kg</td><td>2026-04-03</td><td>2026-04-04</td><td><span class="tag warning">临期</span></td><td><button class="btn btn-sm btn-outline">出库</button></td></tr>
-              <tr><td>大米</td><td>粮油</td><td>20 箱(100kg)</td><td>箱→kg</td><td>5 箱</td><td>2026-04-03</td><td>2027-03-01</td><td><span class="tag success">正常</span></td><td><button class="btn btn-sm btn-outline">出库</button></td></tr>
-              <tr><td>食用油</td><td>粮油</td><td>6 件(30L)</td><td>件→L</td><td>2 件</td><td>2026-04-02</td><td>2026-10-01</td><td><span class="tag success">正常</span></td><td><button class="btn btn-sm btn-outline">出库</button></td></tr>
-              <tr><td>豆腐</td><td>豆制品</td><td>8.0 kg</td><td>kg</td><td>3 kg</td><td>2026-04-02</td><td>2026-04-04</td><td><span class="tag warning">临期</span></td><td><button class="btn btn-sm btn-outline">出库</button></td></tr>
-              <tr><td>鸡蛋</td><td>蛋类</td><td>2 件(60枚)</td><td>件→枚</td><td>3 件</td><td>2026-04-03</td><td>2026-04-20</td><td><span class="tag danger">不足</span></td><td><button class="btn btn-sm btn-outline">出库</button></td></tr>
+              <tr><td>猪里脊肉</td><td>肉类</td><td>35.5 kg</td><td>kg</td><td>10 kg</td><td>2026-04-03</td><td>2026-04-05</td><td><span class="tag success">正常</span></td><td><button class="btn btn-sm btn-outline" onclick="doOutbound('猪里脊肉')">出库</button></td></tr>
+              <tr><td>菠菜</td><td>蔬菜</td><td>18.0 kg</td><td>kg</td><td>5 kg</td><td>2026-04-03</td><td>2026-04-04</td><td><span class="tag warning">临期</span></td><td><button class="btn btn-sm btn-outline" onclick="doOutbound('菠菜')">出库</button></td></tr>
+              <tr><td>大米</td><td>粮油</td><td>20 箱(100kg)</td><td>箱→kg</td><td>5 箱</td><td>2026-04-03</td><td>2027-03-01</td><td><span class="tag success">正常</span></td><td><button class="btn btn-sm btn-outline" onclick="doOutbound('大米')">出库</button></td></tr>
+              <tr><td>食用油</td><td>粮油</td><td>6 件(30L)</td><td>件→L</td><td>2 件</td><td>2026-04-02</td><td>2026-10-01</td><td><span class="tag success">正常</span></td><td><button class="btn btn-sm btn-outline" onclick="doOutbound('食用油')">出库</button></td></tr>
+              <tr><td>豆腐</td><td>豆制品</td><td>8.0 kg</td><td>kg</td><td>3 kg</td><td>2026-04-02</td><td>2026-04-04</td><td><span class="tag warning">临期</span></td><td><button class="btn btn-sm btn-outline" onclick="doOutbound('豆腐')">出库</button></td></tr>
+              <tr><td>鸡蛋</td><td>蛋类</td><td>2 件(60枚)</td><td>件→枚</td><td>3 件</td><td>2026-04-03</td><td>2026-04-20</td><td><span class="tag danger">不足</span></td><td><button class="btn btn-sm btn-outline" onclick="doOutbound('鸡蛋')">出库</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -1027,18 +1093,18 @@ select.form-input { cursor: pointer; }
       <div class="card">
         <div class="card-head">
           <div class="card-title">⚖️ 库存单位换算管理</div>
-          <button class="btn btn-primary btn-sm">+ 新增换算规则</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddRuleModal()">+ 新增换算规则</button>
         </div>
         <div class="card-body">
           <div class="alert info">ℹ️ 对于按件、箱采购的库存商品，在此设置换算比例，出库时系统自动转换为基础单位（如kg、L、个）。</div>
           <table class="data-table">
             <thead><tr><th>商品名称</th><th>采购单位</th><th>换算比例</th><th>出库单位</th><th>示例</th><th>操作</th></tr></thead>
             <tbody>
-              <tr><td>大米</td><td>箱</td><td>1箱 = 5kg</td><td>kg</td><td>采购2箱 = 出库10kg</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
-              <tr><td>食用油</td><td>件</td><td>1件 = 5L</td><td>L</td><td>采购4件 = 出库20L</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
-              <tr><td>鸡蛋</td><td>件</td><td>1件 = 30枚</td><td>枚</td><td>采购3件 = 出库90枚</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
-              <tr><td>酱油（500ml）</td><td>箱</td><td>1箱 = 12瓶</td><td>瓶</td><td>采购2箱 = 出库24瓶</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
-              <tr><td>纯牛奶（250ml）</td><td>箱</td><td>1箱 = 24盒</td><td>盒</td><td>采购5箱 = 出库120盒</td><td><button class="btn btn-sm btn-outline">编辑</button></td></tr>
+              <tr><td>大米</td><td>箱</td><td>1箱 = 5kg</td><td>kg</td><td>采购2箱 = 出库10kg</td><td><button class="btn btn-sm btn-outline" onclick="editRule('大米')">编辑</button></td></tr>
+              <tr><td>食用油</td><td>件</td><td>1件 = 5L</td><td>L</td><td>采购4件 = 出库20L</td><td><button class="btn btn-sm btn-outline" onclick="editRule('食用油')">编辑</button></td></tr>
+              <tr><td>鸡蛋</td><td>件</td><td>1件 = 30枚</td><td>枚</td><td>采购3件 = 出库90枚</td><td><button class="btn btn-sm btn-outline" onclick="editRule('鸡蛋')">编辑</button></td></tr>
+              <tr><td>酱油（500ml）</td><td>箱</td><td>1箱 = 12瓶</td><td>瓶</td><td>采购2箱 = 出库24瓶</td><td><button class="btn btn-sm btn-outline" onclick="editRule('酱油（500ml）')">编辑</button></td></tr>
+              <tr><td>纯牛奶（250ml）</td><td>箱</td><td>1箱 = 24盒</td><td>盒</td><td>采购5箱 = 出库120盒</td><td><button class="btn btn-sm btn-outline" onclick="editRule('纯牛奶（250ml）')">编辑</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -1273,77 +1339,77 @@ select.form-input { cursor: pointer; }
           <table class="data-table">
             <thead><tr><th>预警时间</th><th>预警类型</th><th>预警内容</th><th>紧急程度</th><th>状态</th><th>处理结果</th><th>操作</th></tr></thead>
             <tbody>
-              <tr>
+              <tr data-type="健康证" data-status="待处理">
                 <td>2026-04-03</td>
                 <td><span class="tag danger">健康证预警</span></td>
                 <td>张厨师健康证已过期（过期2天）</td>
                 <td><span class="tag danger">紧急</span></td>
-                <td><span class="tag danger">待处理</span></td>
+                <td><span class="tag danger status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">去处理</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('健康证', this)">去处理</button></td>
               </tr>
-              <tr>
+              <tr data-type="食材临期" data-status="待处理">
                 <td>2026-04-03</td>
                 <td><span class="tag warning">食材临期</span></td>
                 <td>菠菜（18kg）明日到期</td>
                 <td><span class="tag warning">较急</span></td>
-                <td><span class="tag warning">待处理</span></td>
+                <td><span class="tag warning status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">去处理</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('食材临期', this)">去处理</button></td>
               </tr>
-              <tr>
+              <tr data-type="食材临期" data-status="待处理">
                 <td>2026-04-03</td>
                 <td><span class="tag warning">食材临期</span></td>
                 <td>豆腐（8kg）后天到期</td>
                 <td><span class="tag warning">一般</span></td>
-                <td><span class="tag warning">待处理</span></td>
+                <td><span class="tag warning status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">去处理</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('食材临期', this)">去处理</button></td>
               </tr>
-              <tr>
+              <tr data-type="留样" data-status="待处理">
                 <td>2026-04-03</td>
                 <td><span class="tag warning">留样预警</span></td>
                 <td>今日午餐留样未录入</td>
                 <td><span class="tag warning">较急</span></td>
-                <td><span class="tag warning">待处理</span></td>
+                <td><span class="tag warning status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">去录入</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('留样', this)">去录入</button></td>
               </tr>
-              <tr>
+              <tr data-type="消毒" data-status="待处理">
                 <td>2026-04-03</td>
                 <td><span class="tag danger">消毒预警</span></td>
                 <td>餐具消毒今日未完成（早餐、午餐各1次）</td>
                 <td><span class="tag danger">紧急</span></td>
-                <td><span class="tag danger">待处理</span></td>
+                <td><span class="tag danger status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">去补录</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('消毒', this)">去补录</button></td>
               </tr>
-              <tr>
+              <tr data-type="消毒" data-status="待处理">
                 <td>2026-04-03</td>
                 <td><span class="tag danger">消毒预警</span></td>
                 <td>设施设备消毒本周未完成（计划3次，已完成1次）</td>
                 <td><span class="tag warning">较急</span></td>
-                <td><span class="tag warning">待处理</span></td>
+                <td><span class="tag warning status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">去补录</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('消毒', this)">去补录</button></td>
               </tr>
-              <tr>
+              <tr data-type="价格" data-status="已处理">
                 <td>2026-04-02</td>
                 <td><span class="tag info">价格预警</span></td>
                 <td>猪肉价格涨幅超20%（¥24→¥28.8）</td>
                 <td><span class="tag info">提醒</span></td>
-                <td><span class="tag gray">已处理</span></td>
+                <td><span class="tag gray status-badge">已处理</span></td>
                 <td>已联系供应商重新报价</td>
-                <td><button class="btn btn-sm btn-outline">查看</button></td>
+                <td><button class="btn btn-sm btn-outline" onclick="openWarningModal('价格', this)">查看</button></td>
               </tr>
-              <tr>
+              <tr data-type="成本" data-status="待处理">
                 <td>2026-04-01</td>
                 <td><span class="tag danger">成本预警</span></td>
                 <td>本月食材成本占餐费收入比已达92%，超出预警线（85%）</td>
                 <td><span class="tag danger">紧急</span></td>
-                <td><span class="tag warning">待处理</span></td>
+                <td><span class="tag warning status-badge">待处理</span></td>
                 <td>—</td>
-                <td><button class="btn btn-sm btn-primary">查看详情</button></td>
+                <td><button class="btn btn-sm btn-primary" onclick="openWarningModal('成本', this)">查看详情</button></td>
               </tr>
             </tbody>
           </table>
@@ -1679,7 +1745,7 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModalById('modal-recipe')">取消</button>
-      <button class="btn btn-primary" onclick="closeModalById('modal-recipe')">下一步：添加菜品</button>
+      <button class="btn btn-primary" onclick="nextToAddDishes()">下一步：添加菜品</button>
     </div>
   </div>
 </div>
@@ -1707,7 +1773,7 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModalById('modal-purchase')">取消</button>
-      <button class="btn btn-primary" onclick="closeModalById('modal-purchase')">提交采购单</button>
+      <button class="btn btn-primary" onclick="submitPurchase()">提交采购单</button>
     </div>
   </div>
 </div>
@@ -1743,6 +1809,145 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModalById('modal-cabinet')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增库存模态框 -->
+<div class="modal-overlay" id="modal-inventory" onclick="closeModal(event,'modal-inventory')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">📦 新增库存</div>
+      <div class="modal-close" onclick="closeModalById('modal-inventory')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-item"><label>食材名称 <span style="color:var(--danger)">*</span></label><input type="text" class="form-input" id="invName" placeholder="请输入食材名称"></div>
+        <div class="form-item"><label>分类</label><select class="form-input" id="invCategory"><option>肉类</option><option>蔬菜</option><option>粮油</option><option>调料</option><option>禽蛋</option><option>豆制品</option><option>水果</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-item"><label>当前库存 <span style="color:var(--danger)">*</span></label><input type="number" step="0.1" class="form-input" id="invQuantity" placeholder="请输入数量"></div>
+        <div class="form-item"><label>库存单位</label><select class="form-input" id="invUnit"><option>kg</option><option>g</option><option>L</option><option>mL</option><option>个</option><option>枚</option><option>箱</option><option>件</option><option>瓶</option><option>袋</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-item"><label>最低预警值 <span style="color:var(--danger)">*</span></label><input type="number" step="0.1" class="form-input" id="invMinStock" placeholder="低于此值将触发预警"></div>
+        <div class="form-item"><label>有效期</label><input type="date" class="form-input" id="invExpiry"></div>
+      </div>
+      <div class="form-item"><label>入库日期</label><input type="date" class="form-input" id="invDate" value="2026-04-04"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-inventory')">取消</button>
+      <button class="btn btn-primary" onclick="submitInventory()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增换算规则模态框 -->
+<div class="modal-overlay" id="modal-rule" onclick="closeModal(event,'modal-rule')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">⚖️ 新增换算规则</div>
+      <div class="modal-close" onclick="closeModalById('modal-rule')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert info" style="margin-bottom:16px">ℹ️ 设置采购单位与出库基础单位之间的换算比例，方便库存统计与成本核算。</div>
+      <div class="form-item" style="margin-bottom:16px"><label>商品名称 <span style="color:var(--danger)">*</span></label><input type="text" class="form-input" id="ruleName" placeholder="请输入商品名称"></div>
+      <div class="form-row">
+        <div class="form-item"><label>采购单位 <span style="color:var(--danger)">*</span></label><select class="form-input" id="rulePurchaseUnit"><option>箱</option><option>件</option><option>袋</option><option>瓶</option><option>桶</option><option>盒</option></select></div>
+        <div class="form-item"><label>换算数量 <span style="color:var(--danger)">*</span></label><input type="number" class="form-input" id="ruleConvertQty" placeholder="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-item"><label>出库单位 <span style="color:var(--danger)">*</span></label><select class="form-input" id="ruleOutputUnit"><option>kg</option><option>g</option><option>L</option><option>mL</option><option>个</option><option>枚</option><option>瓶</option><option>盒</option></select></div>
+        <div class="form-item"><label>示例预览</label><div id="rulePreview" style="padding:8px 12px;background:var(--bg-sub);border-radius:6px;font-size:13px;color:var(--text-sub)">请填写完整信息</div></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-rule')">取消</button>
+      <button class="btn btn-primary" onclick="submitRule()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑换算规则模态框 -->
+<div class="modal-overlay" id="modal-edit-rule" onclick="closeModal(event,'modal-edit-rule')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">✏️ 编辑换算规则</div>
+      <div class="modal-close" onclick="closeModalById('modal-edit-rule')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-item" style="margin-bottom:16px"><label>商品名称</label><input type="text" class="form-input" id="editRuleName" readonly style="background:var(--bg-sub)"></div>
+      <div class="form-row">
+        <div class="form-item"><label>采购单位</label><select class="form-input" id="editRulePurchaseUnit"><option>箱</option><option>件</option><option>袋</option><option>瓶</option><option>桶</option><option>盒</option></select></div>
+        <div class="form-item"><label>换算数量</label><input type="number" class="form-input" id="editRuleConvertQty"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-item"><label>出库单位</label><select class="form-input" id="editRuleOutputUnit"><option>kg</option><option>g</option><option>L</option><option>mL</option><option>个</option><option>枚</option><option>瓶</option><option>盒</option></select></div>
+        <div class="form-item"><label>示例预览</label><div id="editRulePreview" style="padding:8px 12px;background:var(--bg-sub);border-radius:6px;font-size:13px;color:var(--text-sub)">请填写完整信息</div></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-edit-rule')">取消</button>
+      <button class="btn btn-primary" onclick="submitEditRule()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 出库操作模态框 -->
+<div class="modal-overlay" id="modal-outbound" onclick="closeModal(event,'modal-outbound')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">📤 出库操作</div>
+      <div class="modal-close" onclick="closeModalById('modal-outbound')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="outbound-info">
+        <div class="outbound-item">
+          <div class="outbound-label">商品名称</div>
+          <div class="outbound-value" id="outboundItemName">-</div>
+        </div>
+        <div class="outbound-item">
+          <div class="outbound-label">当前库存</div>
+          <div class="outbound-value" id="outboundCurrentStock">-</div>
+        </div>
+        <div class="outbound-item">
+          <div class="outbound-label">商品类别</div>
+          <div class="outbound-value" id="outboundCategory">-</div>
+        </div>
+        <div class="outbound-item">
+          <div class="outbound-label">保质期限</div>
+          <div class="outbound-value" id="outboundExpireDate">-</div>
+        </div>
+      </div>
+      <div class="form-item" style="margin-top:20px">
+        <label>出库数量 <span style="color:var(--danger)">*</span></label>
+        <div class="form-row" style="align-items:center">
+          <input type="number" class="form-input" id="outboundAmount" placeholder="请输入出库数量" min="0.1" step="0.1" style="flex:1">
+          <div id="outboundUnit" style="padding:0 12px;font-size:14px;color:var(--text-sub);background:var(--bg-sub);border-radius:6px;margin-left:8px;height:40px;display:flex;align-items:center">-</div>
+        </div>
+      </div>
+      <div class="form-item" style="margin-top:16px">
+        <label>出库用途 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="outboundPurpose">
+          <option value="">请选择出库用途</option>
+          <option value="备餐">备餐使用</option>
+          <option value="留样">食品留样</option>
+          <option value="加工">二次加工</option>
+          <option value="报损">报损处理</option>
+          <option value="其他">其他用途</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-top:16px">
+        <label>备注说明</label>
+        <input type="text" class="form-input" id="outboundNote" placeholder="可选填写备注信息">
+      </div>
+      <div class="outbound-hint" id="outboundHint">
+        <span>💡</span> 出库数量不能超过当前库存
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-outbound')">取消</button>
+      <button class="btn btn-primary" onclick="confirmOutbound()">确认出库</button>
     </div>
   </div>
 </div>
@@ -1966,6 +2171,665 @@ function updateDate() {
   document.getElementById('headerDate').textContent = d;
 }
 updateDate();
+
+// 周食谱相关变量
+let currentWeekOffset = 0;
+
+// 上一周
+function prevWeek() {
+  currentWeekOffset--;
+  updateWeekDisplay();
+}
+
+// 下一周
+function nextWeek() {
+  currentWeekOffset++;
+  updateWeekDisplay();
+}
+
+// 更新周显示
+function updateWeekDisplay() {
+  const now = new Date();
+  // 回到本周一
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  
+  // 加上周偏移
+  monday.setDate(monday.getDate() + (currentWeekOffset * 7));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 4);
+  
+  // 计算周数
+  const weekNum = getWeekOfYear(monday);
+  
+  // 更新标题
+  const mondayStr = `${monday.getMonth() + 1}/${monday.getDate()}`;
+  const sundayStr = `${sunday.getMonth() + 1}/${sunday.getDate()}`;
+  document.getElementById('weekTitle').textContent = `2026年第${weekNum}周（${mondayStr} - ${sundayStr}）`;
+}
+
+// 导出周食谱
+function exportWeeklyMenu() {
+  const weekTitle = document.getElementById('weekTitle').textContent;
+  showToast('正在导出：' + weekTitle + ' 周食谱', 'info');
+  
+  setTimeout(() => {
+    // 生成简单的文本内容
+    const content = `光明小学食堂周食谱\n${weekTitle}\n\n` +
+      `周一：早餐（牛奶、鸡蛋）、午餐（红烧肉、炒白菜、紫菜汤、米饭）\n` +
+      `周二：早餐（豆浆、包子）、午餐（番茄炒蛋、清炒菠菜、米饭）\n` +
+      `周三：早餐（牛奶、面包）、午餐（鱼香肉丝、蒸蛋羹、米饭）\n` +
+      `周四：早餐（牛奶、鸡蛋）、午餐（宫保鸡丁、炒豆角、米饭）\n` +
+      `周五：早餐（豆浆、鸡蛋）、午餐（糖醋排骨、豆腐汤、米饭）\n\n` +
+      `导出时间：${new Date().toLocaleString('zh-CN')}`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `光明小学周食谱_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('导出成功', 'success');
+  }, 500);
+}
+
+// 公示发布周食谱
+function publishWeeklyMenu() {
+  const weekTitle = document.getElementById('weekTitle').textContent;
+  showToast('📢 ' + weekTitle + ' 周食谱已发布公示', 'success');
+}
+
+// 导出成本表
+function exportCostTable() {
+  const date = document.getElementById('costDateInput').value;
+  const persons = document.getElementById('costPersonInput').value;
+  const avgCost = document.getElementById('avgCostDisplay').textContent;
+  const totalCost = document.getElementById('totalCostDisplay').textContent;
+  
+  const content = `光明小学食堂成本测算表\n` +
+    `食谱日期：${date}\n` +
+    `用餐人数：${persons}人\n\n` +
+    `菜品明细：\n` +
+    `红烧肉：猪肉100g，单价¥22/kg，单份¥2.20，总成本¥1,870\n` +
+    `调料：少量，单份¥0.15，总成本¥127.5\n` +
+    `炒白菜：白菜150g，单价¥2.5/kg，单份¥0.38，总成本¥323\n` +
+    `紫菜蛋花汤：鸡蛋+紫菜60g，单价¥12/kg，单份¥0.72，总成本¥612\n` +
+    `米饭：大米150g，单价¥5.6/kg，单份¥0.84，总成本¥714\n\n` +
+    `合计：单份¥4.29，总成本¥3,646.5\n\n` +
+    `人均食材成本：${avgCost}\n` +
+    `今日总食材成本：${totalCost}\n` +
+    `导出时间：${new Date().toLocaleString('zh-CN')}`;
+  
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `光明小学成本测算表_${date}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  showToast('导出成功', 'success');
+}
+
+// 重新测算成本
+function recalculateCost() {
+  const persons = parseInt(document.getElementById('costPersonInput').value) || 850;
+  
+  // 更新表头
+  document.getElementById('totalPersonHeader').textContent = `总成本（${persons}人）`;
+  
+  // 计算新数据（基于原有比例）
+  const basePersons = 850;
+  const scale = persons / basePersons;
+  
+  // 更新总成本值
+  const totalCostValue = (3646.5 * scale).toFixed(1);
+  document.getElementById('totalCostValue').textContent = `¥${totalCostValue}`;
+  
+  // 更新总成本显示
+  document.getElementById('totalCostDisplay').textContent = `¥ ${parseFloat(totalCostValue).toLocaleString()}`;
+  
+  // 更新人均成本（假设固定）
+  const avgCost = 6.85;
+  document.getElementById('avgCostDisplay').textContent = `¥ ${avgCost}`;
+  
+  // 更新食材成本占比（假设固定）
+  const costRatio = 75.2;
+  document.getElementById('costRatioDisplay').textContent = `${costRatio}%`;
+  
+  showToast(`已按${persons}人重新测算`, 'success');
+}
+
+// 下一步：添加菜品
+function nextToAddDishes() {
+  const recipeName = document.querySelector('#modal-recipe input[placeholder*="如：2026"]').value;
+  
+  if (!recipeName) {
+    showToast('请填写食谱名称', 'warning');
+    return;
+  }
+  
+  showToast(`食谱"${recipeName}"已创建，正在添加菜品...`, 'success');
+  
+  // 关闭新建食谱模态框
+  closeModalById('modal-recipe');
+  
+  // 切换到食谱制作页面，方法一标签
+  showPage('recipe');
+  setTimeout(() => {
+    const method1Tab = document.querySelector('#tab-method1');
+    if (method1Tab) {
+      switchTab(method1Tab, 'recipe-tabs', 'tab-method1');
+    }
+    document.getElementById('dishNameInput').focus();
+  }, 100);
+}
+
+// ===== 库存管理功能 =====
+// 入库操作
+function openInboundModal() {
+  showToast('请在新增库存中办理入库', 'info');
+  openAddInventoryModal();
+}
+
+// 出库操作
+function openOutboundModal() {
+  showToast('请在库存列表中点击出库按钮', 'info');
+}
+
+// 新增库存
+function openAddInventoryModal() {
+  // 重置表单
+  document.getElementById('invName').value = '';
+  document.getElementById('invCategory').value = '肉类';
+  document.getElementById('invQuantity').value = '';
+  document.getElementById('invUnit').value = 'kg';
+  document.getElementById('invMinStock').value = '';
+  document.getElementById('invExpiry').value = '';
+  document.getElementById('invDate').value = new Date().toISOString().split('T')[0];
+  openModalById('modal-inventory');
+}
+
+// 提交新增库存
+function submitInventory() {
+  const name = document.getElementById('invName').value.trim();
+  const quantity = document.getElementById('invQuantity').value;
+  const minStock = document.getElementById('invMinStock').value;
+  const category = document.getElementById('invCategory').value;
+  const unit = document.getElementById('invUnit').value;
+  const expiry = document.getElementById('invExpiry').value;
+  const date = document.getElementById('invDate').value;
+  
+  if (!name) {
+    showToast('请输入食材名称', 'warning');
+    return;
+  }
+  if (!quantity || parseFloat(quantity) <= 0) {
+    showToast('请输入有效的库存数量', 'warning');
+    return;
+  }
+  if (!minStock || parseFloat(minStock) <= 0) {
+    showToast('请输入有效的最低预警值', 'warning');
+    return;
+  }
+  
+  // 判断库存状态
+  let status = '正常';
+  let statusClass = 'success';
+  if (expiry) {
+    const expDate = new Date(expiry);
+    const today = new Date();
+    const daysUntilExpiry = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+    if (daysUntilExpiry < 0) {
+      status = '已过期';
+      statusClass = 'danger';
+    } else if (daysUntilExpiry <= 3) {
+      status = '临期';
+      statusClass = 'warning';
+    }
+  }
+  if (parseFloat(quantity) < parseFloat(minStock)) {
+    status = '不足';
+    statusClass = 'danger';
+  }
+  
+  // 添加到库存表格
+  const tbody = document.querySelector('#page-inventory .data-table tbody');
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>${name}</td>
+    <td>${category}</td>
+    <td>${quantity} ${unit}</td>
+    <td>${unit}</td>
+    <td>${minStock} ${unit}</td>
+    <td>${date}</td>
+    <td>${expiry || '-'}</td>
+    <td><span class="tag ${statusClass}">${status}</span></td>
+    <td><button class="btn btn-sm btn-outline" onclick="doOutbound('${name}')">出库</button></td>
+  `;
+  tbody.appendChild(newRow);
+  
+  // 更新统计数字
+  if (statusClass === 'warning') {
+    const warningCount = document.querySelector('.stat-val[style*="color:var(--warning)"]');
+    if (warningCount) warningCount.textContent = parseInt(warningCount.textContent) + 1;
+  }
+  if (statusClass === 'danger') {
+    const dangerCount = document.querySelector('.stat-val[style*="color:var(--danger)"]');
+    if (dangerCount) dangerCount.textContent = parseInt(dangerCount.textContent) + 1;
+  }
+  
+  closeModalById('modal-inventory');
+  showToast(`已添加库存：${name} (${quantity}${unit})`, 'success');
+}
+
+
+// 执行出库
+let currentOutboundItem = '';
+function doOutbound(itemName) {
+  currentOutboundItem = itemName;
+  
+  // 查找库存数据（模拟数据，根据实际情况获取）
+  const inventoryData = {
+    '猪里脊肉': { stock: '35.5', unit: 'kg', category: '肉类', expire: '2026-04-05' },
+    '菠菜': { stock: '18.0', unit: 'kg', category: '蔬菜', expire: '2026-04-04' },
+    '大米': { stock: '20', unit: '箱(100kg)', category: '粮油', expire: '2027-03-01' },
+    '食用油': { stock: '6', unit: '件(30L)', category: '粮油', expire: '2026-10-01' },
+    '豆腐': { stock: '8.0', unit: 'kg', category: '豆制品', expire: '2026-04-04' },
+    '鸡蛋': { stock: '2', unit: '件(60枚)', category: '蛋类', expire: '2026-04-20' }
+  };
+  
+  const data = inventoryData[itemName] || { stock: '-', unit: '-', category: '-', expire: '-' };
+  
+  // 填充模态框数据
+  document.getElementById('outboundItemName').textContent = itemName;
+  document.getElementById('outboundCurrentStock').textContent = `${data.stock} ${data.unit}`;
+  document.getElementById('outboundCategory').textContent = data.category;
+  document.getElementById('outboundExpireDate').textContent = data.expire;
+  document.getElementById('outboundUnit').textContent = data.unit.includes('(') ? data.unit.split('(')[0] : data.unit;
+  
+  // 重置表单
+  document.getElementById('outboundAmount').value = '';
+  document.getElementById('outboundPurpose').value = '';
+  document.getElementById('outboundNote').value = '';
+  document.getElementById('outboundAmount').max = parseFloat(data.stock) || 9999;
+  
+  // 更新提示
+  const hint = document.getElementById('outboundHint');
+  if (data.stock !== '-') {
+    hint.innerHTML = `<span>💡</span> 当前库存 <strong>${data.stock} ${data.unit}</strong>，出库数量不能超过库存`;
+    hint.style.color = 'var(--text-sub)';
+  } else {
+    hint.innerHTML = `<span>💡</span> 请输入出库数量`;
+    hint.style.color = 'var(--text-sub)';
+  }
+  
+  openModalById('modal-outbound');
+  
+  // 自动聚焦到数量输入框
+  setTimeout(() => {
+    document.getElementById('outboundAmount').focus();
+  }, 100);
+}
+
+// 确认出库
+function confirmOutbound() {
+  const amount = document.getElementById('outboundAmount').value;
+  const purpose = document.getElementById('outboundPurpose').value;
+  const note = document.getElementById('outboundNote').value;
+  
+  if (!amount || parseFloat(amount) <= 0) {
+    showToast('请输入有效的出库数量', 'warning');
+    return;
+  }
+  
+  if (!purpose) {
+    showToast('请选择出库用途', 'warning');
+    return;
+  }
+  
+  const unit = document.getElementById('outboundUnit').textContent;
+  const purposeText = {
+    '备餐': '备餐使用',
+    '留样': '食品留样',
+    '加工': '二次加工',
+    '报损': '报损处理',
+    '其他': '其他用途'
+  }[purpose] || purpose;
+  
+  // 关闭模态框
+  closeModalById('modal-outbound');
+  
+  // 显示成功提示
+  let msg = `${currentOutboundItem} 已出库 ${amount}${unit}（${purposeText}）`;
+  if (note) msg += `，备注：${note}`;
+  
+  showToast(msg, 'success');
+  
+  // 如果是报损，显示特殊提示
+  if (purpose === '报损') {
+    showToast('⚠️ 请在出库台账中登记报损原因', 'warning');
+  }
+}
+
+// 新增换算规则
+function openAddRuleModal() {
+  // 重置表单
+  document.getElementById('ruleName').value = '';
+  document.getElementById('rulePurchaseUnit').value = '箱';
+  document.getElementById('ruleConvertQty').value = '1';
+  document.getElementById('ruleOutputUnit').value = 'kg';
+  document.getElementById('rulePreview').textContent = '请填写完整信息';
+  openModalById('modal-rule');
+  
+  // 绑定示例预览更新
+  setTimeout(() => {
+    const ruleNameInput = document.getElementById('ruleName');
+    const rulePurchaseUnit = document.getElementById('rulePurchaseUnit');
+    const ruleConvertQty = document.getElementById('ruleConvertQty');
+    const ruleOutputUnit = document.getElementById('ruleOutputUnit');
+    const rulePreview = document.getElementById('rulePreview');
+    
+    function updatePreview() {
+      const name = ruleNameInput.value.trim();
+      const purchaseUnit = rulePurchaseUnit.value;
+      const convertQty = ruleConvertQty.value;
+      const outputUnit = ruleOutputUnit.value;
+      
+      if (name && convertQty) {
+        const total = parseFloat(convertQty);
+        rulePreview.textContent = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+        rulePreview.style.color = 'var(--text)';
+      } else {
+        rulePreview.textContent = '请填写完整信息';
+        rulePreview.style.color = 'var(--text-sub)';
+      }
+    }
+    
+    ruleNameInput.addEventListener('input', updatePreview);
+    rulePurchaseUnit.addEventListener('change', updatePreview);
+    ruleConvertQty.addEventListener('input', updatePreview);
+    ruleOutputUnit.addEventListener('change', updatePreview);
+  }, 100);
+}
+
+// 提交换算规则
+function submitRule() {
+  const name = document.getElementById('ruleName').value.trim();
+  const purchaseUnit = document.getElementById('rulePurchaseUnit').value;
+  const convertQty = document.getElementById('ruleConvertQty').value;
+  const outputUnit = document.getElementById('ruleOutputUnit').value;
+  
+  if (!name) {
+    showToast('请输入商品名称', 'warning');
+    return;
+  }
+  if (!convertQty || parseFloat(convertQty) <= 0) {
+    showToast('请输入有效的换算数量', 'warning');
+    return;
+  }
+  
+  // 检查是否已存在
+  const existingRows = document.querySelectorAll('#page-unit .data-table tbody tr');
+  for (let row of existingRows) {
+    if (row.cells[0].textContent === name) {
+      showToast(`商品"${name}"的换算规则已存在，请编辑修改`, 'warning');
+      return;
+    }
+  }
+  
+  const total = parseFloat(convertQty);
+  const example = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+  
+  // 添加到换算规则表格
+  const tbody = document.querySelector('#page-unit .data-table tbody');
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>${name}</td>
+    <td>${purchaseUnit}</td>
+    <td>1${purchaseUnit} = ${total}${outputUnit}</td>
+    <td>${outputUnit}</td>
+    <td>${example}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="editRule('${name}')">编辑</button></td>
+  `;
+  tbody.appendChild(newRow);
+  
+  closeModalById('modal-rule');
+  showToast(`已添加换算规则：${name} (1${purchaseUnit} = ${total}${outputUnit})`, 'success');
+}
+
+// 编辑换算规则
+let currentEditRule = '';
+function editRule(itemName) {
+  currentEditRule = itemName;
+  
+  // 查找当前规则数据
+  const rows = document.querySelectorAll('#page-unit .data-table tbody tr');
+  let ruleData = null;
+  for (let row of rows) {
+    if (row.cells[0].textContent === itemName) {
+      const ratio = row.cells[2].textContent; // 如 "1箱 = 5kg"
+      const ratioMatch = ratio.match(/1\s*(\S+)\s*=\s*(\d+(?:\.\d+)?)\s*(\S+)/);
+      ruleData = {
+        purchaseUnit: ratioMatch ? ratioMatch[1] : row.cells[1].textContent,
+        convertQty: ratioMatch ? ratioMatch[2] : '1',
+        outputUnit: ratioMatch ? ratioMatch[3] : row.cells[3].textContent
+      };
+      break;
+    }
+  }
+  
+  // 填充表单
+  document.getElementById('editRuleName').value = itemName;
+  if (ruleData) {
+    document.getElementById('editRulePurchaseUnit').value = ruleData.purchaseUnit;
+    document.getElementById('editRuleConvertQty').value = ruleData.convertQty;
+    document.getElementById('editRuleOutputUnit').value = ruleData.outputUnit;
+    updateEditPreview();
+  }
+  
+  openModalById('modal-edit-rule');
+  
+  // 绑定示例预览更新
+  setTimeout(() => {
+    const editRuleConvertQty = document.getElementById('editRuleConvertQty');
+    const editRuleOutputUnit = document.getElementById('editRuleOutputUnit');
+    const editRulePreview = document.getElementById('editRulePreview');
+    
+    function updateEditPreview() {
+      const purchaseUnit = document.getElementById('editRulePurchaseUnit').value;
+      const convertQty = editRuleConvertQty.value;
+      const outputUnit = editRuleOutputUnit.value;
+      
+      if (convertQty) {
+        const total = parseFloat(convertQty);
+        editRulePreview.textContent = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+        editRulePreview.style.color = 'var(--text)';
+      } else {
+        editRulePreview.textContent = '请填写完整信息';
+        editRulePreview.style.color = 'var(--text-sub)';
+      }
+    }
+    
+    editRuleConvertQty.addEventListener('input', updateEditPreview);
+    editRuleOutputUnit.addEventListener('change', updateEditPreview);
+    document.getElementById('editRulePurchaseUnit').addEventListener('change', updateEditPreview);
+  }, 100);
+}
+
+function updateEditPreview() {
+  const purchaseUnit = document.getElementById('editRulePurchaseUnit').value;
+  const convertQty = document.getElementById('editRuleConvertQty').value;
+  const outputUnit = document.getElementById('editRuleOutputUnit').value;
+  const preview = document.getElementById('editRulePreview');
+  
+  if (convertQty) {
+    const total = parseFloat(convertQty);
+    preview.textContent = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+    preview.style.color = 'var(--text)';
+  } else {
+    preview.textContent = '请填写完整信息';
+    preview.style.color = 'var(--text-sub)';
+  }
+}
+
+// 提交编辑后的换算规则
+function submitEditRule() {
+  const name = currentEditRule;
+  const purchaseUnit = document.getElementById('editRulePurchaseUnit').value;
+  const convertQty = document.getElementById('editRuleConvertQty').value;
+  const outputUnit = document.getElementById('editRuleOutputUnit').value;
+  
+  if (!convertQty || parseFloat(convertQty) <= 0) {
+    showToast('请输入有效的换算数量', 'warning');
+    return;
+  }
+  
+  const total = parseFloat(convertQty);
+  const example = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+  
+  // 更新表格中的对应行
+  const rows = document.querySelectorAll('#page-unit .data-table tbody tr');
+  for (let row of rows) {
+    if (row.cells[0].textContent === name) {
+      row.cells[1].textContent = purchaseUnit;
+      row.cells[2].textContent = `1${purchaseUnit} = ${total}${outputUnit}`;
+      row.cells[3].textContent = outputUnit;
+      row.cells[4].textContent = example;
+      break;
+    }
+  }
+  
+  closeModalById('modal-edit-rule');
+  showToast(`换算规则已更新：${name} (1${purchaseUnit} = ${total}${outputUnit})`, 'success');
+}
+
+// 提交采购单
+function submitPurchase() {
+  const date = document.querySelector('#modal-purchase input[type="date"]').value;
+  const supplier = document.querySelector('#modal-purchase select').value;
+  const ingredientName = document.querySelector('#modal-purchase input[placeholder="请输入食材名称"]').value;
+  const spec = document.querySelector('#modal-purchase input[placeholder="如：新鲜/kg"]').value;
+  const quantity = document.querySelector('#modal-purchase input[placeholder*="采购数量"]').value;
+  const price = document.querySelector('#modal-purchase input[placeholder*="单价"]').value;
+  
+  if (!ingredientName || !quantity || !price) {
+    showToast('请填写完整的采购信息', 'warning');
+    return;
+  }
+  
+  const total = (parseFloat(quantity) * parseFloat(price)).toFixed(2);
+  
+  showToast(`采购单已提交：${ingredientName} ${quantity}件，共¥${total}`, 'success');
+  
+  // 关闭模态框
+  closeModalById('modal-purchase');
+  
+  // 清空表单（需要重新打开模态框才能清空，这里只提示成功）
+}
+
+// 导出采购台账
+function exportPurchaseLedger() {
+  showToast('正在导出采购台账...', 'info');
+  
+  setTimeout(() => {
+    const content = `光明小学食堂采购台账\n` +
+      `导出时间：${new Date().toLocaleString('zh-CN')}\n\n` +
+      `序号\t日期\t食材名称\t规格\t采购数量\t单价\t金额\t供应商\t票证状态\t入库状态\n` +
+      `1\t2026-04-03\t猪里脊肉\t冰鲜/kg\t50kg\t¥24.00\t¥1,200\t鲜肉直供中心\t已上传\t已入库\n` +
+      `2\t2026-04-03\t菠菜\t新鲜/kg\t30kg\t¥4.50\t¥135\t绿鲜蔬菜基地\t已上传\t已入库\n` +
+      `3\t2026-04-03\t大米（5kg）\t袋装/箱\t20箱\t¥56.00/箱\t¥1,120\t优品粮油配送\t待上传\t已入库\n` +
+      `4\t2026-04-03\t鸡蛋（30枚）\t托装/件\t15件\t¥22.00/件\t¥330\t绿鲜蔬菜基地\t已上传\t待入库\n` +
+      `5\t2026-04-02\t食用油（5L）\t桶装/件\t8件\t¥68.00/件\t¥544\t优品粮油配送\t已上传\t已入库\n\n` +
+      `合计：5条记录，总金额 ¥3,329`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `光明小学采购台账_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('导出成功', 'success');
+  }, 500);
+}
+
+// 重新测算成本
+function recalculateForPersons() {
+  const persons = parseInt(document.getElementById('costPersonInput').value) || 850;
+  
+  // 更新表头
+  document.getElementById('totalPersonHeader').textContent = `总成本（${persons}人）`;
+  
+  // 计算新数据（基于原有比例）
+  const basePersons = 850;
+  const scale = persons / basePersons;
+  
+  // 更新总成本值
+  const totalCostValue = (3646.5 * scale).toFixed(1);
+  document.getElementById('totalCostValue').textContent = `¥${totalCostValue}`;
+  
+  // 更新总成本显示
+  document.getElementById('totalCostDisplay').textContent = `¥ ${parseFloat(totalCostValue).toLocaleString()}`;
+  
+  // 更新人均成本（假设固定）
+  const avgCost = 6.85;
+  document.getElementById('avgCostDisplay').textContent = `¥ ${avgCost}`;
+  
+  // 更新食材成本占比（假设固定）
+  const costRatio = 75.2;
+  document.getElementById('costRatioDisplay').textContent = `${costRatio}%`;
+  
+  showToast(`已按${persons}人重新测算`, 'success');
+}
+
+// 重置单个录入表单
+function resetDishForm() {
+  document.getElementById('dishNameInput').value = '';
+  document.getElementById('dishTypeInput').value = '荤菜';
+  document.getElementById('dishIngredientInput').value = '';
+  document.getElementById('dishCalInput').value = '';
+  document.getElementById('dishNameInput').focus();
+  showToast('表单已重置', 'info');
+}
+
+// 添加菜品到列表
+function addRecipeToList() {
+  const name = document.getElementById('dishNameInput').value.trim();
+  const type = document.getElementById('dishTypeInput').value;
+  const ingredient = document.getElementById('dishIngredientInput').value.trim();
+  const cal = parseFloat(document.getElementById('dishCalInput').value) || 0;
+  
+  if (!name) {
+    showToast('请输入菜品名称', 'warning');
+    document.getElementById('dishNameInput').focus();
+    return;
+  }
+  
+  // 检查是否已存在
+  const exists = addedRecipes.some(r => r.name === name);
+  if (exists) {
+    showToast('该菜品已存在，请勿重复添加', 'warning');
+    return;
+  }
+  
+  // 添加到列表
+  addedRecipes.push({ name, type, ingredient, cal });
+  sessionStorage.setItem('addedRecipes', JSON.stringify(addedRecipes));
+  renderAddedRecipes();
+  
+  showToast('已添加：' + name, 'success');
+  
+  // 清空表单（但不重置）
+  document.getElementById('dishNameInput').value = '';
+  document.getElementById('dishIngredientInput').value = '';
+  document.getElementById('dishCalInput').value = '';
+  document.getElementById('dishNameInput').focus();
+}
 
 // 初始化所有动态日期
 function initDates() {
@@ -2839,7 +3703,10 @@ function initBatchGrid() {
   const dishData = currentDishSource === 'school' ? dishes : publicDishes;
   renderBatchGrid(dishData);
 }
-document.addEventListener('DOMContentLoaded', initBatchGrid);
+document.addEventListener('DOMContentLoaded', () => {
+  initBatchGrid();
+  updateWeekDisplay(); // 初始化周食谱显示
+});
 
 // ===== Toast 提示 =====
 function showToast(message, type = 'info') {
@@ -3184,8 +4051,493 @@ function doChangePwd() {
   msg.textContent = '✅ 密码修改成功！'; msg.style.color = 'var(--success)'; msg.style.display = 'block';
   setTimeout(() => { document.getElementById('modalChangePwd').style.display = 'none'; }, 1500);
 }
+
+// 打开预警处理模态框
+let currentWarningRow = null;
+function openWarningModal(type, btn) {
+  currentWarningRow = btn.closest('tr');
+  const cells = currentWarningRow.querySelectorAll('td');
+  const content = cells[2].textContent;
+  const status = currentWarningRow.dataset.status;
+  
+  const modalId = {
+    '健康证': 'modal-healthcert',
+    '食材临期': 'modal-expire',
+    '留样': 'modal-sample',
+    '消毒': 'modal-disinfect',
+    '价格': 'modal-price',
+    '成本': 'modal-cost'
+  }[type];
+  
+  openModalById(modalId);
+  
+  switch(type) {
+    case '健康证':
+      document.getElementById('healthcert-detail').textContent = content;
+      document.getElementById('healthcert-action').value = '';
+      document.getElementById('healthcert-newdate').value = '';
+      document.getElementById('healthcert-note').value = '';
+      break;
+    case '食材临期':
+      document.getElementById('expire-detail').textContent = content;
+      const stockMatch = content.match(/（(.+?)）/);
+      if (stockMatch) {
+        document.getElementById('expire-stock').textContent = stockMatch[1];
+        const unitMatch = stockMatch[1].match(/(\d+\.?\d*)(.+)/);
+        if (unitMatch) {
+          document.getElementById('expire-amount').placeholder = `最多 ${unitMatch[1]} ${unitMatch[2]}`;
+          document.getElementById('expire-unit').textContent = unitMatch[2];
+        }
+      }
+      document.getElementById('expire-action').value = '';
+      document.getElementById('expire-amount').value = '';
+      document.getElementById('expire-note').value = '';
+      break;
+    case '留样':
+      document.getElementById('sample-detail').textContent = content;
+      document.getElementById('sample-meal').value = '';
+      document.getElementById('sample-time').value = '';
+      document.getElementById('sample-dishes').value = '';
+      document.getElementById('sample-weight').value = '';
+      document.getElementById('sample-person').value = '';
+      const now = new Date();
+      now.setMinutes(0, 0, 0);
+      document.getElementById('sample-time').value = now.toISOString().slice(0, 16);
+      break;
+    case '消毒':
+      document.getElementById('disinfect-detail').textContent = content;
+      document.getElementById('disinfect-type').value = '';
+      document.getElementById('disinfect-time').value = '';
+      document.getElementById('disinfect-method').value = '';
+      document.getElementById('disinfect-person').value = '';
+      document.getElementById('disinfect-note').value = '';
+      document.getElementById('disinfect-time').value = now.toISOString().slice(0, 16);
+      const requireMatch = content.match(/（早餐、午餐各(\d+)次）/);
+      if (requireMatch) {
+        document.getElementById('disinfect-require').textContent = requireMatch[1] * 2 + '次';
+        document.getElementById('disinfect-done').textContent = '0次';
+      }
+      break;
+    case '价格':
+      document.getElementById('price-detail').textContent = content;
+      const priceMatch = content.match(/¥(.+)→¥(.+)/);
+      if (priceMatch) {
+        document.getElementById('price-old').textContent = '¥' + priceMatch[1];
+        document.getElementById('price-new').textContent = '¥' + priceMatch[2];
+        const oldP = parseFloat(priceMatch[1]);
+        const newP = parseFloat(priceMatch[2]);
+        const change = ((newP - oldP) / oldP * 100).toFixed(1);
+        document.getElementById('price-change').textContent = (change > 0 ? '+' : '') + change + '%';
+      }
+      document.getElementById('price-status').textContent = status;
+      document.getElementById('price-handle-status').value = '';
+      document.getElementById('price-note').value = '';
+      break;
+    case '成本':
+      document.getElementById('cost-warning-detail').textContent = content;
+      document.getElementById('cost-amount').textContent = '¥85,000';
+      document.getElementById('cost-income').textContent = '¥92,500';
+      document.getElementById('cost-rate').textContent = '92%';
+      document.getElementById('cost-threshold').textContent = '85%';
+      document.getElementById('cost-analysis').innerHTML = '• 近30天食材成本呈上升趋势<br>• 主要涨幅来源：肉类（+12%）、蔬菜（+8%）<br>• 建议优先优化肉类菜品结构';
+      document.getElementById('cost-action').value = '';
+      document.getElementById('cost-note').value = '';
+      break;
+  }
+}
+
+function submitHealthCert() {
+  const action = document.getElementById('healthcert-action').value;
+  if (!action) { showToast('请选择处理方式', 'warning'); return; }
+  updateWarningStatus('已处理');
+  closeModalById('modal-healthcert');
+  showToast('✅ 健康证预警已处理', 'success');
+}
+
+function submitExpire() {
+  const action = document.getElementById('expire-action').value;
+  if (!action) { showToast('请选择处理方式', 'warning'); return; }
+  updateWarningStatus('已处理');
+  closeModalById('modal-expire');
+  showToast('✅ 食材临期预警已处理', 'success');
+}
+
+function submitSample() {
+  const meal = document.getElementById('sample-meal').value;
+  if (!meal) { showToast('请选择留样餐次', 'warning'); return; }
+  updateWarningStatus('已处理');
+  closeModalById('modal-sample');
+  showToast('✅ 食品留样已录入', 'success');
+}
+
+function submitDisinfect() {
+  const type = document.getElementById('disinfect-type').value;
+  if (!type) { showToast('请选择消毒类型', 'warning'); return; }
+  updateWarningStatus('已处理');
+  closeModalById('modal-disinfect');
+  showToast('✅ 消毒记录已补录', 'success');
+}
+
+function submitPrice() {
+  const status = document.getElementById('price-handle-status').value;
+  if (!status) { showToast('请选择处理状态', 'warning'); return; }
+  closeModalById('modal-price');
+  showToast('✅ 价格预警处理已保存', 'success');
+}
+
+function submitCost() {
+  const action = document.getElementById('cost-action').value;
+  if (!action) { showToast('请选择应对措施', 'warning'); return; }
+  updateWarningStatus('已处理');
+  closeModalById('modal-cost');
+  showToast('✅ 成本预警处理已保存', 'success');
+}
+
+function updateWarningStatus(status) {
+  if (!currentWarningRow) return;
+  const statusCell = currentWarningRow.querySelector('.status-badge');
+  const resultCell = currentWarningRow.cells[5];
+  if (statusCell) {
+    statusCell.className = 'tag ' + (status === '已处理' ? 'success' : 'danger');
+    statusCell.textContent = status;
+  }
+  if (status === '已处理') {
+    resultCell.textContent = '已处理';
+  }
+  const btn = currentWarningRow.querySelector('.btn');
+  if (btn) {
+    btn.className = 'btn btn-sm btn-outline';
+    btn.textContent = '查看';
+  }
+}
+
 setTimeout(initCharts, 300);
 </script>
+
+<!-- ==================== 预警处理模态框 ==================== -->
+
+<!-- 健康证预警处理 -->
+<div class="modal-overlay" id="modal-healthcert" onclick="closeModal(event,'modal-healthcert')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">🏥 健康证预警处理</div>
+      <div class="modal-close" onclick="closeModalById('modal-healthcert')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert warning" style="margin-bottom:16px">
+        <strong>⚠️ 即将过期/已过期</strong><br>
+        <span id="healthcert-detail"></span>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>处理方式 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="healthcert-action">
+          <option value="">请选择处理方式</option>
+          <option value="new">提交新健康证</option>
+          <option value="extend">申请延期（需附说明）</option>
+          <option value="replace">安排人员顶替</option>
+          <option value="other">其他原因</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>新健康证有效期至</label>
+        <input type="date" class="form-input" id="healthcert-newdate">
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>补充说明</label>
+        <textarea class="form-input" id="healthcert-note" rows="3" placeholder="请输入补充说明（可选）"></textarea>
+      </div>
+      <div class="form-item">
+        <label>上传新健康证</label>
+        <div class="upload-area" onclick="document.getElementById('healthcert-file').click()">
+          <div style="font-size:28px;margin-bottom:8px">📤</div>
+          <div style="font-size:13px;color:var(--text-sub)">点击上传文件</div>
+          <input type="file" id="healthcert-file" accept=".jpg,.png,.pdf" style="display:none">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-healthcert')">取消</button>
+      <button class="btn btn-primary" onclick="submitHealthCert()">确认处理</button>
+    </div>
+  </div>
+</div>
+
+<!-- 食材临期处理 -->
+<div class="modal-overlay" id="modal-expire" onclick="closeModal(event,'modal-expire')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">🥬 食材临期处理</div>
+      <div class="modal-close" onclick="closeModalById('modal-expire')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert warning" style="margin-bottom:16px">
+        <strong>⚠️ 食材即将过期</strong><br>
+        <span id="expire-detail"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        <div class="info-card">
+          <div class="info-label">当前库存</div>
+          <div class="info-value" id="expire-stock">-</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">剩余保质期</div>
+          <div class="info-value" id="expire-days" style="color:var(--warning)">-</div>
+        </div>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>处理方式 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="expire-action">
+          <option value="">请选择处理方式</option>
+          <option value="consume">优先使用（今日备餐）</option>
+          <option value="transfer">调拨至其他班级</option>
+          <option value="discard">报损处理</option>
+          <option value="extend">申请延期使用</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>处理数量</label>
+        <div class="form-row" style="align-items:center">
+          <input type="number" class="form-input" id="expire-amount" placeholder="请输入处理数量" style="flex:1">
+          <span id="expire-unit" style="padding:0 12px;color:var(--text-sub)">-</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label>备注说明</label>
+        <textarea class="form-input" id="expire-note" rows="2" placeholder="请输入备注说明（可选）"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-expire')">取消</button>
+      <button class="btn btn-primary" onclick="submitExpire()">确认处理</button>
+    </div>
+  </div>
+</div>
+
+<!-- 留样预警处理 -->
+<div class="modal-overlay" id="modal-sample" onclick="closeModal(event,'modal-sample')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">🧪 食品留样录入</div>
+      <div class="modal-close" onclick="closeModalById('modal-sample')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert info" style="margin-bottom:16px">
+        <strong>📋 留样信息</strong><br>
+        <span id="sample-detail"></span>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>留样餐次 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="sample-meal">
+          <option value="">请选择餐次</option>
+          <option value="breakfast">早餐</option>
+          <option value="lunch">午餐</option>
+          <option value="dinner">晚餐</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>留样时间</label>
+        <input type="datetime-local" class="form-input" id="sample-time">
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>留样品种</label>
+        <input type="text" class="form-input" id="sample-dishes" placeholder="请输入留样菜品名称，多个用顿号分隔">
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>留样重量</label>
+        <div class="form-row" style="align-items:center">
+          <input type="number" class="form-input" id="sample-weight" placeholder="请输入留样重量" style="flex:1">
+          <span style="padding:0 12px;color:var(--text-sub)">g</span>
+        </div>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>留样人员</label>
+        <input type="text" class="form-input" id="sample-person" placeholder="请输入留样操作人员">
+      </div>
+      <div class="form-item">
+        <label>上传照片</label>
+        <div class="upload-area" onclick="document.getElementById('sample-photo').click()">
+          <div style="font-size:28px;margin-bottom:8px">📷</div>
+          <div style="font-size:13px;color:var(--text-sub)">点击上传留样照片</div>
+          <input type="file" id="sample-photo" accept=".jpg,.png" style="display:none">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-sample')">取消</button>
+      <button class="btn btn-primary" onclick="submitSample()">确认录入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 消毒预警处理 -->
+<div class="modal-overlay" id="modal-disinfect" onclick="closeModal(event,'modal-disinfect')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">🧴 消毒记录补录</div>
+      <div class="modal-close" onclick="closeModalById('modal-disinfect')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert danger" style="margin-bottom:16px">
+        <strong>⚠️ 消毒记录缺失</strong><br>
+        <span id="disinfect-detail"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        <div class="info-card">
+          <div class="info-label">应完成次数</div>
+          <div class="info-value" id="disinfect-require">-</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">已完成次数</div>
+          <div class="info-value" id="disinfect-done" style="color:var(--danger)">-</div>
+        </div>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>消毒类型</label>
+        <select class="form-input" id="disinfect-type">
+          <option value="">请选择消毒类型</option>
+          <option value="tableware">餐具消毒</option>
+          <option value="equipment">设施设备消毒</option>
+          <option value="environment">环境消毒</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>消毒时间</label>
+        <input type="datetime-local" class="form-input" id="disinfect-time">
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>消毒方式</label>
+        <select class="form-input" id="disinfect-method">
+          <option value="">请选择消毒方式</option>
+          <option value="steam">高温蒸汽</option>
+          <option value="boil">沸水煮沸</option>
+          <option value="uv">紫外线</option>
+          <option value="chemical">化学消毒</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>消毒人员</label>
+        <input type="text" class="form-input" id="disinfect-person" placeholder="请输入消毒操作人员">
+      </div>
+      <div class="form-item">
+        <label>备注说明</label>
+        <textarea class="form-input" id="disinfect-note" rows="2" placeholder="请输入备注说明"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-disinfect')">取消</button>
+      <button class="btn btn-primary" onclick="submitDisinfect()">确认补录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 价格预警处理 -->
+<div class="modal-overlay" id="modal-price" onclick="closeModal(event,'modal-price')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">💰 价格预警详情</div>
+      <div class="modal-close" onclick="closeModalById('modal-price')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert info" style="margin-bottom:16px">
+        <strong>📊 价格波动预警</strong><br>
+        <span id="price-detail"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        <div class="info-card">
+          <div class="info-label">原价</div>
+          <div class="info-value" id="price-old">¥0</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">现价</div>
+          <div class="info-value" id="price-new" style="color:var(--danger)">¥0</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">涨幅</div>
+          <div class="info-value" id="price-change">0%</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">状态</div>
+          <div class="info-value" id="price-status">-</div>
+        </div>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>处理状态</label>
+        <select class="form-input" id="price-handle-status">
+          <option value="">请选择处理状态</option>
+          <option value="contacted">已联系供应商</option>
+          <option value="comparing">正在比价</option>
+          <option value="accepted">接受新价格</option>
+          <option value="replaced">已更换供应商</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>处理说明</label>
+        <textarea class="form-input" id="price-note" rows="3" placeholder="请输入处理说明"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-price')">关闭</button>
+      <button class="btn btn-primary" onclick="submitPrice()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 成本预警处理 -->
+<div class="modal-overlay" id="modal-cost" onclick="closeModal(event,'modal-cost')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">📈 成本预警详情</div>
+      <div class="modal-close" onclick="closeModalById('modal-cost')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert danger" style="margin-bottom:16px">
+        <strong>⚠️ 成本超支预警</strong><br>
+        <span id="cost-warning-detail"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        <div class="info-card">
+          <div class="info-label">本月食材成本</div>
+          <div class="info-value" id="cost-amount">¥0</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">餐费收入</div>
+          <div class="info-value" id="cost-income">¥0</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">当前占比</div>
+          <div class="info-value" id="cost-rate" style="color:var(--danger)">0%</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">预警线</div>
+          <div class="info-value" id="cost-threshold">85%</div>
+        </div>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>预警分析</label>
+        <div id="cost-analysis" style="padding:12px;background:var(--bg-sub);border-radius:8px;font-size:13px;line-height:1.6"></div>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>应对措施</label>
+        <select class="form-input" id="cost-action">
+          <option value="">请选择应对措施</option>
+          <option value="adjust">调整菜单降低成本</option>
+          <option value="negotiate">与供应商议价</option>
+          <option value="request">申请提高餐标</option>
+          <option value="subsidy">申请补贴</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>处理说明</label>
+        <textarea class="form-input" id="cost-note" rows="3" placeholder="请输入处理说明"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-cost')">关闭</button>
+      <button class="btn btn-primary" onclick="submitCost()">保存</button>
+    </div>
+  </div>
+</div>
+
   <!-- 退出登录确认弹窗 -->
   <div id="modalLogoutConfirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:12px;width:380px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
