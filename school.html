@@ -762,13 +762,13 @@ select.form-input { cursor: pointer; }
               <div style="color:var(--text-sub);font-size:13px;margin-bottom:16px">从学校菜品库或系统公共菜品库中批量选择，再进行修改调整。</div>
               <div style="display:flex;gap:10px;margin-bottom:14px">
                 <select class="form-input" style="width:160px" id="dishSourceSelect" onchange="switchDishSource(this.value)"><option value="school">学校菜品库</option><option value="public">系统公共菜品库</option></select>
-                <input type="text" class="form-input" style="flex:1" placeholder="搜索菜品名称…">
-                <select class="form-input" style="width:120px"><option>全部分类</option><option>荤菜</option><option>素菜</option><option>汤类</option><option>主食</option></select>
+                <input type="text" class="form-input" style="flex:1" placeholder="搜索菜品名称…" id="batchSearchInput" oninput="searchBatchDishes()">
+                <select class="form-input" style="width:120px" id="batchFilterType" onchange="filterBatchDishes()"><option value="">全部分类</option><option value="荤菜">荤菜</option><option value="素菜">素菜</option><option value="汤类">汤类</option><option value="主食">主食</option></select>
               </div>
               <div class="recipe-grid" id="recipeBatchGrid"></div>
               <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-                <div style="font-size:13px;color:var(--text-sub)">已选 <strong style="color:var(--primary)">3</strong> 个菜品</div>
-                <button class="btn btn-primary">确认选择并调整</button>
+                <div style="font-size:13px;color:var(--text-sub)">已选 <strong style="color:var(--primary)" id="batchSelectedCount">0</strong> 个菜品</div>
+                <button class="btn btn-primary" onclick="confirmBatchSelection()">确认选择并调整</button>
               </div>
             </div>
             <div class="tab-content" id="tab-method3">
@@ -1771,7 +1771,16 @@ function showPage(id) {
 let currentRecipeSource = '';
 let currentRecipeType = '';
 let selectedRecipe = null;
-let addedRecipes = JSON.parse(sessionStorage.getItem('addedRecipes') || '[]');
+let addedRecipes = JSON.parse(sessionStorage.getItem('addedRecipes') || 'null');
+// 如果没有保存的数据，使用默认模拟数据
+if (!addedRecipes) {
+  addedRecipes = [
+    { name: '红烧肉', type: '荤菜', ingredient: '猪肉100g、酱油5ml、冰糖10g', cal: 350 },
+    { name: '炒白菜', type: '素菜', ingredient: '白菜150g、食用油10ml', cal: 65 },
+    { name: '紫菜蛋花汤', type: '汤类', ingredient: '紫菜5g、鸡蛋50g', cal: 90 },
+    { name: '米饭', type: '主食', ingredient: '大米150g', cal: 173 }
+  ];
+}
 
 // 食谱数据
 const recipeDatabase = {
@@ -2666,58 +2675,161 @@ function refreshCabinetList() {
 
 // ===== Batch Recipe Grid =====
 const dishes = [
-  {name:'红烧肉',emoji:'🥩',cal:'350kcal'},
-  {name:'番茄炒蛋',emoji:'🍅',cal:'180kcal'},
-  {name:'清炒菠菜',emoji:'🥬',cal:'65kcal'},
-  {name:'宫保鸡丁',emoji:'🍗',cal:'280kcal'},
-  {name:'鱼香肉丝',emoji:'🐟',cal:'260kcal'},
-  {name:'蒸蛋羹',emoji:'🥚',cal:'90kcal'},
-  {name:'炒白菜',emoji:'🥦',cal:'70kcal'},
-  {name:'糖醋排骨',emoji:'🍖',cal:'420kcal'},
-  {name:'米饭',emoji:'🍚',cal:'173kcal'},
-  {name:'紫菜汤',emoji:'🍵',cal:'55kcal'},
-  {name:'豆腐汤',emoji:'🫕',cal:'80kcal'},
-  {name:'炒豆角',emoji:'🫘',cal:'75kcal'},
+  {name:'红烧肉',emoji:'🥩',type:'荤菜',ingredient:'猪肉100g、酱油5ml、冰糖10g',cal:'350'},
+  {name:'番茄炒蛋',emoji:'🍅',type:'荤菜',ingredient:'番茄100g、鸡蛋60g',cal:'180'},
+  {name:'清炒菠菜',emoji:'🥬',type:'素菜',ingredient:'菠菜150g、食用油10ml',cal:'65'},
+  {name:'宫保鸡丁',emoji:'🍗',type:'荤菜',ingredient:'鸡胸肉100g、花生15g',cal:'280'},
+  {name:'鱼香肉丝',emoji:'🐟',type:'荤菜',ingredient:'猪肉80g、木耳30g',cal:'260'},
+  {name:'蒸蛋羹',emoji:'🥚',type:'荤菜',ingredient:'鸡蛋80g、葱花5g',cal:'90'},
+  {name:'炒白菜',emoji:'🥦',type:'素菜',ingredient:'白菜150g、食用油10ml',cal:'70'},
+  {name:'糖醋排骨',emoji:'🍖',type:'荤菜',ingredient:'猪排骨120g、醋20ml',cal:'420'},
+  {name:'米饭',emoji:'🍚',type:'主食',ingredient:'大米150g',cal:'173'},
+  {name:'紫菜汤',emoji:'🍵',type:'汤类',ingredient:'紫菜5g、虾皮3g',cal:'55'},
+  {name:'豆腐汤',emoji:'🫕',type:'汤类',ingredient:'嫩豆腐80g、葱花5g',cal:'80'},
+  {name:'炒豆角',emoji:'🫘',type:'素菜',ingredient:'豆角150g、食用油10ml',cal:'75'},
 ];
 
 // 系统公共菜品库
 const publicDishes = [
-  {name:'土豆烧牛肉',emoji:'🥔',cal:'310kcal'},
-  {name:'青椒肉丝',emoji:'🫑',cal:'240kcal'},
-  {name:'蒜蓉西兰花',emoji:'🥦',cal:'58kcal'},
-  {name:'萝卜炖排骨',emoji:'🥕',cal:'380kcal'},
-  {name:'香菇炒青菜',emoji:'🍄',cal:'72kcal'},
-  {name:'冬瓜虾皮汤',emoji:'🍤',cal:'65kcal'},
-  {name:'木须肉',emoji:'🥩',cal:'220kcal'},
-  {name:'酸辣土豆丝',emoji:'🧡',cal:'130kcal'},
-  {name:'红烧鸡腿',emoji:'🍗',cal:'290kcal'},
-  {name:'清蒸鲈鱼',emoji:'🐟',cal:'185kcal'},
-  {name:'蛋花紫菜汤',emoji:'🥣',cal:'48kcal'},
-  {name:'西红柿蛋汤',emoji:'🍅',cal:'62kcal'},
-  {name:'小葱拌豆腐',emoji:'🧈',cal:'95kcal'},
-  {name:'蒜泥白肉',emoji:'🥓',cal:'340kcal'},
-  {name:'白灼虾',emoji:'🦐',cal:'150kcal'},
-  {name:'凉拌黄瓜',emoji:'🥒',cal:'35kcal'},
-  {name:'菠菜蛋汤',emoji:'🥬',cal:'55kcal'},
-  {name:'海带排骨汤',emoji:'🌊',cal:'160kcal'},
+  {name:'土豆烧牛肉',emoji:'🥔',type:'荤菜',ingredient:'土豆100g、牛肉80g',cal:'310'},
+  {name:'青椒肉丝',emoji:'🫑',type:'荤菜',ingredient:'青椒100g、猪肉80g',cal:'240'},
+  {name:'蒜蓉西兰花',emoji:'🥦',type:'素菜',ingredient:'西兰花150g、蒜蓉5g',cal:'58'},
+  {name:'萝卜炖排骨',emoji:'🥕',type:'荤菜',ingredient:'白萝卜100g、猪排骨80g',cal:'380'},
+  {name:'香菇炒青菜',emoji:'🍄',type:'素菜',ingredient:'香菇50g、青菜120g',cal:'72'},
+  {name:'冬瓜虾皮汤',emoji:'🍤',type:'汤类',ingredient:'冬瓜100g、虾皮5g',cal:'65'},
+  {name:'木须肉',emoji:'🥩',type:'荤菜',ingredient:'猪肉80g、鸡蛋40g、木耳20g',cal:'220'},
+  {name:'酸辣土豆丝',emoji:'🧡',type:'素菜',ingredient:'土豆140g、醋10ml、辣椒5g',cal:'130'},
+  {name:'红烧鸡腿',emoji:'🍗',type:'荤菜',ingredient:'鸡腿120g、酱油10ml',cal:'290'},
+  {name:'清蒸鲈鱼',emoji:'🐟',type:'荤菜',ingredient:'鲈鱼150g、葱姜10g',cal:'185'},
+  {name:'蛋花紫菜汤',emoji:'🥣',type:'汤类',ingredient:'紫菜5g、鸡蛋30g',cal:'48'},
+  {name:'西红柿蛋汤',emoji:'🍅',type:'汤类',ingredient:'番茄80g、鸡蛋40g',cal:'62'},
+  {name:'小葱拌豆腐',emoji:'🧈',type:'素菜',ingredient:'嫩豆腐100g、葱花10g',cal:'95'},
+  {name:'蒜泥白肉',emoji:'🥓',type:'荤菜',ingredient:'猪肉100g、蒜泥10g',cal:'340'},
+  {name:'白灼虾',emoji:'🦐',type:'荤菜',ingredient:'鲜虾120g、姜片10g',cal:'150'},
+  {name:'凉拌黄瓜',emoji:'🥒',type:'素菜',ingredient:'黄瓜150g、蒜泥5g',cal:'35'},
+  {name:'菠菜蛋汤',emoji:'🥬',type:'汤类',ingredient:'菠菜60g、鸡蛋30g',cal:'55'},
+  {name:'海带排骨汤',emoji:'🌊',type:'汤类',ingredient:'海带50g、猪排骨60g',cal:'160'},
 ];
 
 let currentDishSource = 'school';
+let batchSelectedDishes = []; // 批量选择中选中的菜品
 
 function renderBatchGrid(dishData) {
   const g = document.getElementById('recipeBatchGrid');
   if (!g) return;
-  g.innerHTML = dishData.map((d,i) => `<div class="recipe-card ${i<3?'selected':''}" onclick="this.classList.toggle('selected')">
+  batchSelectedDishes = []; // 重置选中列表
+  g.innerHTML = dishData.map((d, i) => `<div class="recipe-card" onclick="toggleBatchDish(this, '${d.name}', '${d.type}', '${d.ingredient}', ${d.cal}, '${d.emoji}')">
     <div class="recipe-emoji">${d.emoji}</div>
     <div class="recipe-name">${d.name}</div>
-    <div class="recipe-cal">${d.cal}</div>
+    <div class="recipe-cal">${d.cal} kcal</div>
   </div>`).join('');
+  updateBatchSelectionCount();
+}
+
+// 切换批量选择的菜品
+function toggleBatchDish(el, name, type, ingredient, cal, emoji) {
+  el.classList.toggle('selected');
+  const dishKey = name;
+  const existingIndex = batchSelectedDishes.findIndex(d => d.name === name);
+  
+  if (el.classList.contains('selected')) {
+    if (existingIndex === -1) {
+      batchSelectedDishes.push({ name, type, ingredient, cal, emoji });
+    }
+  } else {
+    if (existingIndex !== -1) {
+      batchSelectedDishes.splice(existingIndex, 1);
+    }
+  }
+  updateBatchSelectionCount();
+}
+
+// 更新批量选择的数量显示
+function updateBatchSelectionCount() {
+  const countEl = document.getElementById('batchSelectedCount');
+  if (countEl) {
+    countEl.textContent = batchSelectedDishes.length;
+  }
+}
+
+// 确认批量选择并添加到列表
+function confirmBatchSelection() {
+  if (batchSelectedDishes.length === 0) {
+    showToast('请先选择菜品', 'warning');
+    return;
+  }
+  
+  // 将选中的菜品添加到食谱列表
+  batchSelectedDishes.forEach(dish => {
+    const exists = addedRecipes.some(r => r.name === dish.name);
+    if (!exists) {
+      addedRecipes.push({
+        name: dish.name,
+        type: dish.type,
+        ingredient: dish.ingredient,
+        cal: dish.cal
+      });
+    }
+  });
+  
+  sessionStorage.setItem('addedRecipes', JSON.stringify(addedRecipes));
+  renderAddedRecipes();
+  
+  // 清空选中状态
+  batchSelectedDishes = [];
+  updateBatchSelectionCount();
+  
+  showToast('已添加 ' + batchSelectedDishes.length + ' 个菜品到食谱', 'success');
+  
+  // 切换到单个录入标签页显示结果
+  const method1Tab = document.querySelector('#tab-method1');
+  if (method1Tab) {
+    method1Tab.classList.add('active');
+    document.getElementById('tab-method2').classList.remove('active');
+  }
 }
 
 function switchDishSource(source) {
   currentDishSource = source;
   const dishData = source === 'school' ? dishes : publicDishes;
   renderBatchGrid(dishData);
+  // 清空搜索和筛选
+  document.getElementById('batchSearchInput').value = '';
+  document.getElementById('batchFilterType').value = '';
+}
+
+// 搜索批量选择中的菜品
+function searchBatchDishes() {
+  const search = document.getElementById('batchSearchInput').value.toLowerCase();
+  const filter = document.getElementById('batchFilterType').value;
+  const dishData = currentDishSource === 'school' ? dishes : publicDishes;
+  
+  let filtered = dishData;
+  if (search) {
+    filtered = filtered.filter(d => d.name.toLowerCase().includes(search));
+  }
+  if (filter) {
+    filtered = filtered.filter(d => d.type === filter);
+  }
+  
+  renderBatchGridWithData(filtered);
+}
+
+// 筛选批量选择中的菜品
+function filterBatchDishes() {
+  searchBatchDishes();
+}
+
+// 使用指定数据渲染批量选择网格
+function renderBatchGridWithData(dishData) {
+  const g = document.getElementById('recipeBatchGrid');
+  if (!g) return;
+  g.innerHTML = dishData.map((d, i) => `<div class="recipe-card" onclick="toggleBatchDish(this, '${d.name}', '${d.type}', '${d.ingredient}', ${d.cal}, '${d.emoji}')">
+    <div class="recipe-emoji">${d.emoji}</div>
+    <div class="recipe-name">${d.name}</div>
+    <div class="recipe-cal">${d.cal} kcal</div>
+  </div>`).join('');
+  updateBatchSelectionCount();
 }
 
 function initBatchGrid() {
@@ -2727,6 +2839,67 @@ function initBatchGrid() {
   renderBatchGrid(dishData);
 }
 document.addEventListener('DOMContentLoaded', initBatchGrid);
+
+// ===== Toast 提示 =====
+function showToast(message, type = 'info') {
+  // 移除已有的toast
+  const existing = document.querySelector('.toast-message');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast-message';
+  toast.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 10000;
+    animation: toastSlideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  `;
+  
+  if (type === 'success') {
+    toast.style.background = '#f6ffed';
+    toast.style.color = '#52c41a';
+    toast.style.border = '1px solid #b7eb8f';
+  } else if (type === 'warning') {
+    toast.style.background = '#fffbe6';
+    toast.style.color = '#faad14';
+    toast.style.border = '1px solid #ffe58f';
+  } else if (type === 'error') {
+    toast.style.background = '#fff2f0';
+    toast.style.color = '#ff4d4f';
+    toast.style.border = '1px solid #ffccc7';
+  } else {
+    toast.style.background = '#e6f0ff';
+    toast.style.color = '#1677ff';
+    toast.style.border = '1px solid #91caff';
+  }
+  
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// 添加toast动画样式
+const toastStyle = document.createElement('style');
+toastStyle.textContent = `
+  @keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes toastSlideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+`;
+document.head.appendChild(toastStyle);
 
 // ===== QR Code Generation =====
 function generateAllQRCodes() {
