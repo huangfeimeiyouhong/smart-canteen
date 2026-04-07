@@ -6,7 +6,8 @@
 <title>学校管理端 - 智慧食堂监管平台</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <style>
 :root {
@@ -28,6 +29,31 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); }
+
+/* Toast 提示 */
+.toast {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+  min-width: 200px;
+}
+.toast.show { transform: translateX(0); }
+.toast-success { border-left: 4px solid var(--success); }
+.toast-success span { color: var(--success); }
+.toast-info { border-left: 4px solid var(--primary); }
+.toast-info span { color: var(--primary); }
+.toast-warning { border-left: 4px solid var(--warning); }
+.toast-warning span { color: var(--warning); }
+.toast-error { border-left: 4px solid var(--danger); }
+.toast-error span { color: var(--danger); }
+.btn-disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Layout */
 .app { display: flex; min-height: 100vh; }
@@ -1100,11 +1126,11 @@ select.form-input { cursor: pointer; }
           <table class="data-table">
             <thead><tr><th>商品名称</th><th>采购单位</th><th>换算比例</th><th>出库单位</th><th>示例</th><th>操作</th></tr></thead>
             <tbody>
-              <tr><td>大米</td><td>箱</td><td>1箱 = 5kg</td><td>kg</td><td>采购2箱 = 出库10kg</td><td><button class="btn btn-sm btn-outline" onclick="editRule('大米')">编辑</button></td></tr>
-              <tr><td>食用油</td><td>件</td><td>1件 = 5L</td><td>L</td><td>采购4件 = 出库20L</td><td><button class="btn btn-sm btn-outline" onclick="editRule('食用油')">编辑</button></td></tr>
-              <tr><td>鸡蛋</td><td>件</td><td>1件 = 30枚</td><td>枚</td><td>采购3件 = 出库90枚</td><td><button class="btn btn-sm btn-outline" onclick="editRule('鸡蛋')">编辑</button></td></tr>
-              <tr><td>酱油（500ml）</td><td>箱</td><td>1箱 = 12瓶</td><td>瓶</td><td>采购2箱 = 出库24瓶</td><td><button class="btn btn-sm btn-outline" onclick="editRule('酱油（500ml）')">编辑</button></td></tr>
-              <tr><td>纯牛奶（250ml）</td><td>箱</td><td>1箱 = 24盒</td><td>盒</td><td>采购5箱 = 出库120盒</td><td><button class="btn btn-sm btn-outline" onclick="editRule('纯牛奶（250ml）')">编辑</button></td></tr>
+              <tr><td>大米</td><td>箱</td><td>1箱 = 5kg</td><td>kg</td><td>1箱 = 5kg</td><td><button class="btn btn-sm btn-outline" onclick="editRule('大米')">编辑</button></td></tr>
+              <tr><td>食用油</td><td>件</td><td>1件 = 5L</td><td>L</td><td>1件 = 5L</td><td><button class="btn btn-sm btn-outline" onclick="editRule('食用油')">编辑</button></td></tr>
+              <tr><td>鸡蛋</td><td>件</td><td>1件 = 30枚</td><td>枚</td><td>1件 = 30枚</td><td><button class="btn btn-sm btn-outline" onclick="editRule('鸡蛋')">编辑</button></td></tr>
+              <tr><td>酱油（500ml）</td><td>箱</td><td>1箱 = 12瓶</td><td>瓶</td><td>1箱 = 12瓶</td><td><button class="btn btn-sm btn-outline" onclick="editRule('酱油（500ml）')">编辑</button></td></tr>
+              <tr><td>纯牛奶（250ml）</td><td>箱</td><td>1箱 = 24盒</td><td>盒</td><td>1箱 = 24盒</td><td><button class="btn btn-sm btn-outline" onclick="editRule('纯牛奶（250ml）')">编辑</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -1186,17 +1212,17 @@ select.form-input { cursor: pointer; }
               <option>2026年4月</option>
               <option>2026年3月</option>
             </select>
-            <button class="btn btn-primary btn-sm">一键生成对账表</button>
+            <button class="btn btn-primary btn-sm" onclick="openModalById('modal-statement-gen')">一键生成对账表</button>
           </div>
         </div>
         <div class="card-body">
           <div class="alert success">✅ 2026年4月对账表已生成，可下载PDF版本</div>
           <table class="data-table">
             <thead><tr><th>供应商</th><th>本期采购金额</th><th>已付款</th><th>未结算</th><th>票证完整性</th><th>对账状态</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>鲜肉直供中心</td><td>¥8,640</td><td>¥8,640</td><td>¥0</td><td><span class="tag success">完整</span></td><td><span class="tag success">已对账</span></td><td><button class="btn btn-sm btn-outline">查看详情</button></td></tr>
-              <tr><td>绿鲜蔬菜基地</td><td>¥3,280</td><td>¥2,000</td><td>¥1,280</td><td><span class="tag warning">待补传</span></td><td><span class="tag warning">待确认</span></td><td><button class="btn btn-sm btn-outline">查看详情</button></td></tr>
-              <tr><td>优品粮油配送</td><td>¥5,120</td><td>¥5,120</td><td>¥0</td><td><span class="tag success">完整</span></td><td><span class="tag success">已对账</span></td><td><button class="btn btn-sm btn-outline">查看详情</button></td></tr>
+            <tbody id="settlementTableBody">
+              <tr><td>鲜肉直供中心</td><td>¥8,640</td><td>¥8,640</td><td>¥0</td><td><span class="tag success">完整</span></td><td><span class="tag success">已对账</span></td><td><button class="btn btn-sm btn-outline" onclick="showStatementDetail('鲜肉直供中心', '¥8,640', '¥8,640', '¥0', '完整', '已对账')">查看详情</button></td></tr>
+              <tr><td>绿鲜蔬菜基地</td><td>¥3,280</td><td>¥2,000</td><td>¥1,280</td><td><span class="tag warning">待补传</span></td><td><span class="tag warning">待确认</span></td><td><button class="btn btn-sm btn-outline" onclick="showStatementDetail('绿鲜蔬菜基地', '¥3,280', '¥2,000', '¥1,280', '待补传', '待确认')">查看详情</button></td></tr>
+              <tr><td>优品粮油配送</td><td>¥5,120</td><td>¥5,120</td><td>¥0</td><td><span class="tag success">完整</span></td><td><span class="tag success">已对账</span></td><td><button class="btn btn-sm btn-outline" onclick="showStatementDetail('优品粮油配送', '¥5,120', '¥5,120', '¥0', '完整', '已对账')">查看详情</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -1210,7 +1236,6 @@ select.form-input { cursor: pointer; }
           <div class="card-title">🗄️ 电子资料柜</div>
           <div style="display:flex;gap:8px">
             <select class="form-input" style="width:120px;padding:6px 10px"><option>2026年4月</option><option>2026年3月</option></select>
-            <button class="btn btn-outline btn-sm" onclick="exportAllCabinetPDF()">📤 一键导出全部PDF</button>
           </div>
         </div>
         <div class="card-body">
@@ -1305,12 +1330,6 @@ select.form-input { cursor: pointer; }
               <div class="name">废弃处置</div>
               <div class="count">本月 8 条</div>
               <div class="status"><span class="tag success">完整</span></div>
-            </div>
-            <div class="cabinet-item" style="background:var(--primary-light);border-color:var(--primary)">
-              <div class="icon">📊</div>
-              <div class="name">全部台账打包</div>
-              <div class="count">一键生成PDF</div>
-              <div class="status"><button class="btn btn-primary btn-sm" style="margin-top:4px">立即导出</button></div>
             </div>
           </div>
         </div>
@@ -1477,7 +1496,7 @@ select.form-input { cursor: pointer; }
             <div class="card-title">📈 评分历史趋势</div>
           </div>
           <div class="card-body">
-            <canvas id="scoreChart" height="220"></canvas>
+            <canvas id="scoreChart" height="160"></canvas>
           </div>
         </div>
       </div>
@@ -1556,7 +1575,7 @@ select.form-input { cursor: pointer; }
               <div class="card-title">📈 学期各月评分趋势</div>
             </div>
             <div class="card-body">
-              <canvas id="termScoreChart" height="220"></canvas>
+              <canvas id="termScoreChart" height="160"></canvas>
             </div>
           </div>
         </div>
@@ -1607,30 +1626,34 @@ select.form-input { cursor: pointer; }
         <div class="card-head">
           <div class="card-title">📅 周报管理</div>
           <div style="display:flex;gap:8px">
-            <select class="form-input" style="width:180px;padding:6px 10px"><option>第14周（3/30-4/3）</option><option>第13周（3/23-3/27）</option></select>
+            <select class="form-input" style="width:180px;padding:6px 10px" id="weekSelect" onchange="changeWeekReport()">
+              <option value="0">第14周（3/30-4/3）</option>
+              <option value="1">第13周（3/23-3/27）</option>
+              <option value="2">第12周（3/16-3/20）</option>
+            </select>
             <button class="btn btn-primary btn-sm">🔄 自动生成周报</button>
             <button class="btn btn-outline btn-sm" onclick="exportWeeklyReportPDF()">📤 导出PDF</button>
-            <button class="btn btn-success btn-sm">📨 上报监管端</button>
+            <button class="btn btn-success btn-sm" id="btnReportUp" onclick="reportToSupervisor()">📨 上报监管端</button>
           </div>
         </div>
-        <div class="card-body">
+        <div class="card-body" id="weekReportContent">
           <div style="background:#f0f7ff;border-left:4px solid var(--primary);padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:20px">
-            <div style="font-size:15px;font-weight:600;color:var(--primary)">实验小学食堂第14周周报（2026年3月30日 - 4月3日）</div>
-            <div style="font-size:12px;color:var(--text-sub);margin-top:4px">生成时间：2026-04-03 18:00 | 状态：<span style="color:var(--success)">已上报</span></div>
+            <div style="font-size:15px;font-weight:600;color:var(--primary)" id="weekReportTitle">实验小学食堂第14周周报（2026年3月30日 - 4月3日）</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px" id="weekReportMeta">生成时间：2026-04-03 18:00 | 状态：<span id="weekReportStatus" style="color:var(--success)">已上报</span></div>
           </div>
           <div class="grid-2" style="gap:16px">
             <div>
               <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">📋 一、食谱公示与营养分析</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekNutriText">
                 本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率96%，脂肪达标率91%，碳水化合物达标率98%，营养综合评级A级。
               </div>
               <div class="grid-2" style="gap:8px;margin-top:10px">
                 <div style="background:#f0fff4;border-radius:6px;padding:10px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;color:var(--success)">A</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--success)" id="weekNutriLevel">A</div>
                   <div style="font-size:11px;color:var(--text-sub)">营养评级</div>
                 </div>
                 <div style="background:#e6f0ff;border-radius:6px;padding:10px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;color:var(--primary)">100%</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--primary)" id="weekPubRate">100%</div>
                   <div style="font-size:11px;color:var(--text-sub)">公示率</div>
                 </div>
               </div>
@@ -1639,7 +1662,7 @@ select.form-input { cursor: pointer; }
               <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🛒 二、食材采购情况</div>
               <table class="data-table">
                 <thead><tr><th>类别</th><th>入库</th><th>出库</th><th>期末库存</th></tr></thead>
-                <tbody>
+                <tbody id="weekPurchaseBody">
                   <tr><td>肉类</td><td>250kg</td><td>230kg</td><td>20kg</td></tr>
                   <tr><td>蔬菜</td><td>400kg</td><td>395kg</td><td>5kg</td></tr>
                   <tr><td>粮油</td><td>180kg</td><td>150kg</td><td>30kg</td></tr>
@@ -1648,14 +1671,14 @@ select.form-input { cursor: pointer; }
             </div>
             <div>
               <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">💰 三、食材成本分析</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekCostText">
                 本周食材总成本：<strong>¥28,640</strong>，日均成本：<strong>¥5,728</strong>，人均成本：<strong>¥6.74</strong>（按850人计）。较上周增加约3.2%，猪肉价格上涨为主因。
               </div>
-              <div class="alert warning" style="margin-top:10px;font-size:12px">⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）</div>
+              <div class="alert warning" style="margin-top:10px;font-size:12px" id="weekCostAlert">⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）</div>
             </div>
             <div>
               <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">⚠️ 四、食安预警汇总</div>
-              <ul class="timeline">
+              <ul class="timeline" id="weekWarningTimeline">
                 <li class="timeline-item"><div class="timeline-dot danger"></div><div class="timeline-time">04-03</div><div class="timeline-text">健康证过期预警（张厨师）—待处理</div></li>
                 <li class="timeline-item"><div class="timeline-dot warning"></div><div class="timeline-time">04-03</div><div class="timeline-text">菠菜临期预警（18kg）—已提醒</div></li>
                 <li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">04-02</div><div class="timeline-text">价格预警（猪肉）—已处理</div></li>
@@ -1664,11 +1687,11 @@ select.form-input { cursor: pointer; }
             </div>
             <div>
               <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🍽️ 五、陪餐情况</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekDiningText">本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。</div>
             </div>
             <div>
               <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🧪 六、留样数据</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">本周应留样25份（每日早午餐各1份），实际留样24份，完成率96%。2026-04-03午餐留样未录入，需尽快补录。</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekSampleText">本周应留样25份（每日早午餐各1份），实际留样24份，完成率96%。2026-04-03午餐留样未录入，需尽快补录。</div>
             </div>
           </div>
         </div>
@@ -1786,17 +1809,13 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-body" id="cabinetListView">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <select class="form-input" style="width:160px" onchange="refreshCabinetList()"><option>2026年4月</option><option>2026年3月</option></select>
-        <button class="btn btn-primary btn-sm">📤 导出本月PDF</button>
+        <select class="form-input" style="width:160px" id="cabinetMonthSelect" onchange="refreshCabinetList()"><option>2026年4月</option><option>2026年3月</option></select>
+        <button class="btn btn-primary btn-sm" onclick="exportMonthCabinetPDF()">📤 导出本月PDF</button>
       </div>
       <table class="data-table">
         <thead><tr><th>日期</th><th>填报人</th><th>状态</th><th>操作</th></tr></thead>
         <tbody id="cabinetListBody">
-          <tr><td>2026-04-03</td><td>王主任</td><td><span class="tag warning">未填写</span></td><td><button class="btn btn-sm btn-primary">立即填写</button></td></tr>
-          <tr><td>2026-04-02</td><td>王主任</td><td><span class="tag success">已完成</span></td><td><button class="btn btn-sm btn-outline" onclick="showCabinetDetail('detail-view')">查看</button></td></tr>
-          <tr><td>2026-04-01</td><td>李师傅</td><td><span class="tag success">已完成</span></td><td><button class="btn btn-sm btn-outline" onclick="showCabinetDetail('detail-view')">查看</button></td></tr>
-          <tr><td>2026-03-31</td><td>王主任</td><td><span class="tag success">已完成</span></td><td><button class="btn btn-sm btn-outline" onclick="showCabinetDetail('detail-view')">查看</button></td></tr>
-          <tr><td>2026-03-30</td><td>王主任</td><td><span class="tag success">已完成</span></td><td><button class="btn btn-sm btn-outline" onclick="showCabinetDetail('detail-view')">查看</button></td></tr>
+          <!-- 由 refreshCabinetList() 动态渲染 -->
         </tbody>
       </table>
     </div>
@@ -1951,6 +1970,60 @@ select.form-input { cursor: pointer; }
     </div>
   </div>
 </div>
+
+<!-- 生成对账报表弹窗 -->
+<div class="modal-overlay" id="modal-statement-gen" onclick="closeModal(event,'modal-statement-gen')">
+  <div class="modal" style="width:480px;max-width:95vw" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">📊 生成对账报表</div>
+      <div class="modal-close" onclick="closeModalById('modal-statement-gen')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-item" style="margin-bottom:16px">
+        <label>选择供应商 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="stmtSupplier">
+          <option value="">全部供应商</option>
+          <option value="鲜肉直供中心">鲜肉直供中心</option>
+          <option value="绿鲜蔬菜基地">绿鲜蔬菜基地</option>
+          <option value="优品粮油配送">优品粮油配送</option>
+          <option value="放心蛋品供应商">放心蛋品供应商</option>
+          <option value="鲜活水产批发">鲜活水产批发</option>
+        </select>
+      </div>
+      <div class="form-item" style="margin-bottom:16px">
+        <label>选择月份 <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="stmtMonth">
+          <option value="2026-04">2026年4月</option>
+          <option value="2026-03">2026年3月</option>
+          <option value="2026-02">2026年2月</option>
+        </select>
+      </div>
+      <div style="padding:12px;background:var(--bg-sub);border-radius:8px;font-size:13px;color:var(--text-sub)">
+        💡 生成后将自动计算本期采购金额、已付款、未结算金额，并展示票证完整性
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-statement-gen')">取消</button>
+      <button class="btn btn-primary" onclick="doGenerateStatement()">生成报表</button>
+    </div>
+  </div>
+</div>
+
+<!-- 对账详情弹窗 -->
+<div class="modal-overlay" id="modal-statement-detail" onclick="closeModal(event,'modal-statement-detail')">
+  <div class="modal" style="width:680px;max-width:95vw" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="stmtDetailTitle">📋 对账详情</div>
+      <div class="modal-close" onclick="closeModalById('modal-statement-detail')">×</div>
+    </div>
+    <div class="modal-body" id="stmtDetailContent" style="max-height:60vh;overflow-y:auto"></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModalById('modal-statement-detail')">关闭</button>
+      <button class="btn btn-primary" onclick="exportStatementPDF()">📥 导出PDF</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 // ===== Navigation =====
@@ -2515,6 +2588,150 @@ function confirmOutbound() {
   }
 }
 
+// ===== 结算对账功能 =====
+// 供应商对账数据模拟
+const settlementData = {
+  '鲜肉直供中心': { total: '¥8,640', paid: '¥8,640', unpaid: '¥0', ticket: '完整', status: '已对账' },
+  '绿鲜蔬菜基地': { total: '¥3,280', paid: '¥2,000', unpaid: '¥1,280', ticket: '待补传', status: '待确认' },
+  '优品粮油配送': { total: '¥5,120', paid: '¥5,120', unpaid: '¥0', ticket: '完整', status: '已对账' },
+  '放心蛋品供应商': { total: '¥2,880', paid: '¥1,440', unpaid: '¥1,440', ticket: '完整', status: '待确认' },
+  '鲜活水产批发': { total: '¥4,200', paid: '¥2,000', unpaid: '¥2,200', ticket: '待补传', status: '待确认' }
+};
+
+// 生成对账报表
+function doGenerateStatement() {
+  const supplier = document.getElementById('stmtSupplier').value;
+  const month = document.getElementById('stmtMonth').value;
+  const supplierText = supplier || '全部供应商';
+  const monthDisplay = month.replace('-', '年') + '月';
+  
+  closeModalById('modal-statement-gen');
+  showToast(`正在生成 ${monthDisplay} ${supplierText} 的对账报表...`, 'info');
+  
+  setTimeout(() => {
+    // 生成数据
+    const targets = supplier ? [supplier] : Object.keys(settlementData);
+    
+    targets.forEach(name => {
+      // 检查是否已存在该供应商当月记录
+      const tbody = document.getElementById('settlementTableBody');
+      let exists = false;
+      for (let row of tbody.rows) {
+        if (row.cells[0].textContent === name) {
+          // 更新已有行
+          const data = settlementData[name];
+          row.cells[1].textContent = data.total;
+          row.cells[2].textContent = data.paid;
+          row.cells[3].textContent = data.unpaid;
+          row.cells[4].innerHTML = data.ticket === '完整'
+            ? '<span class="tag success">完整</span>'
+            : '<span class="tag warning">待补传</span>';
+          row.cells[5].innerHTML = data.status === '已对账'
+            ? '<span class="tag success">已对账</span>'
+            : '<span class="tag warning">待确认</span>';
+          row.cells[6].innerHTML = `<button class="btn btn-sm btn-outline" onclick="showStatementDetail('${name}', '${data.total}', '${data.paid}', '${data.unpaid}', '${data.ticket}', '${data.status}')">查看详情</button>`;
+          exists = true;
+          break;
+        }
+      }
+      
+      if (!exists) {
+        // 追加新行
+        const data = settlementData[name];
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td>${name}</td>
+          <td>${data.total}</td>
+          <td>${data.paid}</td>
+          <td>${data.unpaid}</td>
+          <td>${data.ticket === '完整' ? '<span class="tag success">完整</span>' : '<span class="tag warning">待补传</span>'}</td>
+          <td>${data.status === '已对账' ? '<span class="tag success">已对账</span>' : '<span class="tag warning">待确认</span>'}</td>
+          <td><button class="btn btn-sm btn-outline" onclick="showStatementDetail('${name}', '${data.total}', '${data.paid}', '${data.unpaid}', '${data.ticket}', '${data.status}')">查看详情</button></td>
+        `;
+        tbody.appendChild(newRow);
+      }
+    });
+    
+    showToast(`✅ ${monthDisplay} ${supplierText} 对账报表已生成，共 ${targets.length} 条记录`, 'success');
+  }, 1000);
+}
+
+// 查看对账详情
+function showStatementDetail(name, total, paid, unpaid, ticketStatus, stmtStatus) {
+  document.getElementById('stmtDetailTitle').textContent = `📋 ${name} — 对账详情`;
+  
+  const ticketHtml = ticketStatus === '完整'
+    ? '<span class="tag success">完整</span>'
+    : '<span class="tag warning">待补传</span>';
+  const stmtHtml = stmtStatus === '已对账'
+    ? '<span class="tag success">已对账</span>'
+    : '<span class="tag warning">待确认</span>';
+  
+  document.getElementById('stmtDetailContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">供应商</div>
+        <div style="font-size:16px;font-weight:600">${name}</div>
+      </div>
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">对账月份</div>
+        <div style="font-size:16px;font-weight:600">2026年4月</div>
+      </div>
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">本期采购金额</div>
+        <div style="font-size:20px;font-weight:700;color:var(--primary)">${total}</div>
+      </div>
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">已付款</div>
+        <div style="font-size:20px;font-weight:700;color:var(--success)">${paid}</div>
+      </div>
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">未结算</div>
+        <div style="font-size:20px;font-weight:700;color:${unpaid === '¥0' ? 'var(--success)' : 'var(--warning)'}">${unpaid}</div>
+      </div>
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">票证完整性</div>
+        <div style="font-size:16px;font-weight:600;margin-top:4px">${ticketHtml}</div>
+      </div>
+      <div style="padding:16px;background:var(--bg-sub);border-radius:10px;text-align:center">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px">对账状态</div>
+        <div style="font-size:16px;font-weight:600;margin-top:4px">${stmtHtml}</div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:16px">
+      <div style="font-weight:600;margin-bottom:10px;font-size:14px">📦 本期货源明细</div>
+      <table class="data-table">
+        <thead><tr><th>日期</th><th>商品名称</th><th>采购数量</th><th>单价</th><th>金额</th><th>票证</th></tr></thead>
+        <tbody>
+          <tr><td>2026-04-01</td><td>猪里脊肉</td><td>30kg</td><td>¥24.00/kg</td><td>¥720</td><td><span class="tag success">✓</span></td></tr>
+          <tr><td>2026-04-02</td><td>五花肉</td><td>25kg</td><td>¥22.00/kg</td><td>¥550</td><td><span class="tag success">✓</span></td></tr>
+          <tr><td>2026-04-03</td><td>猪排骨</td><td>20kg</td><td>¥28.00/kg</td><td>¥560</td><td><span class="tag success">✓</span></td></tr>
+          <tr><td>2026-04-07</td><td>猪腿肉</td><td>40kg</td><td>¥20.00/kg</td><td>¥800</td><td><span class="tag success">✓</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div style="padding:12px;background:var(--bg-sub);border-radius:8px;font-size:13px;color:var(--text-sub)">
+      <div style="margin-bottom:6px"><strong>备注：</strong></div>
+      <div>• 付款方式：银行转账</div>
+      <div>• 开户行：中国农业银行 XX支行</div>
+      <div>• 账&nbsp;&nbsp;&nbsp;&nbsp;号：6228 XXXX XXXX 1234</div>
+      <div>• 发票状态：${ticketStatus === '完整' ? '✅ 已全部开具' : '⚠️ 部分发票待补开'}</div>
+    </div>
+  `;
+  
+  openModalById('modal-statement-detail');
+}
+
+// 导出对账报表PDF
+function exportStatementPDF() {
+  showToast('正在导出对账报表PDF...', 'info');
+  setTimeout(() => {
+    showToast('✅ PDF导出成功，已保存至本地', 'success');
+  }, 1200);
+}
+
 // 新增换算规则
 function openAddRuleModal() {
   // 重置表单
@@ -2541,7 +2758,7 @@ function openAddRuleModal() {
       
       if (name && convertQty) {
         const total = parseFloat(convertQty);
-        rulePreview.textContent = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+        rulePreview.textContent = `1${purchaseUnit} = ${total}${outputUnit}`;
         rulePreview.style.color = 'var(--text)';
       } else {
         rulePreview.textContent = '请填写完整信息';
@@ -2582,7 +2799,7 @@ function submitRule() {
   }
   
   const total = parseFloat(convertQty);
-  const example = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+  const example = `1${purchaseUnit} = ${total}${outputUnit}`;
   
   // 添加到换算规则表格
   const tbody = document.querySelector('#page-unit .data-table tbody');
@@ -2592,7 +2809,7 @@ function submitRule() {
     <td>${purchaseUnit}</td>
     <td>1${purchaseUnit} = ${total}${outputUnit}</td>
     <td>${outputUnit}</td>
-    <td>${example}</td>
+    <td>1${purchaseUnit} = ${total}${outputUnit}</td>
     <td><button class="btn btn-sm btn-outline" onclick="editRule('${name}')">编辑</button></td>
   `;
   tbody.appendChild(newRow);
@@ -2646,7 +2863,7 @@ function editRule(itemName) {
       
       if (convertQty) {
         const total = parseFloat(convertQty);
-        editRulePreview.textContent = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+        editRulePreview.textContent = `1${purchaseUnit} = ${total}${outputUnit}`;
         editRulePreview.style.color = 'var(--text)';
       } else {
         editRulePreview.textContent = '请填写完整信息';
@@ -2668,7 +2885,7 @@ function updateEditPreview() {
   
   if (convertQty) {
     const total = parseFloat(convertQty);
-    preview.textContent = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+    preview.textContent = `1${purchaseUnit} = ${total}${outputUnit}`;
     preview.style.color = 'var(--text)';
   } else {
     preview.textContent = '请填写完整信息';
@@ -2689,7 +2906,7 @@ function submitEditRule() {
   }
   
   const total = parseFloat(convertQty);
-  const example = `采购2${purchaseUnit} = 出库${total * 2}${outputUnit}`;
+  const example = `1${purchaseUnit} = ${total}${outputUnit}`;
   
   // 更新表格中的对应行
   const rows = document.querySelectorAll('#page-unit .data-table tbody tr');
@@ -3020,8 +3237,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm" onclick="exportCabinetPDF('食谱')">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3052,8 +3268,7 @@ const cabinetDetails = {
           </div>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3086,8 +3301,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3121,8 +3335,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3146,8 +3359,7 @@ const cabinetDetails = {
           </div>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3156,43 +3368,65 @@ const cabinetDetails = {
     rows: [['2026-04-03', '张厨师', '厨师', '36.2℃', '正常', '查看']],
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
-        <div class="card-head"><div class="card-title">👨‍⚕️ ${date} 晨检详情</div></div>
+        <div class="card-head"><div class="card-title">👨‍⚕️ ${date} 晨检记录</div></div>
         <div class="card-body">
-          <div class="grid-4" style="gap:12px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
             <div style="text-align:center;padding:12px;background:#f6ffed;border-radius:8px">
-              <div style="font-size:24px">👨‍🍳</div>
-              <div style="font-weight:600;margin-top:4px">张厨师</div>
-              <div style="font-size:12px;color:var(--text-sub)">厨师</div>
+              <div style="font-size:20px">👥</div><div style="font-size:12px;color:var(--text-sub)">应检人数</div><div style="font-weight:600">12人</div>
             </div>
             <div style="text-align:center;padding:12px;background:#f0f7ff;border-radius:8px">
-              <div style="font-size:20px">🌡️</div>
-              <div style="font-weight:600;margin-top:4px">36.2℃</div>
-              <div style="font-size:12px;color:var(--text-sub)">体温正常</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:#f6ffed;border-radius:8px">
-              <div style="font-size:20px">💪</div>
-              <div style="font-weight:600;margin-top:4px;color:var(--success)">良好</div>
-              <div style="font-size:12px;color:var(--text-sub)">健康状况</div>
+              <div style="font-size:20px">✅</div><div style="font-size:12px;color:var(--text-sub)">已检人数</div><div style="font-weight:600">11人</div>
             </div>
             <div style="text-align:center;padding:12px;background:#fffbe6;border-radius:8px">
-              <div style="font-size:20px">✅</div>
-              <div style="font-weight:600;margin-top:4px">已完成</div>
-              <div style="font-size:12px;color:var(--text-sub)">晨检状态</div>
+              <div style="font-size:20px">🌡️</div><div style="font-size:12px;color:var(--text-sub)">体温异常</div><div style="font-weight:600">0人</div>
+            </div>
+            <div style="text-align:center;padding:12px;background:#fff1f0;border-radius:8px">
+              <div style="font-size:20px">⚠️</div><div style="font-size:12px;color:var(--text-sub)">未检人数</div><div style="font-weight:600">1人</div>
             </div>
           </div>
           <table class="data-table">
-            <thead><tr><th>检查项目</th><th>结果</th><th>备注</th></tr></thead>
+            <thead><tr><th>姓名</th><th>岗位</th><th>体温</th><th>健康状况</th><th>晨检状态</th></tr></thead>
             <tbody>
-              <tr><td>体温检测</td><td><span class="tag success">正常</span></td><td>36.2℃</td></tr>
-              <tr><td>手部检查</td><td><span class="tag success">正常</span></td><td>无伤口</td></tr>
-              <tr><td>着装检查</td><td><span class="tag success">正常</span></td><td>穿戴整齐</td></tr>
-              <tr><td>健康证</td><td><span class="tag success">有效</span></td><td>有效期至2026-08-15</td></tr>
+              <tr>
+                <td>张厨师</td>
+                <td>厨师</td>
+                <td>36.2℃</td>
+                <td><span class="tag success">正常</span></td>
+                <td><span class="tag success">已检</span></td>
+              </tr>
+              <tr>
+                <td>李师傅</td>
+                <td>厨师</td>
+                <td>36.5℃</td>
+                <td><span class="tag success">正常</span></td>
+                <td><span class="tag success">已检</span></td>
+              </tr>
+              <tr>
+                <td>王面点师</td>
+                <td>面点师</td>
+                <td>36.3℃</td>
+                <td><span class="tag success">正常</span></td>
+                <td><span class="tag success">已检</span></td>
+              </tr>
+              <tr>
+                <td>刘帮厨</td>
+                <td>帮厨</td>
+                <td>36.8℃</td>
+                <td><span class="tag success">正常</span></td>
+                <td><span class="tag success">已检</span></td>
+              </tr>
+              <tr>
+                <td>赵洗碗</td>
+                <td>洗碗工</td>
+                <td>—</td>
+                <td><span class="tag warning">待检查</span></td>
+                <td><span class="tag danger">未检</span></td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3217,8 +3451,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3244,7 +3477,6 @@ const cabinetDetails = {
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3284,7 +3516,6 @@ const cabinetDetails = {
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3327,8 +3558,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3354,7 +3584,6 @@ const cabinetDetails = {
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3398,8 +3627,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3427,8 +3655,7 @@ const cabinetDetails = {
           </div>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3455,8 +3682,7 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   },
@@ -3499,23 +3725,35 @@ const cabinetDetails = {
           </table>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn btn-outline btn-sm">📤 导出PDF</button>
+      <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="closeModalById('modal-cabinet')">确认</button>
       </div>`
   }
 };
 
 // 显示/隐藏台账详情
-function showCabinetDetail(view) {
+var currentCabinetDate = '';
+function showCabinetDetail(view, date) {
   if (view === 'detail-view') {
     document.getElementById('cabinetListView').style.display = 'none';
     document.getElementById('cabinetDetailView').style.display = 'block';
     const detail = cabinetDetails[currentCabinetName] || cabinetDetails['食谱台账'];
-    const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    document.getElementById('detailDateLabel').textContent = today + ' 详情';
-    document.getElementById('cabinetDetailContent').innerHTML = detail.detail(today);
+    // 使用传入的日期参数，如果没传则用今天的日期
+    let displayDate;
+    if (date) {
+      displayDate = date;
+    } else {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      displayDate = `${y}-${m}-${day}`;
+    }
+    currentCabinetDate = displayDate;
+    const month = parseInt(displayDate.split('-')[1]);
+    const day = parseInt(displayDate.split('-')[2]);
+    document.getElementById('detailDateLabel').textContent = `${month}月${day}日 详情`;
+    document.getElementById('cabinetDetailContent').innerHTML = detail.detail(displayDate);
   } else {
     document.getElementById('cabinetListView').style.display = 'block';
     document.getElementById('cabinetDetailView').style.display = 'none';
@@ -3524,18 +3762,47 @@ function showCabinetDetail(view) {
 
 // 刷新台账列表
 function refreshCabinetList() {
-  const now = new Date();
-  const today = now.toISOString().slice(0, 10);
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const yestStr = yesterday.toISOString().slice(0, 10);
+  const tbody = document.getElementById('cabinetListBody');
+  if (!tbody) return;
   
-  document.querySelectorAll('#cabinetListBody td:first-child').forEach(cell => {
-    const text = cell.textContent.trim();
-    if (text.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      cell.textContent = text === '2026-04-03' ? today : (text === '2026-04-02' ? yestStr : today);
-    }
-  });
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = new Date(2026, 3, 1); // 2026-04-01
+  
+  // 格式化日期为 YYYY-MM-DD（使用本地时间，避免 UTC 时区问题）
+  function formatDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  
+  // 从4月1日到今天，每天一条
+  const rows = [];
+  for (let d = new Date(today); d >= start; d.setDate(d.getDate() - 1)) {
+    const dateStr = formatDate(d);
+    const day = d.getDate();
+    const dateLabel = `4月${day}日`;
+    const todayStr = formatDate(today);
+    const isToday = dateStr === todayStr;
+    
+    // 模拟数据：当天未填写，昨天往前已完成
+    const reporters = ['王主任', '李师傅', '张师傅', '刘厨师'];
+    const reporter = reporters[Math.abs(day) % reporters.length];
+    const status = isToday ? 'warning' : 'success';
+    const statusText = isToday ? '未填写' : '已完成';
+    const btnClass = isToday ? 'btn-primary' : 'btn-outline';
+    const btnText = isToday ? '立即填写' : '查看';
+    
+    rows.push(`<tr>
+      <td><strong>${dateLabel}</strong><br><span style="font-size:11px;color:var(--text-sub)">${dateStr}</span></td>
+      <td>${reporter}</td>
+      <td><span class="tag ${status}">${statusText}</span></td>
+      <td><button class="btn btn-sm ${btnClass}" onclick="showCabinetDetail('detail-view','${dateStr}')">${btnText}</button></td>
+    </tr>`);
+  }
+  
+  tbody.innerHTML = rows.join('');
 }
 
 // ===== Batch Recipe Grid =====
@@ -4804,7 +5071,821 @@ async function exportNutritionPDF() {
   }
 }
 
-// 导出周报PDF
+// 周报数据（不同周期的数据）
+const weekReports = {
+  '0': { // 第14周
+    title: '实验小学食堂第14周周报（2026年3月30日 - 4月3日）',
+    genTime: '2026-04-03 18:00',
+    status: '已上报',
+    statusColor: 'var(--success)',
+    nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率96%，脂肪达标率91%，碳水化合物达标率98%，营养综合评级A级。',
+    nutriLevel: 'A',
+    pubRate: '100%',
+    purchaseRows: '<tr><td>肉类</td><td>250kg</td><td>230kg</td><td>20kg</td></tr><tr><td>蔬菜</td><td>400kg</td><td>395kg</td><td>5kg</td></tr><tr><td>粮油</td><td>180kg</td><td>150kg</td><td>30kg</td></tr>',
+    costText: '本周食材总成本：<strong>¥28,640</strong>，日均成本：<strong>¥5,728</strong>，人均成本：<strong>¥6.74</strong>（按850人计）。较上周增加约3.2%，猪肉价格上涨为主因。',
+    costAlert: '⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）',
+    warningTimeline: '<li class="timeline-item"><div class="timeline-dot danger"></div><div class="timeline-time">04-03</div><div class="timeline-text">健康证过期预警（张厨师）—待处理</div></li><li class="timeline-item"><div class="timeline-dot warning"></div><div class="timeline-time">04-03</div><div class="timeline-text">菠菜临期预警（18kg）—已提醒</div></li><li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">04-02</div><div class="timeline-text">价格预警（猪肉）—已处理</div></li><li class="timeline-item"><div class="timeline-dot"></div><div class="timeline-time">03-31</div><div class="timeline-text">餐具消毒未完成—已补录</div></li>',
+    diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+    sampleText: '本周应留样25份（每日早午餐各1份），实际留样24份，完成率96%。2026-04-03午餐留样未录入，需尽快补录。'
+  },
+  '1': { // 第13周
+    title: '实验小学食堂第13周周报（2026年3月23日 - 3月27日）',
+    genTime: '2026-03-27 18:00',
+    status: '已上报',
+    statusColor: 'var(--success)',
+    nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率94%，脂肪达标率90%，碳水化合物达标率97%，营养综合评级A级。',
+    nutriLevel: 'A',
+    pubRate: '100%',
+    purchaseRows: '<tr><td>肉类</td><td>240kg</td><td>225kg</td><td>15kg</td></tr><tr><td>蔬菜</td><td>380kg</td><td>375kg</td><td>5kg</td></tr><tr><td>粮油</td><td>170kg</td><td>145kg</td><td>25kg</td></tr>',
+    costText: '本周食材总成本：<strong>¥27,750</strong>，日均成本：<strong>¥5,550</strong>，人均成本：<strong>¥6.53</strong>（按850人计）。成本与上周持平。',
+    costAlert: '',
+    warningTimeline: '<li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">03-25</div><div class="timeline-text">蔬菜农残检测预警—已处理</div></li><li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">03-24</div><div class="timeline-text">库存不足预警（大米）—已补货</div></li>',
+    diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+    sampleText: '本周应留样25份（每日早午餐各1份），实际留样25份，完成率100%。'
+  },
+  '2': { // 第12周
+    title: '实验小学食堂第12周周报（2026年3月16日 - 3月20日）',
+    genTime: '2026-03-20 18:00',
+    status: '待上报',
+    statusColor: 'var(--warning)',
+    nutriText: '本周共制作食谱5天（午餐），食谱按时公示率95%。营养分析结果：蛋白质达标率93%，脂肪达标率89%，碳水化合物达标率96%，营养综合评级B级。',
+    nutriLevel: 'B',
+    pubRate: '95%',
+    purchaseRows: '<tr><td>肉类</td><td>230kg</td><td>220kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>360kg</td><td>358kg</td><td>2kg</td></tr><tr><td>粮油</td><td>160kg</td><td>140kg</td><td>20kg</td></tr>',
+    costText: '本周食材总成本：<strong>¥26,820</strong>，日均成本：<strong>¥5,364</strong>，人均成本：<strong>¥6.31</strong>（按850人计）。成本略有下降。',
+    costAlert: '',
+    warningTimeline: '<li class="timeline-item"><div class="timeline-dot warning"></div><div class="timeline-time">03-18</div><div class="timeline-text">留样未及时录入—已补录</div></li>',
+    diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+    sampleText: '本周应留样25份（每日早午餐各1份），实际留样23份，完成率92%。存在2份留样缺失，已补录说明。'
+  }
+};
+
+// 切换周报周期
+function changeWeekReport() {
+  const sel = document.getElementById('weekSelect');
+  const data = weekReports[sel.value];
+  if (!data) return;
+  
+  document.getElementById('weekReportTitle').textContent = data.title;
+  document.getElementById('weekReportMeta').innerHTML = `生成时间：${data.genTime} | 状态：<span id="weekReportStatus" style="color:${data.statusColor}">${data.status}</span>`;
+  document.getElementById('weekNutriText').innerHTML = data.nutriText;
+  document.getElementById('weekNutriLevel').textContent = data.nutriLevel;
+  document.getElementById('weekPubRate').textContent = data.pubRate;
+  document.getElementById('weekPurchaseBody').innerHTML = data.purchaseRows;
+  document.getElementById('weekCostText').innerHTML = data.costText;
+  document.getElementById('weekCostAlert').innerHTML = data.costAlert;
+  document.getElementById('weekCostAlert').style.display = data.costAlert ? '' : 'none';
+  document.getElementById('weekWarningTimeline').innerHTML = data.warningTimeline;
+  document.getElementById('weekDiningText').textContent = data.diningText;
+  document.getElementById('weekSampleText').textContent = data.sampleText;
+  
+  // 更新上报按钮状态
+  const btn = document.getElementById('btnReportUp');
+  if (data.status === '已上报') {
+    btn.innerHTML = '✅ 已上报';
+    btn.disabled = true;
+    btn.classList.add('btn-disabled');
+  } else {
+    btn.innerHTML = '📨 上报监管端';
+    btn.disabled = false;
+    btn.classList.remove('btn-disabled');
+  }
+}
+
+// 上报监管端
+function reportToSupervisor() {
+  const btn = document.getElementById('btnReportUp');
+  if (btn.disabled) return;
+  
+  // 显示确认对话框
+  const sel = document.getElementById('weekSelect');
+  const weekNames = ['第14周', '第13周', '第12周'];
+  const weekName = weekNames[parseInt(sel.value)];
+  
+  showToast(`📨 ${weekName}周报正在上报至监管端...`, 'info');
+  
+  // 模拟上报过程
+  setTimeout(() => {
+    // 更新状态
+    document.getElementById('weekReportStatus').textContent = '已上报';
+    document.getElementById('weekReportStatus').style.color = 'var(--success)';
+    
+    btn.innerHTML = '✅ 已上报';
+    btn.disabled = true;
+    btn.classList.add('btn-disabled');
+    
+    showToast(`✅ ${weekName}周报已成功上报至监管端！`, 'success');
+  }, 1500);
+}
+
+// Toast提示
+function showToast(message, type) {
+  const container = document.getElementById('toast-container') || createToastContainer();
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.id = 'toast-container';
+  container.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px';
+  document.body.appendChild(container);
+  return container;
+}
+
+// 导出本月台账PDF - 按日期导出台账数据（仅当前台账类型）
+async function exportMonthCabinetPDF() {
+  const progressEl = document.getElementById('pdfExportProgress');
+  const textEl = document.getElementById('pdfExportText');
+  const barEl = document.getElementById('pdfProgressBar');
+
+  progressEl.style.display = 'flex';
+  textEl.textContent = '正在生成台账...';
+  barEl.style.width = '10%';
+
+  try {
+    // 获取当前选择的月份
+    const monthSelect = document.getElementById('cabinetMonthSelect');
+    const selectedMonth = monthSelect.value; // 如 "2026年4月"
+    const monthMatch = selectedMonth.match(/(\d+)年(\d+)月/);
+    const year = parseInt(monthMatch[1]);
+    const month = parseInt(monthMatch[2]);
+    const monthStr = `${year}年${month}月`;
+
+    // 计算该月的天数
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    // 导出结束日期：当前日期前一天
+    const exportEndDay = new Date().getDate() - 1;
+
+    // 获取当前台账类型
+    const cabinetType = currentCabinetName || '食谱台账';
+
+    barEl.style.width = '20%';
+
+    // 创建临时导出容器
+    const exportContainer = document.createElement('div');
+    exportContainer.id = 'monthCabinetExport';
+    exportContainer.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff;padding:40px;font-family:sans-serif;z-index:99999';
+
+    // 生成表头
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align:center;margin-bottom:30px;border-bottom:2px solid #1668dc;padding-bottom:20px';
+    header.innerHTML = `
+      <div style="font-size:24px;font-weight:bold;color:#1668dc;margin-bottom:10px">智慧食堂监管平台</div>
+      <div style="font-size:16px;color:#333">${monthStr} ${cabinetType}</div>
+      <div style="font-size:12px;color:#666;margin-top:8px">学校：${sessionStorage.getItem('user_school') || '测试学校'} | 导出日期：${new Date().toLocaleDateString('zh-CN')}</div>
+    `;
+    exportContainer.appendChild(header);
+
+    barEl.style.width = '40%';
+
+    // 获取台账的真实数据
+    const cabinetData = cabinetDetails[cabinetType] || cabinetDetails['食谱台账'];
+    const realRows = cabinetData.rows || [];
+    const headers = cabinetData.headers || [];
+
+    // 食谱台账详细数据（循环使用的菜品库）
+    const recipeDishes = [
+      { meal: '午餐', cost: '¥6.85', grade: 'A+',
+        dishes: [
+          { name: '红烧肉', cat: '荤菜', food: '猪肉100g', cal: '350' },
+          { name: '炒白菜', cat: '素菜', food: '白菜150g', cal: '65' },
+          { name: '紫菜蛋花汤', cat: '汤类', food: '鸡蛋50g、紫菜5g', cal: '90' },
+          { name: '米饭', cat: '主食', food: '大米150g', cal: '173' }
+        ]
+      },
+      { meal: '午餐', cost: '¥6.50', grade: 'A',
+        dishes: [
+          { name: '番茄炒蛋', cat: '荤菜', food: '番茄100g、鸡蛋80g', cal: '180' },
+          { name: '清炒菠菜', cat: '素菜', food: '菠菜150g', cal: '45' },
+          { name: '豆腐汤', cat: '汤类', food: '豆腐100g', cal: '80' },
+          { name: '米饭', cat: '主食', food: '大米150g', cal: '173' }
+        ]
+      },
+      { meal: '午餐', cost: '¥7.20', grade: 'A+',
+        dishes: [
+          { name: '糖醋排骨', cat: '荤菜', food: '猪排骨150g', cal: '320' },
+          { name: '蒜蓉西兰花', cat: '素菜', food: '西兰花200g', cal: '54' },
+          { name: '番茄蛋汤', cat: '汤类', food: '番茄100g、鸡蛋40g', cal: '70' },
+          { name: '米饭', cat: '主食', food: '大米150g', cal: '173' }
+        ]
+      },
+      { meal: '午餐', cost: '¥5.80', grade: 'B+',
+        dishes: [
+          { name: '土豆烧肉', cat: '荤菜', food: '猪肉80g、土豆100g', cal: '280' },
+          { name: '凉拌黄瓜', cat: '素菜', food: '黄瓜150g', cal: '24' },
+          { name: '紫菜汤', cat: '汤类', food: '紫菜5g', cal: '15' },
+          { name: '米饭', cat: '主食', food: '大米150g', cal: '173' }
+        ]
+      },
+      { meal: '午餐', cost: '¥6.30', grade: 'A',
+        dishes: [
+          { name: '宫保鸡丁', cat: '荤菜', food: '鸡肉100g、花生20g', cal: '290' },
+          { name: '炒青菜', cat: '素菜', food: '青菜150g', cal: '35' },
+          { name: '冬瓜排骨汤', cat: '汤类', food: '冬瓜100g、排骨50g', cal: '110' },
+          { name: '米饭', cat: '主食', food: '大米150g', cal: '173' }
+        ]
+      }
+    ];
+
+    // 采购台账详细数据
+    const purchaseDetailData = [
+      { name: '猪里脊肉', spec: '冰鲜/kg', qty: '50kg', price: '¥24.00', amount: '¥1,200', supplier: '鲜肉直供中心' },
+      { name: '猪排骨', spec: '冰鲜/kg', qty: '30kg', price: '¥28.00', amount: '¥840', supplier: '鲜肉直供中心' },
+      { name: '大白菜', spec: '新鲜/kg', qty: '15kg', price: '¥3.50', amount: '¥52.50', supplier: '绿鲜蔬菜基地' },
+      { name: '菠菜', spec: '新鲜/kg', qty: '10kg', price: '¥5.00', amount: '¥50.00', supplier: '绿鲜蔬菜基地' },
+      { name: '大米', spec: '25kg/袋', qty: '8袋', price: '¥85.00', amount: '¥680.00', supplier: '优品粮油配送' },
+      { name: '鸡蛋', spec: '15kg/箱', qty: '5箱', price: '¥142.50', amount: '¥712.50', supplier: '鲜捷禽蛋批发' },
+      { name: '土豆', spec: '新鲜/kg', qty: '20kg', price: '¥4.00', amount: '¥80.00', supplier: '绿鲜蔬菜基地' },
+      { name: '豆腐', spec: '新鲜/kg', qty: '10kg', price: '¥6.00', amount: '¥60.00', supplier: '豆制品供应商' },
+      { name: '食用油', spec: '5L/桶', qty: '10桶', price: '¥45.00', amount: '¥450.00', supplier: '优品粮油配送' },
+      { name: '番茄', spec: '新鲜/kg', qty: '12kg', price: '¥4.50', amount: '¥54.00', supplier: '绿鲜蔬菜基地' },
+      { name: '黄瓜', spec: '新鲜/kg', qty: '8kg', price: '¥3.80', amount: '¥30.40', supplier: '绿鲜蔬菜基地' },
+      { name: '五花肉', spec: '冰鲜/kg', qty: '25kg', price: '¥26.00', amount: '¥650.00', supplier: '鲜肉直供中心' },
+      { name: '冬瓜', spec: '新鲜/kg', qty: '15kg', price: '¥2.50', amount: '¥37.50', supplier: '绿鲜蔬菜基地' },
+      { name: '花生米', spec: '干货/kg', qty: '5kg', price: '¥18.00', amount: '¥90.00', supplier: '优品粮油配送' },
+      { name: '鸡肉', spec: '冰鲜/kg', qty: '20kg', price: '¥22.00', amount: '¥440.00', supplier: '鲜捷禽蛋批发' },
+      { name: '紫菜', spec: '干货/kg', qty: '3kg', price: '¥35.00', amount: '¥105.00', supplier: '豆制品供应商' }
+    ];
+
+    // 入库台账详细数据（循环生成）
+    const inStockItems = [
+      { name: '猪里脊肉', spec: '冰鲜/kg', qty: '50kg', price: '¥24.00', amount: '¥1,200', supplier: '鲜肉直供中心', receiver: '张师傅' },
+      { name: '大白菜', spec: '新鲜/kg', qty: '15kg', price: '¥3.50', amount: '¥52.50', supplier: '绿鲜蔬菜基地', receiver: '李师傅' },
+      { name: '大米', spec: '25kg/袋', qty: '8袋', price: '¥85.00', amount: '¥680.00', supplier: '优品粮油配送', receiver: '王主任' },
+      { name: '鸡蛋', spec: '15kg/箱', qty: '5箱', price: '¥142.50', amount: '¥712.50', supplier: '鲜捷禽蛋批发', receiver: '张师傅' },
+      { name: '猪排骨', spec: '冰鲜/kg', qty: '30kg', price: '¥28.00', amount: '¥840.00', supplier: '鲜肉直供中心', receiver: '张师傅' },
+      { name: '土豆', spec: '新鲜/kg', qty: '20kg', price: '¥4.00', amount: '¥80.00', supplier: '绿鲜蔬菜基地', receiver: '李师傅' },
+      { name: '菠菜', spec: '新鲜/kg', qty: '10kg', price: '¥5.00', amount: '¥50.00', supplier: '绿鲜蔬菜基地', receiver: '张师傅' },
+      { name: '豆腐', spec: '新鲜/kg', qty: '10kg', price: '¥6.00', amount: '¥60.00', supplier: '豆制品供应商', receiver: '李师傅' },
+      { name: '番茄', spec: '新鲜/kg', qty: '12kg', price: '¥4.50', amount: '¥54.00', supplier: '绿鲜蔬菜基地', receiver: '王主任' },
+      { name: '食用油', spec: '5L/桶', qty: '10桶', price: '¥45.00', amount: '¥450.00', supplier: '优品粮油配送', receiver: '张师傅' }
+    ];
+
+    // 出库台账详细数据
+    const outStockDetailData = [
+      { date: '04-01', id: 'CK20260401001', name: '猪里脊肉', spec: '冰鲜/kg', qty: '35kg', purpose: '午餐备餐', person: '李师傅' },
+      { date: '04-01', id: 'CK20260401002', name: '菠菜', spec: '新鲜/kg', qty: '8kg', purpose: '午餐备餐', person: '李师傅' },
+      { date: '04-02', id: 'CK20260402001', name: '土豆', spec: '新鲜/kg', qty: '10kg', purpose: '午餐备餐', person: '张师傅' },
+      { date: '04-02', id: 'CK20260402002', name: '大白菜', spec: '新鲜/kg', qty: '5kg', purpose: '午餐备餐', person: '李师傅' },
+      { date: '04-03', id: 'CK20260403001', name: '鸡蛋', spec: '15kg/箱', qty: '3箱', purpose: '午餐备餐', person: '王面点师' },
+      { date: '04-03', id: 'CK20260403002', name: '猪排骨', spec: '冰鲜/kg', qty: '15kg', purpose: '午餐备餐', person: '张师傅' }
+    ];
+
+    // 晨检台账详细数据
+    const checkupDetailData = {
+      stats: { total: 12, checked: 11, abnormal: 0, unchecked: 1, rate: '92%' },
+      persons: [
+        { name: '张厨师', job: '厨师', temp: '36.2℃', status: '正常', checkStatus: '已检' },
+        { name: '李师傅', job: '厨师', temp: '36.5℃', status: '正常', checkStatus: '已检' },
+        { name: '王面点师', job: '面点师', temp: '36.3℃', status: '正常', checkStatus: '已检' },
+        { name: '刘帮厨', job: '帮厨', temp: '36.8℃', status: '正常', checkStatus: '已检' },
+        { name: '赵洗碗', job: '洗碗工', temp: '—', status: '待检查', checkStatus: '未检' }
+      ]
+    };
+
+    // 根据不同台账类型生成不同的内容
+    if (cabinetType === '食谱台账') {
+      // 食谱台账 - 遍历到昨天，每天生成一条记录
+      for (let day = 1; day <= exportEndDay; day++) {
+        const dateStr = `2026-04-${String(day).padStart(2, '0')}`;
+        const dateLabel = `4月${day}日`;
+        const dishIdx = (day - 1) % recipeDishes.length;
+        const data = recipeDishes[dishIdx];
+        const dateBg = day % 2 === 0 ? '#fafafa' : '#fff';
+
+        const recipeCard = document.createElement('div');
+        recipeCard.style.cssText = 'margin-bottom:12px;page-break-inside:avoid';
+        recipeCard.innerHTML = `
+          <div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e8e8e8">
+            📋 ${dateLabel}
+          </div>
+          <div style="font-size:11px;color:#666;margin-bottom:6px;padding:6px;background:#f8faff;border-radius:4px">
+            餐次：${data.meal} | 用餐人数：850人 | 人均成本：${data.cost} | 营养评级：${data.grade}
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:10px">
+            <thead><tr style="background:#f0f7ff">
+              <th style="border:1px solid #ddd;padding:3px;text-align:left">菜品</th>
+              <th style="border:1px solid #ddd;padding:3px;text-align:left">分类</th>
+              <th style="border:1px solid #ddd;padding:3px;text-align:left">主要食材</th>
+              <th style="border:1px solid #ddd;padding:3px;text-align:right">热量(kcal)</th>
+            </tr></thead>
+            <tbody>
+              ${data.dishes.map((d, i) => `
+                <tr style="background:${i % 2 === 0 ? dateBg : '#f5f5f5'}">
+                  <td style="border:1px solid #ddd;padding:2px;font-weight:500">${d.name}</td>
+                  <td style="border:1px solid #ddd;padding:2px"><span style="padding:1px 4px;border-radius:2px;font-size:9px;${d.cat === '荤菜' ? 'background:#e6f0ff;color:#1677ff' : d.cat === '素菜' ? 'background:#f6ffed;color:#52c41a' : d.cat === '汤类' ? 'background:#fffbe6;color:#faad14' : 'background:#f5f5f5;color:#666'}">${d.cat}</span></td>
+                  <td style="border:1px solid #ddd;padding:2px">${d.food}</td>
+                  <td style="border:1px solid #ddd;padding:2px;text-align:right">${d.cal}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        exportContainer.appendChild(recipeCard);
+      }
+    } else if (cabinetType === '采购台账') {
+      // 采购台账 - 遍历到昨天，每天生成采购记录
+      const allPurchaseRows = [];
+      for (let day = 1; day <= exportEndDay; day++) {
+        const dateStr = `04-${String(day).padStart(2, '0')}`;
+        // 每天分配不同的采购项
+        const itemsPerDay = 3;
+        for (let j = 0; j < itemsPerDay; j++) {
+          const itemIdx = ((day - 1) * itemsPerDay + j) % purchaseDetailData.length;
+          const item = purchaseDetailData[itemIdx];
+          allPurchaseRows.push({
+            ...item,
+            date: dateStr
+          });
+        }
+      }
+      const purchaseTable = document.createElement('div');
+      purchaseTable.style.cssText = 'margin-bottom:20px;page-break-inside:avoid';
+      purchaseTable.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="background:#f6ffed">
+            <th style="border:1px solid #ddd;padding:4px">日期</th>
+            <th style="border:1px solid #ddd;padding:4px">食材名称</th>
+            <th style="border:1px solid #ddd;padding:4px">规格</th>
+            <th style="border:1px solid #ddd;padding:4px;text-align:right">数量</th>
+            <th style="border:1px solid #ddd;padding:4px;text-align:right">单价</th>
+            <th style="border:1px solid #ddd;padding:4px;text-align:right">金额</th>
+            <th style="border:1px solid #ddd;padding:4px">供应商</th>
+          </tr></thead>
+          <tbody>
+            ${allPurchaseRows.map((f, i) => `
+              <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+                <td style="border:1px solid #ddd;padding:3px">${f.date}</td>
+                <td style="border:1px solid #ddd;padding:3px;font-weight:500">${f.name}</td>
+                <td style="border:1px solid #ddd;padding:3px">${f.spec}</td>
+                <td style="border:1px solid #ddd;padding:3px;text-align:right">${f.qty}</td>
+                <td style="border:1px solid #ddd;padding:3px;text-align:right">${f.price}</td>
+                <td style="border:1px solid #ddd;padding:3px;text-align:right;font-weight:500">${f.amount}</td>
+                <td style="border:1px solid #ddd;padding:3px">${f.supplier}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot><tr style="background:#fffbe6">
+            <td colspan="5" style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">本月合计</td>
+            <td style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">¥${(4057.50 * exportEndDay / 3).toFixed(2)}</td>
+            <td style="border:1px solid #ddd;padding:6px"></td>
+          </tr></tfoot>
+        </table>
+      `;
+      exportContainer.appendChild(purchaseTable);
+    } else if (cabinetType === '入库台账') {
+      // 入库台账 - 遍历到昨天，每天生成入库记录
+      const allInRows = [];
+      for (let day = 1; day <= exportEndDay; day++) {
+        const dateStr = `04-${String(day).padStart(2, '0')}`;
+        const itemsPerDay = 2;
+        for (let j = 0; j < itemsPerDay; j++) {
+          const itemIdx = ((day - 1) * itemsPerDay + j) % inStockItems.length;
+          const item = inStockItems[itemIdx];
+          const seq = String((day - 1) * itemsPerDay + j + 1).padStart(3, '0');
+          allInRows.push({
+            ...item,
+            date: dateStr,
+            id: `RK202604${String(day).padStart(2, '0')}${seq}`
+          });
+        }
+      }
+      const inTable = document.createElement('div');
+      inTable.style.cssText = 'margin-bottom:20px;page-break-inside:avoid';
+      inTable.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="background:#f0f7ff">
+            <th style="border:1px solid #ddd;padding:3px">日期</th>
+            <th style="border:1px solid #ddd;padding:3px">入库单号</th>
+            <th style="border:1px solid #ddd;padding:3px">食材</th>
+            <th style="border:1px solid #ddd;padding:3px">规格</th>
+            <th style="border:1px solid #ddd;padding:3px;text-align:right">数量</th>
+            <th style="border:1px solid #ddd;padding:3px">单价</th>
+            <th style="border:1px solid #ddd;padding:3px;text-align:right">金额</th>
+            <th style="border:1px solid #ddd;padding:3px">供应商</th>
+            <th style="border:1px solid #ddd;padding:3px">验收人</th>
+          </tr></thead>
+          <tbody>
+            ${allInRows.map((r, i) => `
+              <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+                <td style="border:1px solid #ddd;padding:2px">${r.date}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.id}</td>
+                <td style="border:1px solid #ddd;padding:2px;font-weight:500">${r.name}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.spec}</td>
+                <td style="border:1px solid #ddd;padding:2px;text-align:right">${r.qty}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.price}</td>
+                <td style="border:1px solid #ddd;padding:2px;text-align:right">${r.amount}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.supplier}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.receiver}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot><tr style="background:#fffbe6">
+            <td colspan="4" style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">本月入库总计</td>
+            <td style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">${allInRows.length}件</td>
+            <td colspan="3" style="border:1px solid #ddd;padding:6px"></td>
+            <td style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">¥${(3467.50 * exportEndDay / 3).toFixed(2)}</td>
+          </tr></tfoot>
+        </table>
+      `;
+      exportContainer.appendChild(inTable);
+    } else if (cabinetType === '出库台账') {
+      // 出库台账 - 遍历整个月，每天生成出库记录
+      const outItems = [
+        { name: '猪里脊肉', spec: '冰鲜/kg', qty: '30kg', purpose: '午餐备餐', person: '李师傅' },
+        { name: '大白菜', spec: '新鲜/kg', qty: '8kg', purpose: '午餐备餐', person: '李师傅' },
+        { name: '土豆', spec: '新鲜/kg', qty: '10kg', purpose: '午餐备餐', person: '张师傅' },
+        { name: '鸡蛋', spec: '15kg/箱', qty: '3箱', purpose: '午餐备餐', person: '王面点师' },
+        { name: '猪排骨', spec: '冰鲜/kg', qty: '15kg', purpose: '午餐备餐', person: '张师傅' },
+        { name: '菠菜', spec: '新鲜/kg', qty: '5kg', purpose: '午餐备餐', person: '李师傅' },
+        { name: '番茄', spec: '新鲜/kg', qty: '6kg', purpose: '午餐备餐', person: '张师傅' },
+        { name: '豆腐', spec: '新鲜/kg', qty: '5kg', purpose: '午餐备餐', person: '李师傅' },
+        { name: '黄瓜', spec: '新鲜/kg', qty: '4kg', purpose: '午餐备餐', person: '王面点师' },
+        { name: '鸡肉', spec: '冰鲜/kg', qty: '8kg', purpose: '午餐备餐', person: '张师傅' }
+      ];
+      const allOutRows = [];
+      for (let day = 1; day <= exportEndDay; day++) {
+        const dateStr = `04-${String(day).padStart(2, '0')}`;
+        const itemsPerDay = 2;
+        for (let j = 0; j < itemsPerDay; j++) {
+          const itemIdx = ((day - 1) * itemsPerDay + j) % outItems.length;
+          const item = outItems[itemIdx];
+          const seq = String((day - 1) * itemsPerDay + j + 1).padStart(3, '0');
+          allOutRows.push({
+            ...item,
+            date: dateStr,
+            id: `CK202604${String(day).padStart(2, '0')}${seq}`
+          });
+        }
+      }
+      const outTable = document.createElement('div');
+      outTable.style.cssText = 'margin-bottom:20px;page-break-inside:avoid';
+      outTable.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="background:#fffbe6">
+            <th style="border:1px solid #ddd;padding:3px">日期</th>
+            <th style="border:1px solid #ddd;padding:3px">出库单号</th>
+            <th style="border:1px solid #ddd;padding:3px">食材</th>
+            <th style="border:1px solid #ddd;padding:3px">规格</th>
+            <th style="border:1px solid #ddd;padding:3px;text-align:right">数量</th>
+            <th style="border:1px solid #ddd;padding:3px">用途</th>
+            <th style="border:1px solid #ddd;padding:3px">领用人</th>
+          </tr></thead>
+          <tbody>
+            ${allOutRows.map((r, i) => `
+              <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+                <td style="border:1px solid #ddd;padding:2px">${r.date}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.id}</td>
+                <td style="border:1px solid #ddd;padding:2px;font-weight:500">${r.name}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.spec}</td>
+                <td style="border:1px solid #ddd;padding:2px;text-align:right">${r.qty}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.purpose}</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.person}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot><tr style="background:#fffbe6">
+            <td colspan="4" style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">本月出库总计</td>
+            <td style="border:1px solid #ddd;padding:6px;font-weight:bold;text-align:right">${allOutRows.length}件</td>
+            <td colspan="2" style="border:1px solid #ddd;padding:6px"></td>
+          </tr></tfoot>
+        </table>
+      `;
+      exportContainer.appendChild(outTable);
+    } else if (cabinetType === '从业人员晨检') {
+      // 晨检台账 - 遍历整个月，每天生成晨检记录
+      const checkupPersons = [
+        { name: '张厨师', job: '厨师', temps: ['36.2℃', '36.4℃', '36.3℃', '36.5℃', '36.2℃', '36.3℃', '36.4℃'] },
+        { name: '李师傅', job: '厨师', temps: ['36.5℃', '36.3℃', '36.6℃', '36.4℃', '36.5℃', '36.3℃', '36.4℃'] },
+        { name: '王面点师', job: '面点师', temps: ['36.3℃', '36.2℃', '36.4℃', '36.3℃', '36.2℃', '36.4℃', '36.3℃'] },
+        { name: '刘帮厨', job: '帮厨', temps: ['36.8℃', '36.6℃', '36.7℃', '36.5℃', '36.8℃', '36.6℃', '36.7℃'] },
+        { name: '赵洗碗', job: '洗碗工', temps: ['—', '36.4℃', '36.3℃', '36.5℃', '—', '36.4℃', '36.3℃'] },
+        { name: '马厨师', job: '厨师', temps: ['36.4℃', '36.5℃', '36.3℃', '36.4℃', '36.5℃', '36.3℃', '36.4℃'] },
+        { name: '刘打荷', job: '打荷', temps: ['36.3℃', '36.4℃', '36.2℃', '36.3℃', '36.4℃', '36.2℃', '36.3℃'] },
+        { name: '孙切配', job: '切配', temps: ['36.5℃', '36.3℃', '36.4℃', '36.6℃', '36.5℃', '36.4℃', '36.5℃'] }
+      ];
+      const reporters = ['王主任', '李师傅', '张师傅', '刘厨师'];
+
+      // 生成汇总统计
+      const totalDays = exportEndDay;
+      const checkedDays = exportEndDay;
+      const abnormalDays = 0;
+      const passRate = '100%';
+
+      // 按天汇总数据
+      const allCheckupRows = [];
+      for (let day = 1; day <= exportEndDay; day++) {
+        const dateStr = `04-${String(day).padStart(2, '0')}`;
+        const weekDay = (day - 1) % 7;
+        const isWeekend = weekDay >= 5;
+        const totalPerson = 12;
+        const checked = isWeekend ? Math.floor(totalPerson * 0.7) : Math.floor(totalPerson * 0.9);
+        const abnormal = 0;
+        const unchecked = totalPerson - checked;
+        const reporter = reporters[day % 4];
+        allCheckupRows.push({
+          date: dateStr,
+          total: totalPerson,
+          checked: checked,
+          abnormal: abnormal,
+          unchecked: unchecked,
+          reporter: reporter,
+          status: '已完成'
+        });
+      }
+
+      const checkTable = document.createElement('div');
+      checkTable.style.cssText = 'margin-bottom:20px;page-break-inside:avoid';
+      checkTable.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+          <div style="text-align:center;padding:10px;background:#f0f7ff;border-radius:6px">
+            <div style="font-size:18px;font-weight:bold">${totalDays}天</div>
+            <div style="font-size:11px;color:#666">应检天数</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:#f6ffed;border-radius:6px">
+            <div style="font-size:18px;font-weight:bold;color:#52c41a">${checkedDays}天</div>
+            <div style="font-size:11px;color:#666">已检天数</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:#fff1f0;border-radius:6px">
+            <div style="font-size:18px;font-weight:bold;color:#ff4d4f">${abnormalDays}天</div>
+            <div style="font-size:11px;color:#666">异常天数</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:#fffbe6;border-radius:6px">
+            <div style="font-size:18px;font-weight:bold">${passRate}</div>
+            <div style="font-size:11px;color:#666">合格率</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="background:#f9f0ff">
+            <th style="border:1px solid #ddd;padding:3px">日期</th>
+            <th style="border:1px solid #ddd;padding:3px;text-align:right">应检人数</th>
+            <th style="border:1px solid #ddd;padding:3px;text-align:right">已检人数</th>
+            <th style="border:1px solid #ddd;padding:3px;text-align:right">异常人数</th>
+            <th style="border:1px solid #ddd;padding:3px">填报人</th>
+            <th style="border:1px solid #ddd;padding:3px">状态</th>
+          </tr></thead>
+          <tbody>
+            ${allCheckupRows.map((r, i) => `
+              <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+                <td style="border:1px solid #ddd;padding:2px;font-weight:500">${r.date}</td>
+                <td style="border:1px solid #ddd;padding:2px;text-align:right">${r.total}人</td>
+                <td style="border:1px solid #ddd;padding:2px;text-align:right">${r.checked}人</td>
+                <td style="border:1px solid #ddd;padding:2px;text-align:right;color:${r.abnormal > 0 ? '#ff4d4f' : '#52c41a'}">${r.abnormal}人</td>
+                <td style="border:1px solid #ddd;padding:2px">${r.reporter}</td>
+                <td style="border:1px solid #ddd;padding:2px"><span style="color:${r.status === '已完成' ? '#52c41a' : '#faad14'}">${r.status === '已完成' ? '✓ 已完成' : '○ 进行中'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      exportContainer.appendChild(checkTable);
+    } else {
+      // 其他台账类型 - 遍历到昨天生成完整数据
+      let allRows = [];
+      const persons = ['张厨师', '李师傅', '王面点师', '刘帮厨', '赵洗碗', '马厨师', '刘打荷', '孙切配'];
+      const supervisors = ['王主任', '李师傅', '张师傅', '刘厨师'];
+      
+      if (cabinetType === '票证中心') {
+        const suppliers = ['鲜肉直供中心', '绿鲜蔬菜基地', '优品粮油配送', '鲜捷禽蛋批发', '豆制品供应商'];
+        const certTypes = ['检疫证明', '营业执照', '食品经营许可证', '健康证', '检测报告'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          if (weekDay >= 5) continue; // 周末无配送
+          const supplier = suppliers[day % suppliers.length];
+          const certType = certTypes[day % certTypes.length];
+          const certNo = `JQ202604${String(day).padStart(2, '0')}${String(day % 3 + 1).padStart(2, '0')}`;
+          allRows.push([dateStr, supplier, certType, certNo, day % 10 === 0 ? '待上传' : '已上传', '查看']);
+        }
+      } else if (cabinetType === '蔬菜粗加工') {
+        const vegetables = ['大白菜', '菠菜', '土豆', '番茄', '黄瓜', '冬瓜', '西兰花', '青椒'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          if (weekDay >= 5) continue; // 周末无加工
+          const veg = vegetables[day % vegetables.length];
+          const qty = String(8 + (day % 10)) + 'kg';
+          const person = persons[day % persons.length];
+          const time = `0${8 + (day % 3)}:3${day % 6}`;
+          const status = day % 15 === 0 ? '待完善' : '已完成';
+          allRows.push([dateStr, veg, qty, person, time, status]);
+        }
+      } else if (cabinetType === '荤菜粗加工') {
+        const meats = ['猪里脊肉', '猪排骨', '五花肉', '鸡肉', '鸭肉', '牛肉'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          if (weekDay >= 5) continue; // 周末无加工
+          const meat = meats[day % meats.length];
+          const qty = String(15 + (day % 20)) + 'kg';
+          const person = persons[(day + 1) % persons.length];
+          const time = `0${8 + (day % 2)}:3${day % 5}`;
+          const status = day % 20 === 0 ? '待完善' : '已完成';
+          allRows.push([dateStr, meat, qty, person, time, status]);
+        }
+      } else if (cabinetType === '留样台账') {
+        const meals = ['早餐', '午餐', '晚餐'];
+        const samplers = ['王主任', '李师傅', '张师傅', '刘厨师'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          if (weekDay >= 5 && day % 3 !== 0) continue; // 周末只有午餐
+          const meal = meals[day % 3 === 0 ? 1 : 1]; // 主要午餐留样
+          const qty = String(3 + (day % 4)) + '份';
+          const sampler = samplers[day % samplers.length];
+          const expDay = day + 2;
+          const expiry = `2026-04-${String(expDay).padStart(2, '0')}`;
+          const status = day === exportEndDay ? '进行中' : '已完成';
+          allRows.push([dateStr, meal, qty, sampler, expiry, status]);
+        }
+      } else if (cabinetType === '餐具消毒') {
+        const mealTimes = ['早餐后', '午餐后', '晚餐后'];
+        const methods = ['高温消毒', '紫外线消毒', '消毒液浸泡'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          const mealCount = weekDay >= 5 ? 1 : 3; // 周末1次，平时3次
+          for (let m = 0; m < mealCount; m++) {
+            const mealTime = mealTimes[m];
+            const qty = String(800 + (day % 100)) + '套';
+            const method = methods[m % methods.length];
+            const person = persons[(day + m) % persons.length];
+            const status = (day === exportEndDay && m === mealCount - 1) ? '进行中' : '已完成';
+            allRows.push([dateStr, mealTime, qty, method, person, status]);
+          }
+        }
+      } else if (cabinetType === '设施设备消毒') {
+        const equipment = ['冷藏柜A', '冷藏柜B', '操作台', '消毒柜', '洗碗机', '油烟机'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          if (weekDay >= 5) continue;
+          const eq = equipment[day % equipment.length];
+          const method = day % 2 === 0 ? '紫外线+臭氧' : '消毒液擦拭';
+          const person = persons[(day + 2) % persons.length];
+          const status = day % 12 === 0 ? '待完善' : '已完成';
+          allRows.push([dateStr, eq, method, person, status]);
+        }
+      } else if (cabinetType === '陪餐记录') {
+        const diners = [{name: '王校长', title: '校长'}, {name: '张副校长', title: '副校长'}, {name: '王主任', title: '教务主任'}, {name: '李老师', title: '班主任'}];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const weekDay = (day - 1) % 7;
+          if (weekDay >= 5) continue; // 周末无陪餐
+          const diner = diners[day % diners.length];
+          const score = 92 + (day % 8);
+          const status = day === exportEndDay ? '进行中' : '已完成';
+          allRows.push([dateStr, '午餐', diner.name, diner.title, score + '分', status]);
+        }
+      } else if (cabinetType === '从业人员培训') {
+        const topics = ['食品安全知识', '卫生操作规范', '应急处理培训', '营养搭配培训', '设备使用培训'];
+        const trainers = ['王主任', '李师傅', '张师傅', '外聘讲师'];
+        // 培训不是每天都有的，按固定间隔
+        for (let day = 1; day <= exportEndDay; day++) {
+          if (day % 7 !== 1 && day % 7 !== 3) continue; // 约每周2次培训
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const topic = topics[day % topics.length];
+          const trainer = trainers[day % trainers.length];
+          const count = 10 + (day % 5);
+          const duration = 1 + (day % 2);
+          allRows.push([dateStr, topic, trainer, count + '人', duration + '小时', '已完成']);
+        }
+      } else if (cabinetType === '安全检查') {
+        const checkTypes = ['日常巡检', '周安全检查', '月度安全检查', '季度安全检查'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          // 检查频率：每周1次日常，每天1次巡检
+          const weekDay = (day - 1) % 7;
+          const checkType = checkTypes[day % 4];
+          const checker = persons[(day + 3) % persons.length];
+          const issues = day % 5 === 0 ? '1' : '0';
+          const status = issues === '1' ? '待整改' : '已完成';
+          allRows.push([dateStr, checkType, checker, issues, status]);
+        }
+      } else if (cabinetType === '废弃处置') {
+        const wasteTypes = ['蔬菜残渣', '荤菜废料', '废弃油脂', '餐巾纸类', '其他垃圾'];
+        const disposals = ['厨余垃圾处理', '分类收集', '专业回收', '环卫部门处理', '统一清运'];
+        for (let day = 1; day <= exportEndDay; day++) {
+          const dateStr = `04-${String(day).padStart(2, '0')}`;
+          const waste = wasteTypes[day % wasteTypes.length];
+          const qty = String(2 + (day % 8)) + 'kg';
+          const disposal = disposals[day % disposals.length];
+          const person = persons[(day + 4) % persons.length];
+          allRows.push([dateStr, waste, qty, disposal, person]);
+        }
+      } else {
+        // 默认处理：使用原始rows数据
+        allRows = realRows;
+      }
+
+      // 生成通用表格
+      const genericCard = document.createElement('div');
+      genericCard.style.cssText = 'margin-bottom:20px;page-break-inside:avoid';
+      genericCard.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="background:#f0f7ff">
+            ${headers.map(h => `<th style="border:1px solid #ddd;padding:4px">${h}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${allRows.map((row, i) => `
+              <tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+                ${row.map(cell => `<td style="border:1px solid #ddd;padding:3px">${cell}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      exportContainer.appendChild(genericCard);
+    }
+
+    barEl.style.width = '70%';
+
+    // 添加页脚
+    const footer = document.createElement('div');
+    footer.style.cssText = 'margin-top:30px;padding-top:15px;border-top:1px solid #ddd;text-align:center;font-size:10px;color:#999';
+    footer.innerHTML = `
+      <div style="margin-bottom:8px">负责人签字：____________ &nbsp;&nbsp; 审核签字：____________ &nbsp;&nbsp; 盖章：</div>
+      <div>智慧食堂监管平台 © ${year}</div>
+    `;
+    exportContainer.appendChild(footer);
+
+    document.body.appendChild(exportContainer);
+
+    barEl.style.width = '80%';
+
+    // 等待 DOM 渲染完成
+    await new Promise(r => setTimeout(r, 300));
+
+    // 使用 html2canvas 截图
+    const canvas = await html2canvas(exportContainer, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    });
+
+    barEl.style.width = '90%';
+
+    // 使用 jsPDF 生成 PDF
+    const { jsPDF } = jspdf;
+    const imgData = canvas.toDataURL('image/png');
+    const pdfWidth = 210; // A4 宽度 mm
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    const doc = new jsPDF({
+      orientation: pdfHeight > 297 ? 'portrait' : 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // 分页处理
+    const pageHeight = 297;
+    const imgHeight = pdfHeight;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      doc.addPage();
+      doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // 生成文件名
+    const fileName = `${monthStr}_${cabinetType}.pdf`;
+    doc.save(fileName);
+
+    // 清理临时容器
+    document.body.removeChild(exportContainer);
+
+    barEl.style.width = '100%';
+    textEl.textContent = '导出成功！';
+    setTimeout(() => { progressEl.style.display = 'none'; }, 1500);
+
+  } catch (error) {
+    console.error('PDF导出失败:', error);
+    textEl.textContent = '导出失败: ' + (error.message || '请重试');
+    setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
+
+    // 确保清理临时容器
+    const tempEl = document.getElementById('monthCabinetExport');
+    if (tempEl) document.body.removeChild(tempEl);
+  }
+}
+
+// 导出周报PDF - 截图页面内容生成PDF
 async function exportWeeklyReportPDF() {
   const progressEl = document.getElementById('pdfExportProgress');
   const textEl = document.getElementById('pdfExportText');
@@ -4812,59 +5893,69 @@ async function exportWeeklyReportPDF() {
 
   progressEl.style.display = 'flex';
   textEl.textContent = '正在生成周报...';
-  barEl.style.width = '30%';
+  barEl.style.width = '20%';
 
   try {
-    const { PDFDocument, rgb, StandardFonts } = PDFLib;
-    const pdfDoc = await PDFDocument.create();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const contentEl = document.getElementById('weekReportContent');
+    if (!contentEl) throw new Error('未找到周报内容');
 
-    await new Promise(r => setTimeout(r, 300));
-    barEl.style.width = '50%';
+    barEl.style.width = '40%';
 
-    const page = pdfDoc.addPage([595.28, 841.89]);
-    const { width, height } = page.getSize();
-
-    // 标题
-    page.drawRectangle({ x: 0, y: height - 100, width: width, height: 100, color: rgb(0.09, 0.47, 1) });
-    const title = '食堂周报';
-    const titleWidth = boldFont.widthOfTextAtSize(title, 24);
-    page.drawText(title, { x: (width - titleWidth) / 2, y: height - 60, size: 24, font: boldFont, color: rgb(1, 1, 1) });
+    // 使用 html2canvas 截图
+    const canvas = await html2canvas(contentEl, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    });
 
     barEl.style.width = '70%';
-    await new Promise(r => setTimeout(r, 300));
 
-    // 周报内容
-    const contentY = height - 180;
-    page.drawText('报告周期：2026年第14周（3月30日 - 4月3日）', { x: 50, y: contentY, size: 12, font: font });
-    page.drawText('本周概况：', { x: 50, y: contentY - 40, size: 12, font: boldFont });
-    page.drawText('• 用餐人数：共计 2,850 人次', { x: 60, y: contentY - 65, size: 11, font: font });
-    page.drawText('• 食材成本：共计 ¥28,650 元', { x: 60, y: contentY - 90, size: 11, font: font });
-    page.drawText('• 预警处理：0 条待处理', { x: 60, y: contentY - 115, size: 11, font: font });
-    page.drawText('• 食安评分：98.5 分（优秀）', { x: 60, y: contentY - 140, size: 11, font: font });
+    // 使用 jsPDF 生成 PDF
+    const { jsPDF } = jspdf;
+    const imgData = canvas.toDataURL('image/png');
+    const pdfWidth = 210; // A4 宽度 mm
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    const doc = new jsPDF({
+      orientation: pdfHeight > 297 ? 'portrait' : 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // 如果内容超过一页，分页处理
+    const pageHeight = 297;
+    const imgHeight = pdfHeight;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      doc.addPage();
+      doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
 
     barEl.style.width = '90%';
-    await new Promise(r => setTimeout(r, 300));
 
-    // 下载
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '食堂周报_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.pdf';
-    link.click();
-    URL.revokeObjectURL(url);
+    // 获取当前周期名称
+    const weekSelect = document.getElementById('weekSelect');
+    const weekNames = ['第14周', '第13周', '第12周'];
+    const weekName = weekNames[parseInt(weekSelect.value)] || '周报';
+    const fileName = `${weekName}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.pdf`;
+    doc.save(fileName);
 
     barEl.style.width = '100%';
     textEl.textContent = '导出成功！';
-    setTimeout(() => { progressEl.style.display = 'none'; }, 1000);
+    setTimeout(() => { progressEl.style.display = 'none'; }, 1500);
 
   } catch (error) {
     console.error('PDF导出失败:', error);
-    textEl.textContent = '导出失败，请重试';
-    progressEl.style.display = 'none';
+    textEl.textContent = '导出失败: ' + (error.message || '请重试');
+    setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
   }
 }
 </script>

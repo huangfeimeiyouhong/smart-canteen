@@ -466,9 +466,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
               <table class="data-table">
                 <thead><tr><th>分组名称</th><th>适用学段</th><th>学校数量</th><th>管理要求</th><th>操作</th></tr></thead>
                 <tbody>
-                  <tr><td>小学组</td><td>小学（6-12岁）</td><td>12所</td><td>营养均衡要求、每日留样2份</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td></tr>
-                  <tr><td>中学组</td><td>初中+高中（13-18岁）</td><td>10所</td><td>高热量配比、台账每日更新</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td></tr>
-                  <tr><td>幼儿园组</td><td>幼儿（3-6岁）</td><td>6所</td><td>精细化营养配比、禁用高盐食材</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td></tr>
+                  <tr><td>小学组</td><td>小学（6-12岁）</td><td>3所</td><td>营养均衡要求、每日留样2份</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button><button class="btn btn-sm btn-outline" onclick="selectSchoolsForGroup(this)">选择学校</button></td></tr>
+                  <tr><td>中学组</td><td>初中+高中（13-18岁）</td><td>3所</td><td>高热量配比、台账每日更新</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button><button class="btn btn-sm btn-outline" onclick="selectSchoolsForGroup(this)">选择学校</button></td></tr>
+                  <tr><td>幼儿园组</td><td>幼儿（3-6岁）</td><td>1所</td><td>精细化营养配比、禁用高盐食材</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button><button class="btn btn-sm btn-outline" onclick="selectSchoolsForGroup(this)">选择学校</button></td></tr>
                 </tbody>
               </table>
             </div>
@@ -724,8 +724,8 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
         <div class="card-head">
           <div class="card-title">💰 食材成本监管</div>
           <div style="display:flex;gap:8px">
-            <select class="form-input" style="width:140px;padding:6px 10px"><option>2025-2026学年</option><option>上学年</option></select>
-            <select class="form-input" style="width:110px;padding:6px 10px"><option>按月统计</option><option>按学期统计</option></select>
+            <select id="costYearSelect" class="form-input" style="width:140px;padding:6px 10px" onchange="switchCostYear()"><option value="current">2025-2026学年</option><option value="last">上学年</option></select>
+            <select id="costStatType" class="form-input" style="width:110px;padding:6px 10px" onchange="switchCostStatType()"><option value="month">按月统计</option><option value="term">按学期统计</option></select>
             <button class="btn btn-outline btn-sm" onclick="exportCostData()">📤 导出</button>
           </div>
         </div>
@@ -741,9 +741,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
             </div>
           </div>
           <div style="font-size:13px;font-weight:500;margin-bottom:12px">各校本学期成本统计</div>
-          <table class="cost-table">
+          <table class="cost-table" id="costTable">
             <thead><tr><th>学校</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th><th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>学期均值</th></tr></thead>
-            <tbody>
+            <tbody id="costTableBody">
               <tr><td>实验小学</td><td class="cost-level-1">6.2</td><td class="cost-level-1">6.4</td><td class="cost-level-1">6.5</td><td class="cost-level-2">7.1</td><td class="cost-level-1">6.3</td><td class="cost-level-1">6.5</td><td class="cost-level-1">6.7</td><td class="cost-level-2">6.9</td><td>6.58</td></tr>
               <tr><td>第一中学</td><td class="cost-level-1">7.1</td><td class="cost-level-2">7.8</td><td class="cost-level-1">7.2</td><td class="cost-level-2">7.9</td><td class="cost-level-1">7.0</td><td class="cost-level-1">7.3</td><td class="cost-level-2">7.6</td><td class="cost-level-2">7.8</td><td>7.46</td></tr>
               <tr><td>朝阳小学</td><td class="cost-level-2">6.9</td><td class="cost-level-3">9.2</td><td class="cost-level-2">7.4</td><td class="cost-level-3">8.8</td><td class="cost-level-2">7.2</td><td class="cost-level-3">9.0</td><td class="cost-level-3">8.5</td><td class="cost-level-3">8.8</td><td>8.23</td></tr>
@@ -810,63 +810,135 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
     <div class="page" id="page-weekly-report">
       <div class="card">
         <div class="card-head">
-          <div class="card-title">📅 周报 - 第14周（3/30-4/3）</div>
-          <div style="display:flex;gap:8px">
-            <select class="form-input" style="width:200px;padding:6px 10px"><option>第14周（3/30-4/3）</option><option>第13周（3/23-3/27）</option></select>
+          <div class="card-title" id="weeklyReportTitle">📅 周报 - 第14周（3/30-4/3）</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="form-input" style="width:160px;padding:6px 10px" id="weeklySchoolSelect" onchange="changeWeeklyReport()">
+              <option value="全部">全部学校</option>
+              <option value="实验小学">实验小学</option>
+              <option value="第一中学">第一中学</option>
+              <option value="朝阳小学">朝阳小学</option>
+              <option value="希望小学">希望小学</option>
+            </select>
+            <select class="form-input" style="width:180px;padding:6px 10px" id="weeklyWeekSelect" onchange="changeWeeklyReport()">
+              <option value="0">第14周（3/30-4/3）</option>
+              <option value="1">第13周（3/23-3/27）</option>
+              <option value="2">第12周（3/16-3/20）</option>
+            </select>
             <button class="btn btn-primary btn-sm" onclick="generateWeeklyReport()">🔄 生成周报</button>
             <button class="btn btn-outline btn-sm">📤 导出</button>
           </div>
         </div>
-        <div class="card-body">
+        <div class="card-body" id="weeklyReportContent">
           <div style="background:#f0fff5;border-left:4px solid var(--primary);padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:20px">
-            <div style="font-size:15px;font-weight:600;color:var(--primary)">XX市教育局学校食堂周报 — 第14周（2026年3月30日-4月3日）</div>
-            <div style="font-size:12px;color:var(--text-sub);margin-top:4px">覆盖28所学校 | 自动汇总生成</div>
+            <div style="font-size:15px;font-weight:600;color:var(--primary)" id="weeklyReportHeader">XX市教育局学校食堂周报 — 第14周（2026年3月30日-4月3日）</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px" id="weeklyReportMeta">覆盖<span id="weeklySchoolCount">28</span>所学校 | 自动汇总生成 | 状态：<span id="weeklyReportStatus" style="color:var(--success)">已上报</span></div>
           </div>
-          <div class="grid-2" style="gap:16px">
-            <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px">一、食谱公示与营养分析汇总</div>
-              <table class="data-table">
-                <thead><tr><th>指标</th><th>本周</th><th>上周</th><th>变化</th></tr></thead>
-                <tbody>
-                  <tr><td>食谱公示率</td><td>96.4%</td><td>94.2%</td><td style="color:var(--success)">+2.2%↑</td></tr>
-                  <tr><td>营养A级达标率</td><td>85.7%</td><td>82.1%</td><td style="color:var(--success)">+3.6%↑</td></tr>
-                  <tr><td>营养B级学校</td><td>4所</td><td>5所</td><td style="color:var(--success)">减少1所</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px">二、食材采购入库出库汇总</div>
-              <table class="data-table">
-                <thead><tr><th>类别</th><th>入库总量</th><th>出库总量</th><th>期末库存</th></tr></thead>
-                <tbody>
-                  <tr><td>肉类</td><td>8,400kg</td><td>7,850kg</td><td>550kg</td></tr>
-                  <tr><td>蔬菜</td><td>12,600kg</td><td>12,400kg</td><td>200kg</td></tr>
-                  <tr><td>粮油</td><td>5,200kg</td><td>4,800kg</td><td>400kg</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px">三、票证数据</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
-                本周各校共上传票证 <strong>426</strong> 张，票证完整率 <strong>94.8%</strong>，待补传 <strong>22</strong> 张，已催办处理中。
+          
+          <!-- 单校数据展示区 -->
+          <div id="weeklySingleSchoolData" style="display:none">
+            <div class="grid-2" style="gap:16px;margin-bottom:16px">
+              <div style="background:#f5f5f5;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:12px;color:var(--text-sub)">营养评级</div>
+                <div style="font-size:28px;font-weight:700;color:var(--success)" id="singleNutriLevel">A</div>
+              </div>
+              <div style="background:#f5f5f5;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:12px;color:var(--text-sub)">食材总成本</div>
+                <div style="font-size:28px;font-weight:700;color:var(--primary)" id="singleTotalCost">¥28,640</div>
+              </div>
+              <div style="background:#f5f5f5;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:12px;color:var(--text-sub)">人均日成本</div>
+                <div style="font-size:28px;font-weight:700;color:var(--accent)" id="singlePerCost">¥6.74</div>
+              </div>
+              <div style="background:#f5f5f5;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:12px;color:var(--text-sub)">本周预警</div>
+                <div style="font-size:28px;font-weight:700;color:var(--warning)" id="singleWarnings">4条</div>
               </div>
             </div>
-            <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px">四、食堂日常预警汇总</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
-                本周全区共产生预警 <strong>38</strong> 条：已处理 <strong>26</strong> 条（68.4%），催办中 <strong>8</strong> 条，待处理 <strong>4</strong> 条。健康证类预警需重点关注。
+          </div>
+          
+          <!-- 汇总数据展示区 -->
+          <div id="weeklyAllSchoolData">
+            <div class="grid-2" style="gap:16px">
+              <div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:10px">一、食谱公示与营养分析汇总</div>
+                <table class="data-table">
+                  <thead><tr><th>指标</th><th>本周</th><th>上周</th><th>变化</th></tr></thead>
+                  <tbody id="weeklyNutriTable">
+                    <tr><td>食谱公示率</td><td>96.4%</td><td>94.2%</td><td style="color:var(--success)">+2.2%↑</td></tr>
+                    <tr><td>营养A级达标率</td><td>85.7%</td><td>82.1%</td><td style="color:var(--success)">+3.6%↑</td></tr>
+                    <tr><td>营养B级学校</td><td>4所</td><td>5所</td><td style="color:var(--success)">减少1所</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:10px">二、食材采购入库出库汇总</div>
+                <table class="data-table">
+                  <thead><tr><th>类别</th><th>入库总量</th><th>出库总量</th><th>期末库存</th></tr></thead>
+                  <tbody id="weeklyPurchaseTable">
+                    <tr><td>肉类</td><td>8,400kg</td><td>7,850kg</td><td>550kg</td></tr>
+                    <tr><td>蔬菜</td><td>12,600kg</td><td>12,400kg</td><td>200kg</td></tr>
+                    <tr><td>粮油</td><td>5,200kg</td><td>4,800kg</td><td>400kg</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:10px">三、票证数据</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weeklyCertText">
+                  本周各校共上传票证 <strong>426</strong> 张，票证完整率 <strong>94.8%</strong>，待补传 <strong>22</strong> 张，已催办处理中。
+                </div>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:10px">四、食堂日常预警汇总</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weeklyWarningText">
+                  本周全区共产生预警 <strong>38</strong> 条：已处理 <strong>26</strong> 条（68.4%），催办中 <strong>8</strong> 条，待处理 <strong>4</strong> 条。健康证类预警需重点关注。
+                </div>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:10px">五、食材成本分析</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weeklyCostText">
+                  全区本周食材总成本 <strong>¥826,400</strong>，日均 <strong>¥165,280</strong>，人均日成本 <strong>¥6.89</strong>（按24,000人计）。较上周上涨2.8%，猪肉价格上涨为主因，已发出价格预警3条。
+                </div>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:10px">六、留样与陪餐</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weeklySampleText">
+                  全区应留样 <strong>280</strong> 份，实际完成 <strong>272</strong> 份（97.1%）。本周各校陪餐 <strong>140</strong> 次，行政陪餐比例96.4%，符合要求。
+                </div>
               </div>
             </div>
-            <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px">五、食材成本分析</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
-                全区本周食材总成本 <strong>¥826,400</strong>，日均 <strong>¥165,280</strong>，人均日成本 <strong>¥6.89</strong>（按24,000人计）。较上周上涨2.8%，猪肉价格上涨为主因，已发出价格预警3条。
+          </div>
+          
+          <!-- 详细数据区（单校时显示） -->
+          <div id="weeklyDetailSection" style="display:none;margin-top:20px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">📋 详细数据</div>
+            <div class="grid-2" style="gap:16px">
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">营养分析</div>
+                <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#f8f8f8;padding:12px;border-radius:6px" id="singleNutriText"></div>
               </div>
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px">六、留样与陪餐</div>
-              <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
-                全区应留样 <strong>280</strong> 份，实际完成 <strong>272</strong> 份（97.1%）。本周各校陪餐 <strong>140</strong> 次，行政陪餐比例96.4%，符合要求。
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">采购数据</div>
+                <table class="data-table" style="font-size:12px">
+                  <thead><tr><th>类别</th><th>计划量</th><th>实际量</th><th>差异</th></tr></thead>
+                  <tbody id="singlePurchaseRows"></tbody>
+                </table>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">成本说明</div>
+                <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#f8f8f8;padding:12px;border-radius:6px" id="singleCostText"></div>
+                <div class="alert warning" style="margin-top:8px;font-size:12px;display:none" id="singleCostAlert"></div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">预警记录</div>
+                <ul style="font-size:12px;color:var(--text-sub);padding-left:16px" id="singleWarningTimeline"></ul>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">留样陪餐</div>
+                <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#f8f8f8;padding:12px;border-radius:6px" id="singleDiningText"></div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">留样记录</div>
+                <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#f8f8f8;padding:12px;border-radius:6px" id="singleSampleText"></div>
               </div>
             </div>
           </div>
@@ -965,7 +1037,6 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
     </div>
   </div>
 </div>
-
 <script>
 // ===== Toast 提示函数 =====
 function showToast(message, type = 'info') {
@@ -1005,6 +1076,311 @@ const pages = {
   'warnings':'预警管理','cost-monitor':'食材成本监管',
   'daily-report':'日报','weekly-report':'周报','monthly-report':'月报'
 };
+
+// ===== 监管端周报数据（各学校各周期的数据） =====
+const weeklyReportsData = {
+  '实验小学': {
+    '0': { // 第14周
+      title: '实验小学食堂第14周周报（2026年3月30日 - 4月3日）',
+      genTime: '2026-04-03 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率96%，脂肪达标率91%，碳水化合物达标率98%，营养综合评级A级。',
+      totalCost: '¥28,640',
+      perCost: '¥6.74',
+      costText: '本周食材总成本：<strong>¥28,640</strong>，日均成本：<strong>¥5,728</strong>，人均成本：<strong>¥6.74</strong>（按850人计）。较上周增加约3.2%，猪肉价格上涨为主因。',
+      costAlert: '⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）',
+      purchaseRows: '<tr><td>肉类</td><td>250kg</td><td>230kg</td><td>20kg</td></tr><tr><td>蔬菜</td><td>400kg</td><td>395kg</td><td>5kg</td></tr><tr><td>粮油</td><td>180kg</td><td>150kg</td><td>30kg</td></tr>',
+      warnings: 4,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--danger)">●</span> 04-03 健康证过期预警（张厨师）— 待处理</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-03 菠菜临期预警（18kg）— 已提醒</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 04-02 价格预警（猪肉）— 已处理</li><li style="margin-bottom:6px"><span style="color:#ccc">●</span> 03-31 餐具消毒未完成— 已补录</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样25份（每日早午餐各1份），实际留样24份，完成率96%。2026-04-03午餐留样未录入，需尽快补录。'
+    },
+    '1': { // 第13周
+      title: '实验小学食堂第13周周报（2026年3月23日 - 3月27日）',
+      genTime: '2026-03-27 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率94%，脂肪达标率90%，碳水化合物达标率97%，营养综合评级A级。',
+      totalCost: '¥27,750',
+      perCost: '¥6.53',
+      costText: '本周食材总成本：<strong>¥27,750</strong>，日均成本：<strong>¥5,550</strong>，人均成本：<strong>¥6.53</strong>（按850人计）。成本与上周持平。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>240kg</td><td>225kg</td><td>15kg</td></tr><tr><td>蔬菜</td><td>380kg</td><td>375kg</td><td>5kg</td></tr><tr><td>粮油</td><td>170kg</td><td>145kg</td><td>25kg</td></tr>',
+      warnings: 2,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-25 蔬菜农残检测预警— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-24 库存不足预警（大米）— 已补货</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样25份（每日早午餐各1份），实际留样25份，完成率100%。'
+    },
+    '2': { // 第12周
+      title: '实验小学食堂第12周周报（2026年3月16日 - 3月20日）',
+      genTime: '2026-03-20 18:00',
+      status: '待上报',
+      nutriLevel: 'B',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率95%。营养分析结果：蛋白质达标率93%，脂肪达标率89%，碳水化合物达标率96%，营养综合评级B级。',
+      totalCost: '¥26,820',
+      perCost: '¥6.31',
+      costText: '本周食材总成本：<strong>¥26,820</strong>，日均成本：<strong>¥5,364</strong>，人均成本：<strong>¥6.31</strong>（按850人计）。成本略有下降。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>230kg</td><td>220kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>360kg</td><td>358kg</td><td>2kg</td></tr><tr><td>粮油</td><td>160kg</td><td>140kg</td><td>20kg</td></tr>',
+      warnings: 1,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-18 留样未及时录入— 已补录</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样25份（每日早午餐各1份），实际留样23份，完成率92%。存在2份留样缺失，已补录说明。'
+    }
+  },
+  '第一中学': {
+    '0': {
+      title: '第一中学食堂第14周周报（2026年3月30日 - 4月3日）',
+      genTime: '2026-04-03 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率95%，脂肪达标率92%，碳水化合物达标率97%，营养综合评级A级。',
+      totalCost: '¥42,500',
+      perCost: '¥7.08',
+      costText: '本周食材总成本：<strong>¥42,500</strong>，日均成本：<strong>¥8,500</strong>，人均成本：<strong>¥7.08</strong>（按1,200人计）。成本较上周增加约1.5%。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>380kg</td><td>370kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>550kg</td><td>540kg</td><td>10kg</td></tr><tr><td>粮油</td><td>280kg</td><td>260kg</td><td>20kg</td></tr>',
+      warnings: 2,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-02 豆制品临期预警— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 04-01 库存盘点提醒— 已完成</li>',
+      diningText: '本周共陪餐6次，校长陪餐3次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样30份（每日早午餐各1份），实际留样30份，完成率100%。'
+    },
+    '1': {
+      title: '第一中学食堂第13周周报（2026年3月23日 - 3月27日）',
+      genTime: '2026-03-27 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率94%，脂肪达标率91%，碳水化合物达标率96%，营养综合评级A级。',
+      totalCost: '¥41,880',
+      perCost: '¥6.98',
+      costText: '本周食材总成本：<strong>¥41,880</strong>，日均成本：<strong>¥8,376</strong>，人均成本：<strong>¥6.98</strong>（按1,200人计）。成本稳定。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>370kg</td><td>365kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>540kg</td><td>535kg</td><td>5kg</td></tr><tr><td>粮油</td><td>270kg</td><td>255kg</td><td>15kg</td></tr>',
+      warnings: 1,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-25 供货商资质更新— 已完成</li>',
+      diningText: '本周共陪餐6次，校长陪餐3次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样30份（每日早午餐各1份），实际留样30份，完成率100%。'
+    },
+    '2': {
+      title: '第一中学食堂第12周周报（2026年3月16日 - 3月20日）',
+      genTime: '2026-03-20 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率95%，脂肪达标率93%，碳水化合物达标率98%，营养综合评级A级。',
+      totalCost: '¥41,200',
+      perCost: '¥6.87',
+      costText: '本周食材总成本：<strong>¥41,200</strong>，日均成本：<strong>¥8,240</strong>，人均成本：<strong>¥6.87</strong>（按1,200人计）。成本控制良好。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>365kg</td><td>360kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>530kg</td><td>525kg</td><td>5kg</td></tr><tr><td>粮油</td><td>265kg</td><td>250kg</td><td>15kg</td></tr>',
+      warnings: 0,
+      warningTimeline: '<li style="color:var(--text-sub)">本周无预警记录</li>',
+      diningText: '本周共陪餐6次，校长陪餐3次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样30份（每日早午餐各1份），实际留样30份，完成率100%。'
+    }
+  },
+  '朝阳小学': {
+    '0': {
+      title: '朝阳小学食堂第14周周报（2026年3月30日 - 4月3日）',
+      genTime: '2026-04-03 18:00',
+      status: '已上报',
+      nutriLevel: 'B',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率90%。营养分析结果：蛋白质达标率88%，脂肪达标率85%，碳水化合物达标率92%，营养综合评级B级。',
+      totalCost: '¥18,720',
+      perCost: '¥6.24',
+      costText: '本周食材总成本：<strong>¥18,720</strong>，日均成本：<strong>¥3,744</strong>，人均成本：<strong>¥6.24</strong>（按600人计）。成本略有下降。',
+      costAlert: '⚠️ 蔬菜损耗偏高，本周损耗率8.3%',
+      purchaseRows: '<tr><td>肉类</td><td>150kg</td><td>140kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>280kg</td><td>257kg</td><td>23kg</td></tr><tr><td>粮油</td><td>100kg</td><td>92kg</td><td>8kg</td></tr>',
+      warnings: 5,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--danger)">●</span> 04-03 健康证过期预警（李师傅）— 待处理</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-02 蔬菜损耗超标— 已提醒</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-01 库存不足（食用油）— 已补货</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-31 农残检测异常— 已处理</li><li style="margin-bottom:6px"><span style="color:#ccc">●</span> 03-30 消毒记录缺失— 已补录</li>',
+      diningText: '本周共陪餐4次，校长陪餐2次，教师陪餐2次，陪餐记录80%完整。03-31陪餐记录缺失，已催促补录。',
+      sampleText: '本周应留样20份（每日早午餐各1份），实际留样18份，完成率90%。存在2份留样缺失，需加强管理。'
+    },
+    '1': {
+      title: '朝阳小学食堂第13周周报（2026年3月23日 - 3月27日）',
+      genTime: '2026-03-27 18:00',
+      status: '已上报',
+      nutriLevel: 'B',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率92%。营养分析结果：蛋白质达标率89%，脂肪达标率86%，碳水化合物达标率93%，营养综合评级B级。',
+      totalCost: '¥19,200',
+      perCost: '¥6.40',
+      costText: '本周食材总成本：<strong>¥19,200</strong>，日均成本：<strong>¥3,840</strong>，人均成本：<strong>¥6.40</strong>（按600人计）。成本略有上升。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>155kg</td><td>148kg</td><td>7kg</td></tr><tr><td>蔬菜</td><td>290kg</td><td>280kg</td><td>10kg</td></tr><tr><td>粮油</td><td>105kg</td><td>98kg</td><td>7kg</td></tr>',
+      warnings: 3,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-26 食材临期预警— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-25 供应商送货延迟— 已协调</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-24 库存盘点异常— 已核实</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样20份（每日早午餐各1份），实际留样20份，完成率100%。'
+    },
+    '2': {
+      title: '朝阳小学食堂第12周周报（2026年3月16日 - 3月20日）',
+      genTime: '2026-03-20 18:00',
+      status: '待上报',
+      nutriLevel: 'B',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率85%。营养分析结果：蛋白质达标率86%，脂肪达标率83%，碳水化合物达标率90%，营养综合评级B级。',
+      totalCost: '¥18,480',
+      perCost: '¥6.16',
+      costText: '本周食材总成本：<strong>¥18,480</strong>，日均成本：<strong>¥3,696</strong>，人均成本：<strong>¥6.16</strong>（按600人计）。成本控制良好。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>148kg</td><td>142kg</td><td>6kg</td></tr><tr><td>蔬菜</td><td>275kg</td><td>268kg</td><td>7kg</td></tr><tr><td>粮油</td><td>98kg</td><td>92kg</td><td>6kg</td></tr>',
+      warnings: 4,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-18 食谱未按时公示— 已补录</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-17 留样重量不足— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-16 设备维护提醒— 已完成</li><li style="margin-bottom:6px"><span style="color:#ccc">●</span> 03-15 健康证即将到期— 已续期</li>',
+      diningText: '本周共陪餐4次，校长陪餐1次，教师陪餐3次，陪餐记录80%完整。03-18陪餐记录缺失。',
+      sampleText: '本周应留样20份（每日早午餐各1份），实际留样17份，完成率85%。存在3份留样缺失，需加强管理。'
+    }
+  },
+  '希望小学': {
+    '0': {
+      title: '希望小学食堂第14周周报（2026年3月30日 - 4月3日）',
+      genTime: '2026-04-03 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率97%，脂肪达标率93%，碳水化合物达标率99%，营养综合评级A级。',
+      totalCost: '¥22,400',
+      perCost: '¥6.40',
+      costText: '本周食材总成本：<strong>¥22,400</strong>，日均成本：<strong>¥4,480</strong>，人均成本：<strong>¥6.40</strong>（按700人计）。成本与上周持平。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>200kg</td><td>195kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>350kg</td><td>345kg</td><td>5kg</td></tr><tr><td>粮油</td><td>140kg</td><td>132kg</td><td>8kg</td></tr>',
+      warnings: 1,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-01 大米库存不足— 已补货</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样22份（每日早午餐各1份），实际留样22份，完成率100%。'
+    },
+    '1': {
+      title: '希望小学食堂第13周周报（2026年3月23日 - 3月27日）',
+      genTime: '2026-03-27 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率96%，脂肪达标率92%，碳水化合物达标率98%，营养综合评级A级。',
+      totalCost: '¥22,100',
+      perCost: '¥6.31',
+      costText: '本周食材总成本：<strong>¥22,100</strong>，日均成本：<strong>¥4,420</strong>，人均成本：<strong>¥6.31</strong>（按700人计）。成本略有下降。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>195kg</td><td>190kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>345kg</td><td>340kg</td><td>5kg</td></tr><tr><td>粮油</td><td>138kg</td><td>130kg</td><td>8kg</td></tr>',
+      warnings: 0,
+      warningTimeline: '<li style="color:var(--text-sub)">本周无预警记录</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样22份（每日早午餐各1份），实际留样22份，完成率100%。'
+    },
+    '2': {
+      title: '希望小学食堂第12周周报（2026年3月16日 - 3月20日）',
+      genTime: '2026-03-20 18:00',
+      status: '已上报',
+      nutriLevel: 'A',
+      nutriText: '本周共制作食谱5天（午餐），食谱按时公示率100%。营养分析结果：蛋白质达标率97%，脂肪达标率94%，碳水化合物达标率99%，营养综合评级A级。',
+      totalCost: '¥22,680',
+      perCost: '¥6.48',
+      costText: '本周食材总成本：<strong>¥22,680</strong>，日均成本：<strong>¥4,536</strong>，人均成本：<strong>¥6.48</strong>（按700人计）。成本略有上升。',
+      costAlert: '',
+      purchaseRows: '<tr><td>肉类</td><td>198kg</td><td>192kg</td><td>6kg</td></tr><tr><td>蔬菜</td><td>348kg</td><td>342kg</td><td>6kg</td></tr><tr><td>粮油</td><td>140kg</td><td>132kg</td><td>8kg</td></tr>',
+      warnings: 2,
+      warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-18 鸡蛋价格波动— 已关注</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-16 设备检修提醒— 已完成</li>',
+      diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
+      sampleText: '本周应留样22份（每日早午餐各1份），实际留样22份，完成率100%。'
+    }
+  }
+};
+
+// 切换周报（学校和周期）
+function changeWeeklyReport() {
+  const schoolSelect = document.getElementById('weeklySchoolSelect');
+  const weekSelect = document.getElementById('weeklyWeekSelect');
+  const school = schoolSelect.value;
+  const week = weekSelect.value;
+  
+  const weekNames = ['第14周（3/30-4/3）', '第13周（3/23-3/27）', '第12周（3/16-3/20）'];
+  const weekNum = ['第14周', '第13周', '第12周'];
+  const schoolCount = document.getElementById('weeklySchoolCount');
+  
+  if (school === '全部') {
+    // 显示汇总数据
+    document.getElementById('weeklySingleSchoolData').style.display = 'none';
+    document.getElementById('weeklyAllSchoolData').style.display = '';
+    document.getElementById('weeklyDetailSection').style.display = 'none';
+    schoolCount.textContent = '28';
+    
+    // 更新汇总数据（根据周期调整）
+    updateWeeklySummary(week);
+    
+    document.getElementById('weeklyReportTitle').textContent = '📅 周报 - ' + weekNames[week];
+    document.getElementById('weeklyReportHeader').textContent = 'XX市教育局学校食堂周报 — ' + weekNames[week] + '（2026年）';
+  } else {
+    // 显示单校数据
+    document.getElementById('weeklySingleSchoolData').style.display = '';
+    document.getElementById('weeklyAllSchoolData').style.display = 'none';
+    document.getElementById('weeklyDetailSection').style.display = '';
+    schoolCount.textContent = '1';
+    
+    const data = weeklyReportsData[school] && weeklyReportsData[school][week];
+    if (data) {
+      // 更新头部
+      document.getElementById('weeklyReportTitle').textContent = '📅 ' + school + ' ' + weekNames[week];
+      document.getElementById('weeklyReportHeader').textContent = school + '食堂' + weekNum[week] + '周报';
+      
+      // 更新状态
+      const statusEl = document.getElementById('weeklyReportStatus');
+      statusEl.textContent = data.status;
+      statusEl.style.color = data.status === '已上报' ? 'var(--success)' : 'var(--warning)';
+      
+      // 更新概览卡片
+      document.getElementById('singleNutriLevel').textContent = data.nutriLevel;
+      document.getElementById('singleNutriLevel').style.color = data.nutriLevel === 'A' ? 'var(--success)' : 'var(--warning)';
+      document.getElementById('singleTotalCost').textContent = data.totalCost;
+      document.getElementById('singlePerCost').textContent = data.perCost;
+      document.getElementById('singleWarnings').textContent = data.warnings + '条';
+      document.getElementById('singleWarnings').style.color = data.warnings > 3 ? 'var(--danger)' : (data.warnings > 0 ? 'var(--warning)' : 'var(--success)');
+      
+      // 更新详细数据
+      document.getElementById('singleNutriText').textContent = data.nutriText;
+      document.getElementById('singlePurchaseRows').innerHTML = data.purchaseRows;
+      document.getElementById('singleCostText').innerHTML = data.costText;
+      document.getElementById('singleCostAlert').innerHTML = data.costAlert;
+      document.getElementById('singleCostAlert').style.display = data.costAlert ? '' : 'none';
+      document.getElementById('singleWarningTimeline').innerHTML = data.warningTimeline;
+      document.getElementById('singleDiningText').textContent = data.diningText;
+      document.getElementById('singleSampleText').textContent = data.sampleText;
+    }
+  }
+}
+
+// 更新汇总数据（根据周期变化）
+function updateWeeklySummary(week) {
+  const summaries = {
+    '0': { // 第14周
+      nutriRows: '<tr><td>食谱公示率</td><td>96.4%</td><td>94.2%</td><td style="color:var(--success)">+2.2%↑</td></tr><tr><td>营养A级达标率</td><td>85.7%</td><td>82.1%</td><td style="color:var(--success)">+3.6%↑</td></tr><tr><td>营养B级学校</td><td>4所</td><td>5所</td><td style="color:var(--success)">减少1所</td></tr>',
+      purchaseRows: '<tr><td>肉类</td><td>8,400kg</td><td>7,850kg</td><td>550kg</td></tr><tr><td>蔬菜</td><td>12,600kg</td><td>12,400kg</td><td>200kg</td></tr><tr><td>粮油</td><td>5,200kg</td><td>4,800kg</td><td>400kg</td></tr>',
+      certText: '本周各校共上传票证 <strong>426</strong> 张，票证完整率 <strong>94.8%</strong>，待补传 <strong>22</strong> 张，已催办处理中。',
+      warningText: '本周全区共产生预警 <strong>38</strong> 条：已处理 <strong>26</strong> 条（68.4%），催办中 <strong>8</strong> 条，待处理 <strong>4</strong> 条。健康证类预警需重点关注。',
+      costText: '全区本周食材总成本 <strong>¥826,400</strong>，日均 <strong>¥165,280</strong>，人均日成本 <strong>¥6.89</strong>（按24,000人计）。较上周上涨2.8%，猪肉价格上涨为主因，已发出价格预警3条。',
+      sampleText: '全区应留样 <strong>280</strong> 份，实际完成 <strong>272</strong> 份（97.1%）。本周各校陪餐 <strong>140</strong> 次，行政陪餐比例96.4%，符合要求。'
+    },
+    '1': { // 第13周
+      nutriRows: '<tr><td>食谱公示率</td><td>94.2%</td><td>92.8%</td><td style="color:var(--success)">+1.4%↑</td></tr><tr><td>营养A级达标率</td><td>82.1%</td><td>78.6%</td><td style="color:var(--success)">+3.5%↑</td></tr><tr><td>营养B级学校</td><td>5所</td><td>6所</td><td style="color:var(--success)">减少1所</td></tr>',
+      purchaseRows: '<tr><td>肉类</td><td>8,200kg</td><td>7,680kg</td><td>520kg</td></tr><tr><td>蔬菜</td><td>12,300kg</td><td>12,100kg</td><td>200kg</td></tr><tr><td>粮油</td><td>5,100kg</td><td>4,720kg</td><td>380kg</td></tr>',
+      certText: '本周各校共上传票证 <strong>408</strong> 张，票证完整率 <strong>93.5%</strong>，待补传 <strong>28</strong> 张，已催办处理中。',
+      warningText: '本周全区共产生预警 <strong>32</strong> 条：已处理 <strong>24</strong> 条（75%），催办中 <strong>6</strong> 条，待处理 <strong>2</strong> 条。预警处理率较上周提升明显。',
+      costText: '全区本周食材总成本 <strong>¥803,600</strong>，日均 <strong>¥160,720</strong>，人均日成本 <strong>¥6.70</strong>（按24,000人计）。成本与上周基本持平。',
+      sampleText: '全区应留样 <strong>275</strong> 份，实际完成 <strong>268</strong> 份（97.5%）。本周各校陪餐 <strong>138</strong> 次，行政陪餐比例95.6%，符合要求。'
+    },
+    '2': { // 第12周
+      nutriRows: '<tr><td>食谱公示率</td><td>92.8%</td><td>91.5%</td><td style="color:var(--success)">+1.3%↑</td></tr><tr><td>营养A级达标率</td><td>78.6%</td><td>75.0%</td><td style="color:var(--success)">+3.6%↑</td></tr><tr><td>营养B级学校</td><td>6所</td><td>7所</td><td style="color:var(--success)">减少1所</td></tr>',
+      purchaseRows: '<tr><td>肉类</td><td>8,050kg</td><td>7,520kg</td><td>530kg</td></tr><tr><td>蔬菜</td><td>12,000kg</td><td>11,800kg</td><td>200kg</td></tr><tr><td>粮油</td><td>4,980kg</td><td>4,600kg</td><td>380kg</td></tr>',
+      certText: '本周各校共上传票证 <strong>385</strong> 张，票证完整率 <strong>91.2%</strong>，待补传 <strong>38</strong> 张，已催办处理中。',
+      warningText: '本周全区共产生预警 <strong>42</strong> 条：已处理 <strong>28</strong> 条（66.7%），催办中 <strong>10</strong> 条，待处理 <strong>4</strong> 条。部分学校留样记录不完整需关注。',
+      costText: '全区本周食材总成本 <strong>¥785,200</strong>，日均 <strong>¥157,040</strong>，人均日成本 <strong>¥6.54</strong>（按24,000人计）。成本略有下降，整体控制良好。',
+      sampleText: '全区应留样 <strong>268</strong> 份，实际完成 <strong>255</strong> 份（95.1%）。本周各校陪餐 <strong>135</strong> 次，行政陪餐比例94.8%，部分学校陪餐记录缺失需改进。'
+    }
+  };
+  
+  const data = summaries[week] || summaries['0'];
+  document.getElementById('weeklyNutriTable').innerHTML = data.nutriRows;
+  document.getElementById('weeklyPurchaseTable').innerHTML = data.purchaseRows;
+  document.getElementById('weeklyCertText').innerHTML = data.certText;
+  document.getElementById('weeklyWarningText').innerHTML = data.warningText;
+  document.getElementById('weeklyCostText').innerHTML = data.costText;
+  document.getElementById('weeklySampleText').innerHTML = data.sampleText;
+}
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1163,12 +1539,12 @@ function initCharts(){
   if(ap==='page-cost-monitor'&&!chartsInited['cm']){
     const c3=document.getElementById('costCompareChart');
     if(c3){
-      new Chart(c3,{type:'bar',data:{labels:['实验小学','第一中学','希望小学','育才中学','朝阳小学','阳光幼儿园'],datasets:[{label:'人均成本(元)',data:[6.85,7.6,6.2,7.2,8.8,6.4],backgroundColor:['#52c41a','#faad14','#52c41a','#faad14','#ff4d4f','#52c41a'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'¥'+v}}}}});
+      window.costBarChart = new Chart(c3,{type:'bar',data:{labels:['实验小学','第一中学','朝阳小学','希望小学'],datasets:[{label:'人均成本(元)',data:[6.2,7.1,8.8,6.4],backgroundColor:'rgba(0, 135, 90, 0.8)',borderRadius:4}],options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'¥'+v}}}}}});
       chartsInited['cm']=true;
     }
     const c4=document.getElementById('costPieChart');
     if(c4){
-      new Chart(c4,{type:'doughnut',data:{labels:['肉类','蔬菜水果','粮油','其他'],datasets:[{data:[38,28,24,10],backgroundColor:['#ff7a45','#52c41a','#faad14','#1677ff']}]},options:{responsive:false,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:12}}}}}});
+      window.costPieChart = new Chart(c4,{type:'doughnut',data:{labels:['肉类','蔬菜水果','粮油','其他'],datasets:[{data:[38,28,24,10],backgroundColor:['#ff7a45','#52c41a','#faad14','#1677ff']}]},options:{responsive:false,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:12}}}}}});
     }
   }
   if(ap==='page-monthly-report'&&!chartsInited['mr']){
@@ -1273,6 +1649,66 @@ function filterSchools() {
 
 // ===== 配置页面功能 =====
 
+// 分组学校数据存储
+const groupSchoolsData = {
+  '小学组': ['实验小学', '朝阳小学', '希望小学'],
+  '中学组': ['第一中学', '育才中学', '新城中学'],
+  '幼儿园组': ['阳光幼儿园']
+};
+
+// 所有学校列表
+const allSchools = ['实验小学', '第一中学', '希望小学', '育才中学', '阳光幼儿园', '朝阳小学', '新城中学'];
+
+// 选择学校 - 打开弹窗
+function selectSchoolsForGroup(btn) {
+  const row = btn.closest('tr');
+  const groupName = row.cells[0].textContent;
+  
+  document.getElementById('schoolSelectTitle').textContent = '选择学校 - ' + groupName;
+  document.getElementById('groupForm').dataset.currentGroup = groupName;
+  
+  const selectedSchools = groupSchoolsData[groupName] || [];
+  const schoolCheckboxes = document.getElementById('schoolCheckboxes');
+  let html = '';
+  for (let i = 0; i < allSchools.length; i++) {
+    const school = allSchools[i];
+    const isChecked = selectedSchools.indexOf(school) >= 0 ? 'checked' : '';
+    html += '<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer"><input type="checkbox" value="' + school + '" ' + isChecked + ' style="width:16px;height:16px" onchange="updateSelectedCount()"><span>' + school + '</span></label>';
+  }
+  schoolCheckboxes.innerHTML = html;
+  
+  updateSelectedCount();
+  openModal('modal-select-schools');
+}
+
+// 更新已选学校数量
+function updateSelectedCount() {
+  const checked = document.querySelectorAll('#schoolCheckboxes input:checked').length;
+  document.getElementById('selectedCount').textContent = '已选择 ' + checked + ' 所学校';
+}
+
+// 确认选择学校
+function confirmSchoolSelection() {
+  const groupName = document.getElementById('groupForm').dataset.currentGroup;
+  const checkedSchools = [];
+  document.querySelectorAll('#schoolCheckboxes input:checked').forEach(function(cb) {
+    checkedSchools.push(cb.value);
+  });
+  
+  groupSchoolsData[groupName] = checkedSchools;
+  
+  const rows = document.querySelectorAll('#cfg-group tbody tr');
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].cells[0].textContent === groupName) {
+      rows[i].cells[2].textContent = checkedSchools.length + '所';
+      break;
+    }
+  }
+  
+  closeModalById('modal-select-schools');
+  showToast('已选择 ' + checkedSchools.length + ' 所学校', 'success');
+}
+
 // 新增分组 - 打开弹窗
 function addNewGroup() {
   openModal('modal-add-group');
@@ -1315,14 +1751,9 @@ function submitGroupForm() {
   if (mode === 'add') {
     const tbody = document.querySelector('#cfg-group tbody');
     const newRow = tbody.insertRow();
-    newRow.innerHTML = `
-      <td>${name}</td>
-      <td>${stage}</td>
-      <td>${count}所</td>
-      <td>${req}</td>
-      <td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button></td>
-    `;
-    showToast(`✅ 分组「${name}」添加成功`, 'success');
+    newRow.innerHTML = '<td>' + name + '</td><td>' + stage + '</td><td>0所</td><td>' + req + '</td><td><button class="btn btn-sm btn-outline" onclick="editGroup(this)">编辑</button><button class="btn btn-sm btn-outline" onclick="selectSchoolsForGroup(this)">选择学校</button></td>';
+    groupSchoolsData[name] = [];
+    showToast('分组「' + name + '」添加成功', 'success');
   } else {
     const rowIndex = parseInt(form.dataset.editRow);
     const tbody = document.querySelector('#cfg-group tbody');
@@ -1821,6 +2252,208 @@ function closeWarning(btn) {
 }
 
 // ===== 成本监管功能 =====
+
+// 学年成本数据
+const costData = {
+  current: {
+    month: {
+      schools: [
+        { name: '实验小学', data: ['6.2', '6.4', '6.5', '7.1', '6.3', '6.5', '6.7', '6.9'], avg: '6.58' },
+        { name: '第一中学', data: ['7.1', '7.8', '7.2', '7.9', '7.0', '7.3', '7.6', '7.8'], avg: '7.46' },
+        { name: '朝阳小学', data: ['6.9', '9.2', '7.4', '8.8', '7.2', '9.0', '8.5', '8.8'], avg: '8.23' },
+        { name: '希望小学', data: ['5.8', '6.0', '5.9', '6.3', '5.9', '6.1', '6.2', '6.4'], avg: '6.08' }
+      ],
+      chartData: [6.2, 7.1, 6.9, 5.8],
+      pieData: [32, 28, 22, 18]
+    },
+    term: {
+      schools: [
+        { name: '实验小学', data: ['5.8', '6.2'], avg: '6.0', lastAvg: '5.8', currentAvg: '6.2' },
+        { name: '第一中学', data: ['6.5', '7.1'], avg: '6.8', lastAvg: '6.5', currentAvg: '7.1' },
+        { name: '朝阳小学', data: ['6.8', '8.2'], avg: '7.5', lastAvg: '6.8', currentAvg: '8.2' },
+        { name: '希望小学', data: ['5.5', '6.0'], avg: '5.75', lastAvg: '5.5', currentAvg: '6.0' }
+      ],
+      chartData: {
+        labels: ['实验小学', '第一中学', '朝阳小学', '希望小学'],
+        lastTerm: [5.8, 6.5, 6.8, 5.5],
+        currentTerm: [6.2, 7.1, 8.2, 6.0]
+      },
+      pieData: { last: [30, 27, 28, 15], current: [32, 28, 22, 18] }
+    }
+  },
+  last: {
+    month: {
+      schools: [
+        { name: '实验小学', data: ['5.8', '5.9', '6.0', '6.5', '5.7', '6.0', '6.2', '6.4'], avg: '6.06' },
+        { name: '第一中学', data: ['6.5', '7.2', '6.8', '7.3', '6.5', '6.8', '7.0', '7.2'], avg: '6.91' },
+        { name: '朝阳小学', data: ['6.2', '8.5', '6.8', '8.2', '6.6', '8.3', '7.9', '8.1'], avg: '7.58' },
+        { name: '希望小学', data: ['5.4', '5.6', '5.5', '5.9', '5.5', '5.7', '5.8', '6.0'], avg: '5.67' }
+      ],
+      chartData: [6.4, 7.2, 8.1, 6.0],
+      pieData: [30, 26, 24, 20]
+    },
+    term: {
+      schools: [
+        { name: '实验小学', data: ['6.06', '6.1'], avg: '6.08', lastAvg: '6.06', currentAvg: '6.1' },
+        { name: '第一中学', data: ['6.91', '7.0'], avg: '6.96', lastAvg: '6.91', currentAvg: '7.0' },
+        { name: '朝阳小学', data: ['7.58', '7.8'], avg: '7.69', lastAvg: '7.58', currentAvg: '7.8' },
+        { name: '希望小学', data: ['5.67', '5.7'], avg: '5.69', lastAvg: '5.67', currentAvg: '5.7' }
+      ],
+      chartData: {
+        labels: ['实验小学', '第一中学', '朝阳小学', '希望小学'],
+        lastTerm: [6.0, 6.8, 7.5, 5.6],
+        currentTerm: [6.1, 7.0, 7.8, 5.7]
+      },
+      pieData: { last: [28, 26, 28, 18], current: [30, 26, 24, 20] }
+    }
+  }
+};
+
+// 切换学年
+function switchCostYear() {
+  const yearSelect = document.getElementById('costYearSelect');
+  const yearType = yearSelect.value;
+  const statType = document.getElementById('costStatType').value;
+  const data = costData[yearType][statType];
+  
+  updateCostTable(data);
+  if (statType === 'term') {
+    updateCostChartsForTerm(data.chartData, data.pieData);
+  } else {
+    updateCostCharts(data.chartData, data.pieData);
+  }
+  
+  showToast('已切换到' + (yearType === 'current' ? '2025-2026学年' : '上学年') + '数据', 'info');
+}
+
+// 切换统计方式
+function switchCostStatType() {
+  const yearSelect = document.getElementById('costYearSelect');
+  const yearType = yearSelect.value;
+  const statType = document.getElementById('costStatType').value;
+  const data = costData[yearType][statType];
+  
+  // 更新表头
+  const thead = document.querySelector('#costTable thead tr');
+  if (statType === 'term') {
+    thead.innerHTML = '<th>学校</th><th>上学期（元）</th><th>本学期（元）</th><th>学期均值</th>';
+  } else {
+    thead.innerHTML = '<th>学校</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th><th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>学期均值</th>';
+  }
+  
+  updateCostTable(data);
+  if (statType === 'term') {
+    updateCostChartsForTerm(data.chartData, data.pieData);
+  } else {
+    updateCostCharts(data.chartData, data.pieData);
+  }
+  
+  showToast('已切换到' + (statType === 'month' ? '按月统计' : '按学期统计'), 'info');
+}
+
+// 更新成本表格
+function updateCostTable(data) {
+  const tbody = document.getElementById('costTableBody');
+  const statType = document.getElementById('costStatType').value;
+  
+  if (statType === 'term') {
+    // 学期模式：显示上学期和本学期
+    tbody.innerHTML = data.schools.map(school => {
+      const lastLevel = getCostLevel(school.lastAvg);
+      const currentLevel = getCostLevel(school.currentAvg);
+      const avgLevel = getCostLevel(school.avg);
+      const trend = parseFloat(school.currentAvg) - parseFloat(school.lastAvg);
+      const trendIcon = trend > 0 ? '↑' : trend < 0 ? '↓' : '';
+      const trendClass = trend > 0 ? 'text-danger' : trend < 0 ? 'text-success' : '';
+      return '<tr><td>' + school.name + '</td><td class="' + lastLevel + '">' + school.lastAvg + '</td><td class="' + currentLevel + '">' + school.currentAvg + ' <span class="' + trendClass + '" style="font-size:12px">' + trendIcon + '</span></td><td class="' + avgLevel + '">' + school.avg + '</td></tr>';
+    }).join('');
+  } else {
+    // 月度模式
+    tbody.innerHTML = data.schools.map(school => {
+      const cells = school.data.map(val => {
+        const level = getCostLevel(val);
+        return '<td class="' + level + '">' + val + '</td>';
+      }).join('');
+      const avgLevel = getCostLevel(school.avg);
+      return '<tr><td>' + school.name + '</td>' + cells + '<td class="' + avgLevel + '">' + school.avg + '</td></tr>';
+    }).join('');
+  }
+}
+
+// 获取成本等级
+function getCostLevel(val) {
+  const num = parseFloat(val);
+  if (num < 7) return 'cost-level-1';
+  if (num <= 9) return 'cost-level-2';
+  return 'cost-level-3';
+}
+
+// 更新图表函数（供switchCostYear调用）
+function updateCostCharts(barData, pieData) {
+  const barCtx = document.getElementById('costCompareChart');
+  const pieCtx = document.getElementById('costPieChart');
+  
+  if (window.costBarChart) {
+    window.costBarChart.data.datasets[0].data = barData;
+    window.costBarChart.update();
+  }
+  if (window.costPieChart) {
+    window.costPieChart.data.datasets[0].data = pieData;
+    window.costPieChart.update();
+  }
+}
+
+// 学期模式图表更新 - 同时显示上学期和本学期
+function updateCostChartsForTerm(chartData, pieData) {
+  if (window.costBarChart) {
+    // 更新为双柱状图
+    window.costBarChart.data.labels = chartData.labels;
+    window.costBarChart.data.datasets[0].data = chartData.lastTerm;
+    window.costBarChart.data.datasets[0].label = '上学期';
+    window.costBarChart.data.datasets[0].backgroundColor = 'rgba(100, 100, 100, 0.7)';
+    if (window.costBarChart.data.datasets.length > 1) {
+      window.costBarChart.data.datasets[1].data = chartData.currentTerm;
+      window.costBarChart.data.datasets[1].label = '本学期';
+      window.costBarChart.data.datasets[1].backgroundColor = 'rgba(0, 135, 90, 0.8)';
+    } else {
+      window.costBarChart.data.datasets.push({
+        label: '本学期',
+        data: chartData.currentTerm,
+        backgroundColor: 'rgba(0, 135, 90, 0.8)',
+        borderColor: 'rgba(0, 135, 90, 1)',
+        borderWidth: 1
+      });
+    }
+    // 显示图例
+    window.costBarChart.options.plugins.legend.display = true;
+    window.costBarChart.update();
+  }
+  if (window.costPieChart) {
+    // 饼图保持显示本学期占比
+    window.costPieChart.data.datasets[0].data = pieData.current;
+    window.costPieChart.update();
+  }
+}
+
+// 月度模式图表更新 - 恢复单柱状图
+function updateCostChartsForMonth(chartData, pieData) {
+  if (window.costBarChart) {
+    // 恢复为单柱状图
+    window.costBarChart.data.datasets = [{
+      label: '人均成本(元)',
+      data: chartData,
+      backgroundColor: 'rgba(0, 135, 90, 0.8)',
+      borderRadius: 4
+    }];
+    window.costBarChart.options.plugins.legend.display = false;
+    window.costBarChart.update();
+  }
+  if (window.costPieChart) {
+    window.costPieChart.data.datasets[0].data = pieData;
+    window.costPieChart.update();
+  }
+}
+
 function exportCostData() {
   showToast('正在导出成本数据...', 'info');
   setTimeout(() => showToast('✅ 成本数据已导出为Excel', 'success'), 1000);
@@ -1993,6 +2626,26 @@ function downloadAllCabinet() {
       <div class="modal-foot">
         <button class="btn btn-outline" onclick="closeModalById('modal-add-group')">取消</button>
         <button class="btn btn-primary" onclick="submitGroupForm()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 选择学校弹窗 -->
+  <div class="modal-overlay" id="modal-select-schools" onclick="closeModal(event,'modal-select-schools')">
+    <div class="modal" style="width:400px" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title" id="schoolSelectTitle">选择学校</div>
+        <div class="modal-close" onclick="closeModalById('modal-select-schools')">×</div>
+      </div>
+      <div class="modal-body" style="max-height:400px;overflow-y:auto">
+        <div id="schoolCheckboxes" style="border:1px solid #e0e0e0;border-radius:8px"></div>
+      </div>
+      <div class="modal-foot" style="justify-content:space-between">
+        <span id="selectedCount" style="color:var(--text-sub);font-size:13px">已选择 0 所学校</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="closeModalById('modal-select-schools')">取消</button>
+          <button class="btn btn-primary" onclick="confirmSchoolSelection()">确认</button>
+        </div>
       </div>
     </div>
   </div>
