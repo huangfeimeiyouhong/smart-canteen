@@ -2280,6 +2280,17 @@ function updateWeekDisplay() {
   const mondayStr = `${monday.getMonth() + 1}/${monday.getDate()}`;
   const sundayStr = `${sunday.getMonth() + 1}/${sunday.getDate()}`;
   document.getElementById('weekTitle').textContent = `2026年第${weekNum}周（${mondayStr} - ${sundayStr}）`;
+  
+  // 更新列表中的日期
+  const weekDays = document.querySelectorAll('#tab-weekly .week-day-head');
+  const days = ['周一', '周二', '周三', '周四', '周五'];
+  weekDays.forEach((el, i) => {
+    if (i < days.length) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      el.textContent = days[i] + ' ' + (date.getMonth() + 1) + '/' + date.getDate();
+    }
+  });
 }
 
 // 导出周食谱
@@ -2348,32 +2359,137 @@ function exportCostTable() {
 }
 
 // 重新测算成本
+// 成本测算数据（按日期）
+const costDataByDate = {
+  '2026-04-03': {
+    dishes: [
+      { name: '红烧肉', ingredients: [{ name: '猪肉', amount: '100g', price: 22.0, cost: 2.20 }, { name: '调料', amount: '少量', price: 0, cost: 0.15 }] },
+      { name: '炒白菜', ingredients: [{ name: '白菜', amount: '150g', price: 2.5, cost: 0.38 }] },
+      { name: '紫菜蛋花汤', ingredients: [{ name: '鸡蛋+紫菜', amount: '60g', price: 12.0, cost: 0.72 }] },
+      { name: '米饭', ingredients: [{ name: '大米', amount: '150g', price: 5.6, cost: 0.84 }] }
+    ],
+    avgCost: 6.85,
+    totalCost: 5822.5,
+    costRatio: 75.2
+  },
+  '2026-04-02': {
+    dishes: [
+      { name: '宫保鸡丁', ingredients: [{ name: '鸡胸肉', amount: '120g', price: 18.0, cost: 2.16 }, { name: '调料', amount: '少量', price: 0, cost: 0.20 }] },
+      { name: '炒豆角', ingredients: [{ name: '豆角', amount: '200g', price: 6.0, cost: 1.20 }] },
+      { name: '番茄蛋汤', ingredients: [{ name: '番茄+鸡蛋', amount: '80g', price: 8.0, cost: 0.64 }] },
+      { name: '米饭', ingredients: [{ name: '大米', amount: '150g', price: 5.6, cost: 0.84 }] }
+    ],
+    avgCost: 6.52,
+    totalCost: 5542.0,
+    costRatio: 72.8
+  },
+  '2026-04-01': {
+    dishes: [
+      { name: '鱼香肉丝', ingredients: [{ name: '猪肉丝', amount: '80g', price: 22.0, cost: 1.76 }, { name: '调料', amount: '少量', price: 0, cost: 0.25 }] },
+      { name: '蒸蛋羹', ingredients: [{ name: '鸡蛋', amount: '100g', price: 12.0, cost: 1.20 }] },
+      { name: '炒青菜', ingredients: [{ name: '青菜', amount: '150g', price: 4.0, cost: 0.60 }] },
+      { name: '米饭', ingredients: [{ name: '大米', amount: '150g', price: 5.6, cost: 0.84 }] }
+    ],
+    avgCost: 5.95,
+    totalCost: 5057.5,
+    costRatio: 68.4
+  },
+  '2026-03-31': {
+    dishes: [
+      { name: '糖醋排骨', ingredients: [{ name: '排骨', amount: '150g', price: 28.0, cost: 4.20 }, { name: '调料', amount: '少量', price: 0, cost: 0.30 }] },
+      { name: '豆腐汤', ingredients: [{ name: '豆腐', amount: '100g', price: 4.0, cost: 0.40 }] },
+      { name: '凉拌黄瓜', ingredients: [{ name: '黄瓜', amount: '100g', price: 3.0, cost: 0.30 }] },
+      { name: '米饭', ingredients: [{ name: '大米', amount: '150g', price: 5.6, cost: 0.84 }] }
+    ],
+    avgCost: 7.45,
+    totalCost: 6332.5,
+    costRatio: 78.6
+  },
+  '2026-03-30': {
+    dishes: [
+      { name: '红烧狮子头', ingredients: [{ name: '猪肉糜', amount: '120g', price: 20.0, cost: 2.40 }, { name: '调料', amount: '少量', price: 0, cost: 0.20 }] },
+      { name: '炒土豆丝', ingredients: [{ name: '土豆', amount: '150g', price: 3.0, cost: 0.45 }] },
+      { name: '紫菜蛋汤', ingredients: [{ name: '紫菜+鸡蛋', amount: '50g', price: 15.0, cost: 0.75 }] },
+      { name: '米饭', ingredients: [{ name: '大米', amount: '150g', price: 5.6, cost: 0.84 }] }
+    ],
+    avgCost: 6.12,
+    totalCost: 5202.0,
+    costRatio: 70.5
+  }
+};
+
 function recalculateCost() {
   const persons = parseInt(document.getElementById('costPersonInput').value) || 850;
+  const date = document.getElementById('costDateInput').value;
+  
+  // 获取该日期的数据
+  const data = costDataByDate[date] || costDataByDate['2026-04-03'];
   
   // 更新表头
   document.getElementById('totalPersonHeader').textContent = `总成本（${persons}人）`;
   
-  // 计算新数据（基于原有比例）
+  // 计算比例
   const basePersons = 850;
   const scale = persons / basePersons;
   
   // 更新总成本值
-  const totalCostValue = (3646.5 * scale).toFixed(1);
-  document.getElementById('totalCostValue').textContent = `¥${totalCostValue}`;
+  const totalCostValue = (data.totalCost * scale);
+  document.getElementById('totalCostValue').textContent = `¥${totalCostValue.toFixed(1)}`;
   
   // 更新总成本显示
-  document.getElementById('totalCostDisplay').textContent = `¥ ${parseFloat(totalCostValue).toLocaleString()}`;
+  document.getElementById('totalCostDisplay').textContent = `¥ ${totalCostValue.toLocaleString()}`;
   
-  // 更新人均成本（假设固定）
-  const avgCost = 6.85;
-  document.getElementById('avgCostDisplay').textContent = `¥ ${avgCost}`;
+  // 按新人数计算人均食材成本 = 总成本 / 人数
+  const avgCost = totalCostValue / persons;
+  document.getElementById('avgCostDisplay').textContent = `¥ ${avgCost.toFixed(2)}`;
   
-  // 更新食材成本占比（假设固定）
-  const costRatio = 75.2;
+  // 更新食材成本占比（根据新人数重新计算）
+  const costRatio = (avgCost / 9.11 * 100).toFixed(1); // 假设标准餐费9.11元
   document.getElementById('costRatioDisplay').textContent = `${costRatio}%`;
   
+  // 更新表格中的合计行
+  const tbody = document.getElementById('costTableBody');
+  const rows = tbody.querySelectorAll('tr');
+  const lastRow = rows[rows.length - 1];
+  if (lastRow) {
+    lastRow.querySelector('td:nth-child(5)').textContent = `¥${avgCost.toFixed(2)}`;
+    lastRow.querySelector('td:last-child').textContent = `¥${totalCostValue.toFixed(1)}`;
+  }
+  
   showToast(`已按${persons}人重新测算`, 'success');
+}
+
+// 根据日期更新成本表格
+function updateCostTableByDate(date) {
+  const data = costDataByDate[date] || costDataByDate['2026-04-03'];
+  const persons = parseInt(document.getElementById('costPersonInput').value) || 850;
+  const scale = persons / 850;
+  
+  let tbodyHTML = '';
+  
+  data.dishes.forEach(dish => {
+    dish.ingredients.forEach((ing, idx) => {
+      const totalCost = (ing.cost * persons).toFixed(0);
+      if (idx === 0) {
+        // 第一行食材，显示菜品名
+        tbodyHTML += `<tr><td rowspan="${dish.ingredients.length}">${dish.name}</td><td>${ing.name}</td><td>${ing.amount}</td><td>¥${ing.price}</td><td>¥${ing.cost.toFixed(2)}</td><td>¥${totalCost}</td></tr>`;
+      } else {
+        tbodyHTML += `<tr><td>${ing.name}</td><td>${ing.amount}</td><td>¥${ing.price}</td><td>¥${ing.cost.toFixed(2)}</td><td>¥${totalCost}</td></tr>`;
+      }
+    });
+  });
+  
+  // 合计行
+  const totalSum = data.totalCost * scale;
+  tbodyHTML += `<tr style="background:#f0f7ff;font-weight:600"><td colspan="4">合计</td><td>¥${data.avgCost}</td><td id="totalCostValue">¥${totalSum.toFixed(1)}</td></tr>`;
+  
+  document.getElementById('costTableBody').innerHTML = tbodyHTML;
+  
+  // 更新汇总数据
+  document.getElementById('totalPersonHeader').textContent = `总成本（${persons}人）`;
+  document.getElementById('totalCostDisplay').textContent = `¥ ${totalSum.toLocaleString()}`;
+  document.getElementById('avgCostDisplay').textContent = `¥ ${data.avgCost}`;
+  document.getElementById('costRatioDisplay').textContent = `${data.costRatio}%`;
 }
 
 // 下一步：添加菜品
@@ -3168,6 +3284,14 @@ function getWeekOfYear(date) {
 document.addEventListener('DOMContentLoaded', function() {
   initDates();
   renderAddedRecipes();
+  
+  // 成本测算日期切换
+  const costDateInput = document.getElementById('costDateInput');
+  if (costDateInput) {
+    costDateInput.addEventListener('change', function() {
+      updateCostTableByDate(this.value);
+    });
+  }
 });
 
 // ===== Tabs =====
@@ -3183,6 +3307,43 @@ function switchTab(el, containerSel, targetId) {
   if (targetId === 'tab-method2') {
     setTimeout(initBatchGrid, 50);
   }
+  // 切换到周食谱预览时更新日期
+  if (targetId === 'tab-weekly') {
+    setTimeout(updateWeekPreviewDates, 50);
+  }
+}
+
+// 更新周食谱预览的日期列表
+function updateWeekPreviewDates() {
+  const weekTitleEl = document.getElementById('weekTitle');
+  if (!weekTitleEl) return;
+  
+  // 解析当前标题中的周数
+  const titleText = weekTitleEl.textContent;
+  const match = titleText.match(/第(\d+)周/);
+  if (!match) return;
+  
+  const targetWeek = parseInt(match[1]);
+  const now = new Date();
+  const currentWeek = getWeekOfYear(now);
+  
+  // 计算目标周与当前周的差值
+  const weekDiff = targetWeek - currentWeek;
+  
+  // 计算目标周的周一
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1 + weekDiff * 7);
+  
+  // 更新列表中的日期
+  const weekDays = document.querySelectorAll('#tab-weekly .week-day-head');
+  const days = ['周一', '周二', '周三', '周四', '周五'];
+  weekDays.forEach((el, i) => {
+    if (i < days.length) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      el.textContent = days[i] + ' ' + (date.getMonth() + 1) + '/' + date.getDate();
+    }
+  });
 }
 
 // ===== Modal =====
@@ -3208,6 +3369,68 @@ const cabinetDetails = {
       ['2026-04-03', '午餐', '红烧肉', '炒白菜', '紫菜蛋花汤', '米饭', '¥6.85', '查看'],
       ['2026-04-02', '午餐', '番茄炒蛋', '清炒菠菜', '豆腐汤', '米饭', '¥6.50', '查看'],
     ],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">📝 ${date} 食谱填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写当日食谱信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="recipeDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>餐次 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="recipeMealType">
+                <option value="breakfast">早餐</option>
+                <option value="lunch" selected>午餐</option>
+                <option value="dinner">晚餐</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>用餐人数 <span style="color:var(--danger)">*</span></label>
+              <input type="number" class="form-input" id="recipePeople" placeholder="请输入用餐人数" value="850">
+            </div>
+            <div class="form-item">
+              <label>人均成本（元） <span style="color:var(--danger)">*</span></label>
+              <input type="number" step="0.01" class="form-input" id="recipeCost" placeholder="请输入人均成本" value="6.50">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:600;margin-bottom:12px">菜品信息</div>
+            <div class="form-row">
+              <div class="form-item">
+                <label>主食</label>
+                <input type="text" class="form-input" id="recipeMainDish" placeholder="如：米饭、馒头" value="米饭">
+              </div>
+              <div class="form-item">
+                <label>主菜（荤菜）</label>
+                <input type="text" class="form-input" id="recipeMeatDish" placeholder="如：红烧肉">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-item">
+                <label>副菜（素菜）</label>
+                <input type="text" class="form-input" id="recipeVegDish" placeholder="如：炒白菜">
+              </div>
+              <div class="form-item">
+                <label>汤类</label>
+                <input type="text" class="form-input" id="recipeSoup" placeholder="如：紫菜蛋花汤">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="recipeNote" rows="2" placeholder="可填写营养分析、特殊说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('recipe')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">📋 ${date} 食谱详情</div></div>
@@ -3246,6 +3469,60 @@ const cabinetDetails = {
     rows: [
       ['2026-04-03', '猪里脊肉', '冰鲜/kg', '50kg', '¥24.00', '¥1,200', '鲜肉直供中心', '查看'],
     ],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🛒 ${date} 采购记录填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写采购信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="purchaseDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>供应商</label>
+              <input type="text" class="form-input" id="purchaseSupplier" placeholder="请输入供应商名称" value="鲜肉直供中心">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>联系人</label>
+              <input type="text" class="form-input" id="purchaseContact" placeholder="请输入联系人" value="李经理">
+            </div>
+            <div class="form-item">
+              <label>联系电话</label>
+              <input type="tel" class="form-input" id="purchasePhone" placeholder="请输入联系电话" value="138****1234">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">采购明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addPurchaseRow()">+ 添加食材</button>
+            </div>
+            <table class="data-table" id="purchaseTable">
+              <thead><tr><th style="width:25%">食材名称 <span style="color:var(--danger)">*</span></th><th style="width:15%">规格</th><th style="width:15%">数量</th><th style="width:15%">单价(元)</th><th style="width:15%">金额</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="purchaseTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="食材名称" value="猪里脊肉"></td>
+                  <td><input type="text" class="form-input" placeholder="规格" value="冰鲜/kg"></td>
+                  <td><input type="number" class="form-input" placeholder="数量" value="50"></td>
+                  <td><input type="number" step="0.01" class="form-input" placeholder="单价" value="24.00"></td>
+                  <td><input type="text" class="form-input" readonly value="¥1,200" style="background:#f5f5f5"></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="purchaseNote" rows="2" placeholder="可填写特殊说明、票证情况等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('purchase')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🛒 ${date} 采购详情</div></div>
@@ -3275,6 +3552,65 @@ const cabinetDetails = {
   '入库台账': {
     headers: ['日期', '食材名称', '数量', '供应商', '验收人', '状态'],
     rows: [['2026-04-03', '猪里脊肉', '50kg', '鲜肉直供中心', '张师傅', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">📥 ${date} 入库记录填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写入库信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="inboundDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>入库仓库</label>
+              <select class="form-input" id="inboundWarehouse">
+                <option value="main" selected>主仓库</option>
+                <option value="cold">冷藏仓库</option>
+                <option value="dry">干货仓库</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>供应商</label>
+              <input type="text" class="form-input" id="inboundSupplier" placeholder="请输入供应商" value="鲜肉直供中心">
+            </div>
+            <div class="form-item">
+              <label>验收人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="inboundInspector" placeholder="请输入验收人姓名" value="张师傅">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">入库明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addInboundRow()">+ 添加食材</button>
+            </div>
+            <table class="data-table" id="inboundTable">
+              <thead><tr><th style="width:20%">食材名称 <span style="color:var(--danger)">*</span></th><th style="width:15%">规格</th><th style="width:12%">数量</th><th style="width:12%">单价</th><th style="width:13%">金额</th><th style="width:13%">保质期至</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="inboundTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="食材名称" value="猪里脊肉"></td>
+                  <td><input type="text" class="form-input" placeholder="规格" value="冰鲜/kg"></td>
+                  <td><input type="number" class="form-input" placeholder="数量" value="50"></td>
+                  <td><input type="number" step="0.01" class="form-input" placeholder="单价" value="24.00"></td>
+                  <td><input type="text" class="form-input" readonly value="¥1,200" style="background:#f5f5f5"></td>
+                  <td><input type="date" class="form-input" value="2026-04-07"></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="inboundNote" rows="2" placeholder="可填写验收情况、特殊情况等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('inbound')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">📥 ${date} 入库详情</div></div>
@@ -3308,6 +3644,75 @@ const cabinetDetails = {
   '出库台账': {
     headers: ['日期', '食材名称', '数量', '用途', '领用人', '状态'],
     rows: [['2026-04-03', '猪里脊肉', '35kg', '午餐备餐', '李师傅', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">📤 ${date} 出库记录填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写出库信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="outboundDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>出库仓库</label>
+              <select class="form-input" id="outboundWarehouse">
+                <option value="main" selected>主仓库</option>
+                <option value="cold">冷藏仓库</option>
+                <option value="dry">干货仓库</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>领用部门 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="outboundDept">
+                <option value="kitchen1" selected>后厨一部</option>
+                <option value="kitchen2">后厨二部</option>
+                <option value="noodle">面点间</option>
+                <option value="cold">冷菜间</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label>领用人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="outboundReceiver" placeholder="请输入领用人姓名" value="李师傅">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">出库明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addOutboundRow()">+ 添加食材</button>
+            </div>
+            <table class="data-table" id="outboundTable">
+              <thead><tr><th style="width:20%">食材名称 <span style="color:var(--danger)">*</span></th><th style="width:15%">规格</th><th style="width:15%">出库数量</th><th style="width:20%">用途</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="outboundTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="食材名称" value="猪里脊肉"></td>
+                  <td><input type="text" class="form-input" placeholder="规格" value="冰鲜/kg"></td>
+                  <td><input type="number" class="form-input" placeholder="数量" value="35"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>午餐备餐</option>
+                      <option>晚餐备餐</option>
+                      <option>应急储备</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="outboundNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('outbound')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">📤 ${date} 出库详情</div></div>
@@ -3342,6 +3747,65 @@ const cabinetDetails = {
   '票证中心': {
     headers: ['日期', '供应商', '票证类型', '票证号', '状态', '操作'],
     rows: [['2026-04-03', '鲜肉直供中心', '检疫证明', 'JQ20260403001', '已上传', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🧾 ${date} 票证上传</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写票证信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="certDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>供应商名称 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="certSupplier" placeholder="请输入供应商名称" value="鲜肉直供中心">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>营业执照号</label>
+              <input type="text" class="form-input" id="certLicense" placeholder="请输入营业执照号" value="91110105MA01234X">
+            </div>
+            <div class="form-item">
+              <label>食品经营许可证号</label>
+              <input type="text" class="form-input" id="certFoodLicense" placeholder="请输入许可证号" value="JY13101050012345">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>票证类型</label>
+              <select class="form-input" id="certType">
+                <option value="quarantine" selected>检疫证明</option>
+                <option value="quality">质检报告</option>
+                <option value="origin">产地证明</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label>票证编号</label>
+              <input type="text" class="form-input" id="certNumber" placeholder="请输入票证编号" value="JQ20260403001">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:600;margin-bottom:12px">票证上传</div>
+            <div style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;background:#fafafa">
+              <div style="font-size:36px;margin-bottom:8px;color:var(--text-sub)">📄</div>
+              <div style="color:var(--text-sub);margin-bottom:12px">点击或拖拽文件到此处上传</div>
+              <button class="btn btn-outline btn-sm">选择文件</button>
+              <div style="margin-top:8px;font-size:11px;color:var(--text-sub)">支持 JPG、PNG、PDF 格式，单个文件不超过 5MB</div>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="certNote" rows="2" placeholder="可填写票证有效期、特殊说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('cert')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🧾 ${date} 票证详情</div></div>
@@ -3366,6 +3830,111 @@ const cabinetDetails = {
   '从业人员晨检': {
     headers: ['日期', '姓名', '岗位', '体温', '健康状况', '操作'],
     rows: [['2026-04-03', '张厨师', '厨师', '36.2℃', '正常', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">👨‍⚕️ ${date} 晨检记录填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写从业人员晨检信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="checkupDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>填报人</label>
+              <input type="text" class="form-input" id="checkupReporter" placeholder="请输入填报人姓名" value="王主任">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">从业人员晨检表</div>
+              <button class="btn btn-outline btn-sm" onclick="addCheckupRow()">+ 添加人员</button>
+            </div>
+            <table class="data-table" id="checkupTable">
+              <thead><tr><th style="width:30%">姓名 <span style="color:var(--danger)">*</span></th><th style="width:20%">岗位</th><th style="width:15%">体温(℃)</th><th style="width:20%">健康状况</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="checkupTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="姓名" value="张厨师"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>厨师</option>
+                      <option>面点师</option>
+                      <option>帮厨</option>
+                      <option>洗碗工</option>
+                      <option>仓库管理员</option>
+                    </select>
+                  </td>
+                  <td><input type="number" step="0.1" class="form-input" placeholder="36.5" value="36.2"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>正常</option>
+                      <option>发热</option>
+                      <option>咳嗽</option>
+                      <option>腹泻</option>
+                      <option>其他不适</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="姓名" value="李师傅"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>厨师</option>
+                      <option>面点师</option>
+                      <option>帮厨</option>
+                      <option>洗碗工</option>
+                      <option>仓库管理员</option>
+                    </select>
+                  </td>
+                  <td><input type="number" step="0.1" class="form-input" placeholder="36.5" value="36.5"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>正常</option>
+                      <option>发热</option>
+                      <option>咳嗽</option>
+                      <option>腹泻</option>
+                      <option>其他不适</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="姓名" value="王面点师"></td>
+                  <td>
+                    <select class="form-input">
+                      <option>厨师</option>
+                      <option selected>面点师</option>
+                      <option>帮厨</option>
+                      <option>洗碗工</option>
+                      <option>仓库管理员</option>
+                    </select>
+                  </td>
+                  <td><input type="number" step="0.1" class="form-input" placeholder="36.5" value="36.3"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>正常</option>
+                      <option>发热</option>
+                      <option>咳嗽</option>
+                      <option>腹泻</option>
+                      <option>其他不适</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="checkupNote" rows="2" placeholder="可填写特殊情况说明，如：健康证临期人员提醒等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('checkup')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">👨‍⚕️ ${date} 晨检记录</div></div>
@@ -3433,6 +4002,70 @@ const cabinetDetails = {
   '蔬菜粗加工': {
     headers: ['日期', '食材', '数量', '操作人', '开始时间', '状态'],
     rows: [['2026-04-03', '菠菜', '15kg', '李师傅', '09:30', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🥦 ${date} 蔬菜粗加工记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写加工信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="vegProcessDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>加工地点</label>
+              <select class="form-input" id="vegProcessLocation">
+                <option value="veg" selected>蔬菜加工区</option>
+                <option value="main">主加工区</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>操作人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="vegProcessOperator" placeholder="请输入操作人姓名" value="李师傅">
+            </div>
+            <div class="form-item">
+              <label>开始时间</label>
+              <input type="time" class="form-input" id="vegProcessStart" value="09:30">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">加工明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addVegProcessRow()">+ 添加食材</button>
+            </div>
+            <table class="data-table" id="vegProcessTable">
+              <thead><tr><th style="width:20%">食材名称 <span style="color:var(--danger)">*</span></th><th style="width:15%">毛重(kg)</th><th style="width:15%">净重(kg)</th><th style="width:15%">损耗率</th><th style="width:20%">加工方式</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="vegProcessTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="食材名称" value="菠菜"></td>
+                  <td><input type="number" class="form-input" placeholder="毛重" value="16"></td>
+                  <td><input type="number" class="form-input" placeholder="净重" value="15"></td>
+                  <td><input type="text" class="form-input" readonly value="6.3%" style="background:#f5f5f5"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>择洗、浸泡</option>
+                      <option>择洗、切分</option>
+                      <option>去皮、切块</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="vegProcessNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('vegProcess')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🥦 ${date} 蔬菜粗加工详情</div></div>
@@ -3458,6 +4091,71 @@ const cabinetDetails = {
   '荤菜粗加工': {
     headers: ['日期', '食材', '数量', '操作人', '开始时间', '状态'],
     rows: [['2026-04-03', '猪里脊肉', '35kg', '张师傅', '08:30', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🥩 ${date} 荤菜粗加工记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写加工信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="meatProcessDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>加工地点</label>
+              <select class="form-input" id="meatProcessLocation">
+                <option value="meat" selected>荤菜加工区</option>
+                <option value="main">主加工区</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>操作人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="meatProcessOperator" placeholder="请输入操作人姓名" value="张师傅">
+            </div>
+            <div class="form-item">
+              <label>开始时间</label>
+              <input type="time" class="form-input" id="meatProcessStart" value="08:30">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">加工明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addMeatProcessRow()">+ 添加食材</button>
+            </div>
+            <table class="data-table" id="meatProcessTable">
+              <thead><tr><th style="width:20%">食材名称 <span style="color:var(--danger)">*</span></th><th style="width:15%">毛重(kg)</th><th style="width:15%">净重(kg)</th><th style="width:15%">损耗率</th><th style="width:20%">加工方式</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="meatProcessTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="食材名称" value="猪里脊肉"></td>
+                  <td><input type="number" class="form-input" placeholder="毛重" value="36"></td>
+                  <td><input type="number" class="form-input" placeholder="净重" value="35"></td>
+                  <td><input type="text" class="form-input" readonly value="2.8%" style="background:#f5f5f5"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>分割、清洗</option>
+                      <option>分割、焯水</option>
+                      <option>切片、切丝</option>
+                      <option>腌制</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="meatProcessNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('meatProcess')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🥩 ${date} 荤菜粗加工详情</div></div>
@@ -3483,6 +4181,81 @@ const cabinetDetails = {
   '留样台账': {
     headers: ['日期', '餐次', '留样数量', '留样人', '保存期限', '状态'],
     rows: [['2026-04-03', '午餐', '5份', '王主任', '2026-04-05', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🧪 ${date} 食品留样记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写留样信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="sampleDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>餐次 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="sampleMealType">
+                <option value="breakfast">早餐</option>
+                <option value="lunch" selected>午餐</option>
+                <option value="dinner">晚餐</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>留样人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="samplePerson" placeholder="请输入留样人姓名" value="王主任">
+            </div>
+            <div class="form-item">
+              <label>留样时间</label>
+              <input type="time" class="form-input" id="sampleTime" value="12:30">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>留样份数 <span style="color:var(--danger)">*</span></label>
+              <input type="number" class="form-input" id="sampleCount" placeholder="留样份数" value="5">
+            </div>
+            <div class="form-item">
+              <label>保存温度</label>
+              <select class="form-input" id="sampleTemp">
+                <option value="0-4" selected>0-4℃（冷藏）</option>
+                <option value="-18">-18℃（冷冻）</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">菜品留样明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addSampleRow()">+ 添加菜品</button>
+            </div>
+            <table class="data-table" id="sampleTable">
+              <thead><tr><th style="width:25%">菜品名称 <span style="color:var(--danger)">*</span></th><th style="width:20%">留样量</th><th style="width:25%">保存方式</th><th style="width:15%">到期时间</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="sampleTableBody">
+                <tr>
+                  <td><input type="text" class="form-input" placeholder="菜品名称" value="红烧肉"></td>
+                  <td><input type="text" class="form-input" placeholder="留样量" value="100g"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>冷藏（0-4℃）</option>
+                      <option>冷冻（-18℃）</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="form-input" readonly value="48小时后" style="background:#f5f5f5"></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="sampleNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('sample')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🧪 ${date} 留样详情</div></div>
@@ -3522,6 +4295,91 @@ const cabinetDetails = {
   '餐具消毒': {
     headers: ['日期', '餐次', '消毒数量', '方式', '负责人', '状态'],
     rows: [['2026-04-03', '午餐后', '850套', '高温消毒', '李师傅', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🍽️ ${date} 餐具消毒记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写消毒信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="dishSanitizeDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>消毒餐次 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="dishSanitizeMeal">
+                <option value="breakfast">早餐后</option>
+                <option value="lunch" selected>午餐后</option>
+                <option value="dinner">晚餐后</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>消毒方式 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="dishSanitizeMethod">
+                <option value="high-temp" selected>高温消毒</option>
+                <option value="chem">化学消毒</option>
+                <option value="uv">紫外线消毒</option>
+                <option value="combo">组合消毒</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label>负责人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="dishSanitizePerson" placeholder="请输入负责人姓名" value="李师傅">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>消毒温度（℃）</label>
+              <input type="number" class="form-input" id="dishSanitizeTemp" placeholder="消毒温度" value="125">
+            </div>
+            <div class="form-item">
+              <label>消毒时长（分钟）</label>
+              <input type="number" class="form-input" id="dishSanitizeDuration" placeholder="消毒时长" value="30">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">餐具明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addDishRow()">+ 添加餐具</button>
+            </div>
+            <table class="data-table" id="dishTable">
+              <thead><tr><th style="width:25%">餐具类型</th><th style="width:20%">数量</th><th style="width:25%">消毒前状态</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="dishTableBody">
+                <tr>
+                  <td>
+                    <select class="form-input">
+                      <option selected>餐盘</option>
+                      <option>碗</option>
+                      <option>筷子</option>
+                      <option>勺子</option>
+                      <option>杯子</option>
+                    </select>
+                  </td>
+                  <td><input type="number" class="form-input" placeholder="数量" value="400"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>已清洗</option>
+                      <option>待清洗</option>
+                      <option>部分清洗</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="dishSanitizeNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('dishSanitize')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🍽️ ${date} 餐具消毒详情</div></div>
@@ -3565,6 +4423,73 @@ const cabinetDetails = {
   '设施设备消毒': {
     headers: ['日期', '设备', '消毒方式', '负责人', '状态'],
     rows: [['2026-04-03', '冷藏柜A', '紫外线+臭氧', '张师傅', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🔧 ${date} 设施设备消毒记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写消毒信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="equipSanitizeDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>负责人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="equipSanitizePerson" placeholder="请输入负责人姓名" value="张师傅">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">设备消毒明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addEquipRow()">+ 添加设备</button>
+            </div>
+            <table class="data-table" id="equipTable">
+              <thead><tr><th style="width:25%">设备名称 <span style="color:var(--danger)">*</span></th><th style="width:25%">消毒方式</th><th style="width:20%">消毒时间</th><th style="width:15%">结果</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="equipTableBody">
+                <tr>
+                  <td>
+                    <select class="form-input">
+                      <option selected>冷藏柜A</option>
+                      <option>冷藏柜B</option>
+                      <option>操作台</option>
+                      <option>切菜台</option>
+                      <option>蒸柜</option>
+                      <option>烤箱</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>紫外线+臭氧</option>
+                      <option>消毒液擦拭</option>
+                      <option>高温消毒</option>
+                      <option>酒精擦拭</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td><input type="time" class="form-input" placeholder="时间" value="15:30"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>合格</option>
+                      <option>不合格</option>
+                      <option>待复检</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="equipSanitizeNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('equipSanitize')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🔧 ${date} 设施设备消毒详情</div></div>
@@ -3590,6 +4515,102 @@ const cabinetDetails = {
   '陪餐记录': {
     headers: ['日期', '餐次', '陪餐人', '职务', '评分', '状态'],
     rows: [['2026-04-03', '午餐', '王校长', '校长', '98分', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">👨‍👩‍👧 ${date} 陪餐记录填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写陪餐信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="mealSupervisorDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>餐次 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="mealSupervisorMeal">
+                <option value="breakfast">早餐</option>
+                <option value="lunch" selected>午餐</option>
+                <option value="dinner">晚餐</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>陪餐人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="mealSupervisorName" placeholder="请输入陪餐人姓名" value="王校长">
+            </div>
+            <div class="form-item">
+              <label>职务</label>
+              <select class="form-input" id="mealSupervisorTitle">
+                <option value="principal" selected>校长</option>
+                <option value="vice-principal">副校长</option>
+                <option value="director">教务主任</option>
+                <option value="teacher">教师</option>
+                <option value="parent">家长代表</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:600;margin-bottom:12px">评分项目</div>
+            <div class="form-row" style="gap:16px">
+              <div class="form-item" style="flex:1">
+                <label>菜品口味</label>
+                <select class="form-input" id="mealScoreTaste">
+                  <option value="100">100分（优秀）</option>
+                  <option value="90">90分（良好）</option>
+                  <option value="80">80分（一般）</option>
+                  <option value="70">70分（较差）</option>
+                </select>
+              </div>
+              <div class="form-item" style="flex:1">
+                <label>营养搭配</label>
+                <select class="form-input" id="mealScoreNutrition">
+                  <option value="100" selected>100分（优秀）</option>
+                  <option value="90">90分（良好）</option>
+                  <option value="80">80分（一般）</option>
+                  <option value="70">70分（较差）</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" style="gap:16px;margin-top:12px">
+              <div class="form-item" style="flex:1">
+                <label>卫生状况</label>
+                <select class="form-input" id="mealScoreHygiene">
+                  <option value="100">100分（优秀）</option>
+                  <option value="90">90分（良好）</option>
+                  <option value="80" selected>80分（一般）</option>
+                  <option value="70">70分（较差）</option>
+                </select>
+              </div>
+              <div class="form-item" style="flex:1">
+                <label>服务态度</label>
+                <select class="form-input" id="mealScoreService">
+                  <option value="100">100分（优秀）</option>
+                  <option value="90" selected>90分（良好）</option>
+                  <option value="80">80分（一般）</option>
+                  <option value="70">70分（较差）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <label>总体评价</label>
+            <select class="form-input" id="mealSupervisorOverall">
+              <option value="satisfied" selected>满意</option>
+              <option value="basic">基本满意</option>
+              <option value="unsatisfied">不满意</option>
+            </select>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">详细备注</label>
+            <textarea class="form-input" id="mealSupervisorNote" rows="3" placeholder="请填写详细的评价和建议"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('mealSupervisor')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">👨‍👩‍👧 ${date} 陪餐记录详情</div></div>
@@ -3634,6 +4655,69 @@ const cabinetDetails = {
   '从业人员培训': {
     headers: ['日期', '培训主题', '讲师', '参与人数', '时长', '状态'],
     rows: [['2026-04-01', '食品安全知识', '王主任', '12人', '2小时', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">📚 ${date} 培训记录填写</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写培训信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="trainDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>培训时长</label>
+              <select class="form-input" id="trainDuration">
+                <option value="1">1小时</option>
+                <option value="2" selected>2小时</option>
+                <option value="3">3小时</option>
+                <option value="half">半天</option>
+                <option value="full">全天</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>培训主题 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="trainTopic" placeholder="请输入培训主题" value="食品安全知识">
+            </div>
+            <div class="form-item">
+              <label>讲师 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="trainTeacher" placeholder="请输入讲师姓名" value="王主任">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>参与人数 <span style="color:var(--danger)">*</span></label>
+              <input type="number" class="form-input" id="trainCount" placeholder="参与人数" value="12">
+            </div>
+            <div class="form-item">
+              <label>培训形式</label>
+              <select class="form-input" id="trainType">
+                <option value="offline" selected>线下培训</option>
+                <option value="online">线上培训</option>
+                <option value="seminar">专题讲座</option>
+                <option value="practice">实操演练</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">培训内容</label>
+            <textarea class="form-input" id="trainContent" rows="4" placeholder="请填写培训的具体内容">食品安全法律法规解读
+食品添加剂的正确使用
+厨房卫生操作规范
+食物中毒预防与应急处理</textarea>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="trainNote" rows="2" placeholder="可填写培训效果评估、后续跟进事项等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('train')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">📚 ${date} 培训记录详情</div></div>
@@ -3662,6 +4746,79 @@ const cabinetDetails = {
   '安全检查': {
     headers: ['日期', '检查项目', '检查人', '问题数', '状态'],
     rows: [['2026-04-03', '月度安全检查', '张师傅', '0', '查看']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">🔍 ${date} 安全检查记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写检查信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="safetyCheckDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>检查类型 <span style="color:var(--danger)">*</span></label>
+              <select class="form-input" id="safetyCheckType">
+                <option value="daily" selected>日常检查</option>
+                <option value="weekly">周检查</option>
+                <option value="monthly">月度检查</option>
+                <option value="special">专项检查</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>检查人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="safetyCheckPerson" placeholder="请输入检查人姓名" value="张师傅">
+            </div>
+            <div class="form-item">
+              <label>检查时间</label>
+              <input type="time" class="form-input" id="safetyCheckTime" value="14:00">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">检查项目明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addSafetyCheckRow()">+ 添加项目</button>
+            </div>
+            <table class="data-table" id="safetyCheckTable">
+              <thead><tr><th style="width:30%">检查项目 <span style="color:var(--danger)">*</span></th><th style="width:20%">检查结果</th><th style="width:35%">备注</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="safetyCheckTableBody">
+                <tr>
+                  <td>
+                    <select class="form-input">
+                      <option selected>燃气管道</option>
+                      <option>电气线路</option>
+                      <option>消防设施</option>
+                      <option>应急通道</option>
+                      <option>食品安全</option>
+                      <option>环境卫生</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select class="form-input">
+                      <option value="pass" selected>合格</option>
+                      <option value="fail">不合格</option>
+                      <option value="pending">待复检</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="form-input" placeholder="备注说明" value="无泄漏"></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">检查总结</label>
+            <textarea class="form-input" id="safetyCheckSummary" rows="2" placeholder="请填写检查总结和改进建议"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('safetyCheck')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">🔍 ${date} 安全检查详情</div></div>
@@ -3689,6 +4846,66 @@ const cabinetDetails = {
   '废弃处置': {
     headers: ['日期', '废弃物类型', '数量', '处置方式', '负责人'],
     rows: [['2026-04-03', '蔬菜残渣', '3kg', '厨余垃圾处理', '李师傅']],
+    editForm: (date) => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head" style="background:#e6f4ff"><div class="card-title">♻️ ${date} 废弃处置记录</div></div>
+        <div class="card-body">
+          <div class="alert info" style="margin-bottom:16px">请填写处置信息，带 <span style="color:var(--danger)">*</span> 的为必填项</div>
+          <div class="form-row">
+            <div class="form-item">
+              <label>日期</label>
+              <input type="date" class="form-input" id="wasteDate" value="${date}" readonly style="background:#f5f5f5">
+            </div>
+            <div class="form-item">
+              <label>负责人 <span style="color:var(--danger)">*</span></label>
+              <input type="text" class="form-input" id="wastePerson" placeholder="请输入负责人姓名" value="李师傅">
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-weight:600">废弃物明细</div>
+              <button class="btn btn-outline btn-sm" onclick="addWasteRow()">+ 添加废弃物</button>
+            </div>
+            <table class="data-table" id="wasteTable">
+              <thead><tr><th style="width:25%">废弃物类型 <span style="color:var(--danger)">*</span></th><th style="width:20%">数量</th><th style="width:25%">处置方式</th><th style="width:15%">处置单位</th><th style="width:15%">操作</th></tr></thead>
+              <tbody id="wasteTableBody">
+                <tr>
+                  <td>
+                    <select class="form-input">
+                      <option selected>蔬菜残渣</option>
+                      <option>荤菜废料</option>
+                      <option>废弃油脂</option>
+                      <option>餐巾纸</option>
+                      <option>塑料袋</option>
+                      <option>过期食品</option>
+                      <option>其他</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="form-input" placeholder="数量" value="3kg"></td>
+                  <td>
+                    <select class="form-input">
+                      <option selected>厨余垃圾处理</option>
+                      <option>分类收集</option>
+                      <option>专业回收</option>
+                      <option>直接丢弃</option>
+                    </select>
+                  </td>
+                  <td><input type="text" class="form-input" placeholder="处置单位" value="环卫部门"></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <label style="font-weight:600">备注说明</label>
+            <textarea class="form-input" id="wasteNote" rows="2" placeholder="可填写特殊情况说明等"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <button class="btn btn-outline btn-sm" onclick="showCabinetDetail('list-view')">← 返回</button>
+        <button class="btn btn-primary" onclick="saveCabinetForm('waste')">💾 保存</button>
+      </div>`,
     detail: (date) => `
       <div class="card" style="margin-bottom:16px">
         <div class="card-head"><div class="card-title">♻️ ${date} 废弃处置详情</div></div>
@@ -3733,8 +4950,9 @@ const cabinetDetails = {
 
 // 显示/隐藏台账详情
 var currentCabinetDate = '';
-function showCabinetDetail(view, date) {
-  if (view === 'detail-view') {
+var isEditMode = false; // 是否是编辑模式
+function showCabinetDetail(view, date, editMode) {
+  if (view === 'detail-view' || view === 'edit-view') {
     document.getElementById('cabinetListView').style.display = 'none';
     document.getElementById('cabinetDetailView').style.display = 'block';
     const detail = cabinetDetails[currentCabinetName] || cabinetDetails['食谱台账'];
@@ -3752,12 +4970,654 @@ function showCabinetDetail(view, date) {
     currentCabinetDate = displayDate;
     const month = parseInt(displayDate.split('-')[1]);
     const day = parseInt(displayDate.split('-')[2]);
-    document.getElementById('detailDateLabel').textContent = `${month}月${day}日 详情`;
-    document.getElementById('cabinetDetailContent').innerHTML = detail.detail(displayDate);
+    
+    // 判断是否为编辑模式（当天未填写且有editMode参数）
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    isEditMode = (editMode === true || (view === 'edit-view')) && displayDate === todayStr;
+    
+    document.getElementById('detailDateLabel').textContent = `${month}月${day}日 ${isEditMode ? '填写' : '详情'}`;
+    
+    // 根据模式显示不同内容
+    if (isEditMode && detail.editForm) {
+      document.getElementById('cabinetDetailContent').innerHTML = detail.editForm(displayDate);
+    } else {
+      document.getElementById('cabinetDetailContent').innerHTML = detail.detail(displayDate);
+    }
   } else {
     document.getElementById('cabinetListView').style.display = 'block';
     document.getElementById('cabinetDetailView').style.display = 'none';
+    isEditMode = false;
   }
+}
+
+// 添加晨检行
+function addCheckupRow() {
+  const tbody = document.getElementById('checkupTableBody');
+  if (!tbody) return;
+  
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="姓名"></td>
+    <td>
+      <select class="form-input">
+        <option>厨师</option>
+        <option>面点师</option>
+        <option>帮厨</option>
+        <option selected>洗碗工</option>
+        <option>仓库管理员</option>
+      </select>
+    </td>
+    <td><input type="number" step="0.1" class="form-input" placeholder="36.5" value="36.5"></td>
+    <td>
+      <select class="form-input">
+        <option selected>正常</option>
+        <option>发热</option>
+        <option>咳嗽</option>
+        <option>腹泻</option>
+        <option>其他不适</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 保存台账表单
+function saveCabinetForm(type) {
+  if (type === 'recipe') {
+    const date = document.getElementById('recipeDate').value;
+    const mealType = document.getElementById('recipeMealType').value;
+    const people = document.getElementById('recipePeople').value;
+    const cost = document.getElementById('recipeCost').value;
+    const mainDish = document.getElementById('recipeMainDish').value;
+    const meatDish = document.getElementById('recipeMeatDish').value;
+    const vegDish = document.getElementById('recipeVegDish').value;
+    const soup = document.getElementById('recipeSoup').value;
+    const note = document.getElementById('recipeNote').value;
+
+    if (!people || !cost) {
+      showToast('请填写必填项（用餐人数和人均成本）', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 食谱已保存`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'checkup') {
+    const date = document.getElementById('checkupDate').value;
+    const reporter = document.getElementById('checkupReporter').value;
+    const rows = document.querySelectorAll('#checkupTableBody tr');
+    let validCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        validCount++;
+      }
+    });
+
+    if (validCount === 0) {
+      showToast('请至少添加一名从业人员信息', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 晨检记录已保存（${validCount}人）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'purchase') {
+    const date = document.getElementById('purchaseDate').value;
+    const supplier = document.getElementById('purchaseSupplier').value;
+    const rows = document.querySelectorAll('#purchaseTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        itemCount++;
+      }
+    });
+
+    if (itemCount === 0) {
+      showToast('请至少添加一条采购明细', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 采购记录已保存（${itemCount}项）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'inbound') {
+    const date = document.getElementById('inboundDate').value;
+    const inspector = document.getElementById('inboundInspector').value;
+    const rows = document.querySelectorAll('#inboundTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        itemCount++;
+      }
+    });
+
+    if (!inspector) {
+      showToast('请填写验收人', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 入库记录已保存（${itemCount}项）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'outbound') {
+    const date = document.getElementById('outboundDate').value;
+    const receiver = document.getElementById('outboundReceiver').value;
+    const rows = document.querySelectorAll('#outboundTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        itemCount++;
+      }
+    });
+
+    if (!receiver || itemCount === 0) {
+      showToast('请填写领用人并添加出库明细', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 出库记录已保存（${itemCount}项）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'cert') {
+    const date = document.getElementById('certDate').value;
+    const supplier = document.getElementById('certSupplier').value;
+
+    if (!supplier) {
+      showToast('请填写供应商名称', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 票证信息已保存`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'vegProcess') {
+    const date = document.getElementById('vegProcessDate').value;
+    const operator = document.getElementById('vegProcessOperator').value;
+    const rows = document.querySelectorAll('#vegProcessTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        itemCount++;
+      }
+    });
+
+    if (!operator || itemCount === 0) {
+      showToast('请填写操作人并添加加工明细', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 蔬菜加工记录已保存（${itemCount}项）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'meatProcess') {
+    const date = document.getElementById('meatProcessDate').value;
+    const operator = document.getElementById('meatProcessOperator').value;
+    const rows = document.querySelectorAll('#meatProcessTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        itemCount++;
+      }
+    });
+
+    if (!operator || itemCount === 0) {
+      showToast('请填写操作人并添加加工明细', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 荤菜加工记录已保存（${itemCount}项）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'sample') {
+    const date = document.getElementById('sampleDate').value;
+    const mealType = document.getElementById('sampleMealType').value;
+    const person = document.getElementById('samplePerson').value;
+    const count = document.getElementById('sampleCount').value;
+    const rows = document.querySelectorAll('#sampleTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const nameInput = row.cells[0].querySelector('input');
+      if (nameInput && nameInput.value.trim()) {
+        itemCount++;
+      }
+    });
+
+    if (!person || !count || itemCount === 0) {
+      showToast('请填写必填项并添加菜品留样', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 食品留样已保存（${itemCount}份）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'dishSanitize') {
+    const date = document.getElementById('dishSanitizeDate').value;
+    const meal = document.getElementById('dishSanitizeMeal').value;
+    const method = document.getElementById('dishSanitizeMethod').value;
+    const person = document.getElementById('dishSanitizePerson').value;
+    const rows = document.querySelectorAll('#dishTableBody tr');
+    let totalCount = 0;
+
+    rows.forEach(row => {
+      const countInput = row.cells[1].querySelector('input');
+      if (countInput && countInput.value) {
+        totalCount += parseInt(countInput.value) || 0;
+      }
+    });
+
+    if (!person) {
+      showToast('请填写负责人', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 餐具消毒记录已保存（${totalCount}套）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'equipSanitize') {
+    const date = document.getElementById('equipSanitizeDate').value;
+    const person = document.getElementById('equipSanitizePerson').value;
+    const rows = document.querySelectorAll('#equipTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const select = row.cells[0].querySelector('select');
+      if (select && select.value) {
+        itemCount++;
+      }
+    });
+
+    if (!person || itemCount === 0) {
+      showToast('请填写负责人并添加设备', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 设施设备消毒记录已保存（${itemCount}台）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'mealSupervisor') {
+    const date = document.getElementById('mealSupervisorDate').value;
+    const name = document.getElementById('mealSupervisorName').value;
+    const taste = document.getElementById('mealScoreTaste').value;
+    const nutrition = document.getElementById('mealScoreNutrition').value;
+    const hygiene = document.getElementById('mealScoreHygiene').value;
+    const service = document.getElementById('mealScoreService').value;
+
+    if (!name) {
+      showToast('请填写陪餐人', 'warning');
+      return;
+    }
+
+    const avgScore = Math.round((parseInt(taste) + parseInt(nutrition) + parseInt(hygiene) + parseInt(service)) / 4);
+    showToast(`✅ ${date} 陪餐记录已保存（评分${avgScore}分）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'train') {
+    const date = document.getElementById('trainDate').value;
+    const topic = document.getElementById('trainTopic').value;
+    const teacher = document.getElementById('trainTeacher').value;
+    const count = document.getElementById('trainCount').value;
+
+    if (!topic || !teacher) {
+      showToast('请填写培训主题和讲师', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 培训记录已保存`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'safetyCheck') {
+    const date = document.getElementById('safetyCheckDate').value;
+    const person = document.getElementById('safetyCheckPerson').value;
+    const rows = document.querySelectorAll('#safetyCheckTableBody tr');
+    let passCount = 0;
+    let totalCount = 0;
+
+    rows.forEach(row => {
+      const select = row.cells[1].querySelector('select');
+      if (select && select.value) {
+        totalCount++;
+        if (select.value === 'pass') passCount++;
+      }
+    });
+
+    if (!person || totalCount === 0) {
+      showToast('请填写检查人并添加检查项目', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 安全检查已保存（${passCount}/${totalCount}项合格）`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  } else if (type === 'waste') {
+    const date = document.getElementById('wasteDate').value;
+    const person = document.getElementById('wastePerson').value;
+    const rows = document.querySelectorAll('#wasteTableBody tr');
+    let itemCount = 0;
+
+    rows.forEach(row => {
+      const select = row.cells[0].querySelector('select');
+      if (select && select.value) {
+        itemCount++;
+      }
+    });
+
+    if (!person || itemCount === 0) {
+      showToast('请填写负责人并添加废弃物', 'warning');
+      return;
+    }
+
+    showToast(`✅ ${date} 废弃处置记录已保存`, 'success');
+    setTimeout(() => {
+      showCabinetDetail('list-view');
+      refreshCabinetList();
+    }, 800);
+  }
+}
+
+// ===== 添加行辅助函数 =====
+
+// 添加采购行
+function addPurchaseRow() {
+  const tbody = document.getElementById('purchaseTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="食材名称"></td>
+    <td><input type="text" class="form-input" placeholder="规格"></td>
+    <td><input type="number" class="form-input" placeholder="数量"></td>
+    <td><input type="number" step="0.01" class="form-input" placeholder="单价"></td>
+    <td><input type="text" class="form-input" readonly value="¥0" style="background:#f5f5f5"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加入库行
+function addInboundRow() {
+  const tbody = document.getElementById('inboundTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="食材名称"></td>
+    <td><input type="text" class="form-input" placeholder="规格"></td>
+    <td><input type="number" class="form-input" placeholder="数量"></td>
+    <td><input type="number" step="0.01" class="form-input" placeholder="单价"></td>
+    <td><input type="text" class="form-input" readonly value="¥0" style="background:#f5f5f5"></td>
+    <td><input type="date" class="form-input"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加出库行
+function addOutboundRow() {
+  const tbody = document.getElementById('outboundTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="食材名称"></td>
+    <td><input type="text" class="form-input" placeholder="规格"></td>
+    <td><input type="number" class="form-input" placeholder="数量"></td>
+    <td>
+      <select class="form-input">
+        <option selected>午餐备餐</option>
+        <option>晚餐备餐</option>
+        <option>应急储备</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加蔬菜加工行
+function addVegProcessRow() {
+  const tbody = document.getElementById('vegProcessTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="食材名称"></td>
+    <td><input type="number" class="form-input" placeholder="毛重"></td>
+    <td><input type="number" class="form-input" placeholder="净重"></td>
+    <td><input type="text" class="form-input" readonly value="0%" style="background:#f5f5f5"></td>
+    <td>
+      <select class="form-input">
+        <option selected>择洗、浸泡</option>
+        <option>择洗、切分</option>
+        <option>去皮、切块</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加荤菜加工行
+function addMeatProcessRow() {
+  const tbody = document.getElementById('meatProcessTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="食材名称"></td>
+    <td><input type="number" class="form-input" placeholder="毛重"></td>
+    <td><input type="number" class="form-input" placeholder="净重"></td>
+    <td><input type="text" class="form-input" readonly value="0%" style="background:#f5f5f5"></td>
+    <td>
+      <select class="form-input">
+        <option selected>分割、清洗</option>
+        <option>分割、焯水</option>
+        <option>切片、切丝</option>
+        <option>腌制</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加留样行
+function addSampleRow() {
+  const tbody = document.getElementById('sampleTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td><input type="text" class="form-input" placeholder="菜品名称"></td>
+    <td><input type="text" class="form-input" placeholder="留样量" value="100g"></td>
+    <td>
+      <select class="form-input">
+        <option selected>冷藏（0-4℃）</option>
+        <option>冷冻（-18℃）</option>
+      </select>
+    </td>
+    <td><input type="text" class="form-input" readonly value="48小时后" style="background:#f5f5f5"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加餐具行
+function addDishRow() {
+  const tbody = document.getElementById('dishTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>
+      <select class="form-input">
+        <option>餐盘</option>
+        <option selected>碗</option>
+        <option>筷子</option>
+        <option>勺子</option>
+        <option>杯子</option>
+      </select>
+    </td>
+    <td><input type="number" class="form-input" placeholder="数量" value="100"></td>
+    <td>
+      <select class="form-input">
+        <option selected>已清洗</option>
+        <option>待清洗</option>
+        <option>部分清洗</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加设备消毒行
+function addEquipRow() {
+  const tbody = document.getElementById('equipTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>
+      <select class="form-input">
+        <option>冷藏柜A</option>
+        <option>冷藏柜B</option>
+        <option selected>操作台</option>
+        <option>切菜台</option>
+        <option>蒸柜</option>
+        <option>烤箱</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td>
+      <select class="form-input">
+        <option selected>消毒液擦拭</option>
+        <option>紫外线+臭氧</option>
+        <option>高温消毒</option>
+        <option>酒精擦拭</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td><input type="time" class="form-input" placeholder="时间"></td>
+    <td>
+      <select class="form-input">
+        <option value="pass" selected>合格</option>
+        <option value="fail">不合格</option>
+        <option value="pending">待复检</option>
+      </select>
+    </td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加安全检查行
+function addSafetyCheckRow() {
+  const tbody = document.getElementById('safetyCheckTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>
+      <select class="form-input">
+        <option selected>燃气管道</option>
+        <option>电气线路</option>
+        <option>消防设施</option>
+        <option>应急通道</option>
+        <option>食品安全</option>
+        <option>环境卫生</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td>
+      <select class="form-input">
+        <option value="pass" selected>合格</option>
+        <option value="fail">不合格</option>
+        <option value="pending">待复检</option>
+      </select>
+    </td>
+    <td><input type="text" class="form-input" placeholder="备注说明"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
+}
+
+// 添加废弃物行
+function addWasteRow() {
+  const tbody = document.getElementById('wasteTableBody');
+  if (!tbody) return;
+
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>
+      <select class="form-input">
+        <option selected>蔬菜残渣</option>
+        <option>荤菜废料</option>
+        <option>废弃油脂</option>
+        <option>餐巾纸</option>
+        <option>塑料袋</option>
+        <option>过期食品</option>
+        <option>其他</option>
+      </select>
+    </td>
+    <td><input type="text" class="form-input" placeholder="数量"></td>
+    <td>
+      <select class="form-input">
+        <option selected>厨余垃圾处理</option>
+        <option>分类收集</option>
+        <option>专业回收</option>
+        <option>直接丢弃</option>
+      </select>
+    </td>
+    <td><input type="text" class="form-input" placeholder="处置单位"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">删除</button></td>
+  `;
+  tbody.appendChild(newRow);
 }
 
 // 刷新台账列表
@@ -3793,12 +5653,15 @@ function refreshCabinetList() {
     const statusText = isToday ? '未填写' : '已完成';
     const btnClass = isToday ? 'btn-primary' : 'btn-outline';
     const btnText = isToday ? '立即填写' : '查看';
+    // 当天点击进入编辑模式，否则进入查看模式
+    const viewMode = isToday ? 'edit-view' : 'detail-view';
+    const editParam = isToday ? ', true' : '';
     
     rows.push(`<tr>
       <td><strong>${dateLabel}</strong><br><span style="font-size:11px;color:var(--text-sub)">${dateStr}</span></td>
       <td>${reporter}</td>
       <td><span class="tag ${status}">${statusText}</span></td>
-      <td><button class="btn btn-sm ${btnClass}" onclick="showCabinetDetail('detail-view','${dateStr}')">${btnText}</button></td>
+      <td><button class="btn btn-sm ${btnClass}" onclick="showCabinetDetail('${viewMode}','${dateStr}'${editParam})">${btnText}</button></td>
     </tr>`);
   }
   
