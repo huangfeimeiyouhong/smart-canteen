@@ -798,7 +798,6 @@ select.form-input { cursor: pointer; }
         <div class="card-head">
           <div class="card-title">📋 食谱制作</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-outline btn-sm" onclick="exportCabinetPDF('食谱')">📤 导出PDF</button>
             <button class="btn btn-primary btn-sm" onclick="openModal('modal-recipe')">+ 新建食谱</button>
           </div>
         </div>
@@ -1452,7 +1451,6 @@ select.form-input { cursor: pointer; }
             <div class="card-title">⭐ 食安月度综合评分</div>
             <div style="display:flex;gap:8px">
               <select class="form-input" style="width:120px;padding:6px 10px"><option>2026年4月</option><option>2026年3月</option></select>
-              <button class="btn btn-sm btn-outline">📤 导出报告</button>
             </div>
           </div>
           <div class="card-body">
@@ -2207,6 +2205,12 @@ function importRecipeToList() {
   
   closeModalById('modal-recipe-detail');
   showToast('已添加 ' + selectedRecipe.dishes.length + ' 个菜品到食谱', 'success');
+  
+  // 切换到方法一标签页显示结果
+  const method1TabEl = document.querySelector('.tabs .tab-item:first-child');
+  if (method1TabEl) {
+    switchTab(method1TabEl, 'recipe-tabs', 'tab-method1');
+  }
 }
 
 // 渲染已添加的菜品列表
@@ -5770,17 +5774,17 @@ function confirmBatchSelection() {
   sessionStorage.setItem('addedRecipes', JSON.stringify(addedRecipes));
   renderAddedRecipes();
   
-  // 清空选中状态
+  // 先记录数量，再清空
+  const addedCount = batchSelectedDishes.length;
   batchSelectedDishes = [];
   updateBatchSelectionCount();
   
-  showToast('已添加 ' + batchSelectedDishes.length + ' 个菜品到食谱', 'success');
+  showToast('已添加 ' + addedCount + ' 个菜品到食谱', 'success');
   
-  // 切换到单个录入标签页显示结果
-  const method1Tab = document.querySelector('#tab-method1');
-  if (method1Tab) {
-    method1Tab.classList.add('active');
-    document.getElementById('tab-method2').classList.remove('active');
+  // 切换到方法一标签页显示结果
+  const method1TabEl = document.querySelector('.tabs .tab-item:first-child');
+  if (method1TabEl) {
+    switchTab(method1TabEl, 'recipe-tabs', 'tab-method1');
   }
 }
 

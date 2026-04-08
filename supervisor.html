@@ -737,7 +737,19 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
             </div>
             <div style="display:flex;flex-direction:column;align-items:center">
               <div style="font-size:13px;font-weight:500;margin-bottom:12px;align-self:flex-start">食材成本品类占比</div>
-              <canvas id="costPieChart" width="300" height="300"></canvas>
+              <div style="position:relative;width:300px;height:300px">
+                <canvas id="costPieChart" width="300" height="300"></canvas>
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+                  <div style="font-size:20px;font-weight:bold;color:var(--text)">¥826,400</div>
+                  <div style="font-size:12px;color:var(--text-sub)">总成本</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;justify-content:center">
+                <span style="display:flex;align-items:center;gap:4px;font-size:12px"><span style="width:10px;height:10px;background:#ff7a45;border-radius:2px"></span>肉类 38%</span>
+                <span style="display:flex;align-items:center;gap:4px;font-size:12px"><span style="width:10px;height:10px;background:#52c41a;border-radius:2px"></span>蔬菜水果 28%</span>
+                <span style="display:flex;align-items:center;gap:4px;font-size:12px"><span style="width:10px;height:10px;background:#faad14;border-radius:2px"></span>粮油 24%</span>
+                <span style="display:flex;align-items:center;gap:4px;font-size:12px"><span style="width:10px;height:10px;background:#1677ff;border-radius:2px"></span>其他 10%</span>
+              </div>
             </div>
           </div>
           <div style="font-size:13px;font-weight:500;margin-bottom:12px">各校本学期成本统计</div>
@@ -1544,7 +1556,7 @@ function initCharts(){
     }
     const c4=document.getElementById('costPieChart');
     if(c4){
-      window.costPieChart = new Chart(c4,{type:'doughnut',data:{labels:['肉类','蔬菜水果','粮油','其他'],datasets:[{data:[38,28,24,10],backgroundColor:['#ff7a45','#52c41a','#faad14','#1677ff']}]},options:{responsive:false,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:12}}}}}});
+      window.costPieChart = new Chart(c4,{type:'doughnut',data:{labels:['肉类','蔬菜水果','粮油','其他'],datasets:[{data:[38,28,24,10],backgroundColor:['#ff7a45','#52c41a','#faad14','#1677ff']}]},options:{responsive:false,maintainAspectRatio:true,cutout:'55%',plugins:{tooltip:{callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=(ctx.raw/total*100).toFixed(1);return ctx.label+': ¥'+(ctx.raw*8264).toLocaleString()+' ('+pct+'%)';}}},legend:{display:false}}}});
     }
   }
   if(ap==='page-monthly-report'&&!chartsInited['mr']){
