@@ -984,9 +984,9 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
         <div class="card-head">
           <div class="card-title">📆 月报 - 2026年3月</div>
           <div style="display:flex;gap:8px">
-            <select class="form-input" style="width:140px;padding:6px 10px"><option>2026年3月</option><option>2026年2月</option><option>2026年1月</option></select>
+            <select class="form-input" style="width:140px;padding:6px 10px" onchange="switchMonthlyReport(this.value)"><option>2026年3月</option><option>2026年2月</option><option>2026年1月</option></select>
             <button class="btn btn-primary btn-sm" onclick="generateMonthlyReport()">🔄 生成月报</button>
-            <button class="btn btn-outline btn-sm" onclick="exportSupervisorWeeklyPDF()">📤 导出PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="exportMonthlyReport()">📤 导出月报</button>
           </div>
         </div>
         <div class="card-body">
@@ -998,11 +998,13 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
             <div class="card">
               <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">📊 月度核心指标</div></div>
               <div class="card-body" style="padding:14px">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
                   <div style="background:#f0fff4;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--success)">88.6</div><div style="font-size:11px;color:var(--text-sub)">全区平均评分</div></div>
                   <div style="background:#e6f4ff;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent)">94.2%</div><div style="font-size:11px;color:var(--text-sub)">食谱公示率</div></div>
                   <div style="background:#fff7e6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--warning)">138</div><div style="font-size:11px;color:var(--text-sub)">本月预警总数</div></div>
                   <div style="background:#f0fff4;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--success)">84.1%</div><div style="font-size:11px;color:var(--text-sub)">预警处理率</div></div>
+                  <div style="background:#fff1f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--danger)">12.6万</div><div style="font-size:11px;color:var(--text-sub)">月采购金额</div></div>
+                  <div style="background:#f9f0ff;border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent)">98.5%</div><div style="font-size:11px;color:var(--text-sub)">票证合规率</div></div>
                 </div>
               </div>
             </div>
@@ -1011,6 +1013,118 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
               <div class="card-body" style="padding:14px"><canvas id="monthlyScoreChart" height="140"></canvas></div>
             </div>
           </div>
+
+          <!-- 食谱公示与营养分析 -->
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;margin-top:20px">🍽️ 食谱公示与营养分析</div>
+          <div class="grid-3" style="gap:16px;margin-bottom:16px">
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">📋 食谱公示情况</div></div>
+              <div class="card-body" style="padding:14px">
+                <div style="margin-bottom:12px">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>食谱公示率</span><span style="font-weight:600;color:var(--success)">94.2%</span></div>
+                  <div style="background:#e8e8e8;height:6px;border-radius:3px"><div style="background:var(--success);height:100%;border-radius:3px;width:94.2%"></div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <div style="background:#f0fff4;padding:8px;border-radius:4px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--success)">26所</div><div style="font-size:11px;color:var(--text-sub)">已公示</div></div>
+                  <div style="background:#fff1f0;padding:8px;border-radius:4px;text-align:center"><div style="font-size:16px;font-weight:700;color:var(--danger)">2所</div><div style="font-size:11px;color:var(--text-sub)">未公示</div></div>
+                </div>
+                <div style="margin-top:10px;font-size:11px;color:var(--text-sub)">本月共发布食谱 <strong style="color:var(--primary)">784</strong> 份</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">🥗 营养达标情况</div></div>
+              <div class="card-body" style="padding:14px">
+                <div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:10px">
+                  <div><div style="font-size:22px;font-weight:700;color:var(--success)">86%</div><div style="font-size:10px;color:var(--text-sub)">蛋白质达标</div></div>
+                  <div><div style="font-size:22px;font-weight:700;color:var(--accent)">82%</div><div style="font-size:10px;color:var(--text-sub)">维生素达标</div></div>
+                  <div><div style="font-size:22px;font-weight:700;color:var(--warning)">78%</div><div style="font-size:10px;color:var(--text-sub)">钙摄入达标</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--text-sub);text-align:center">平均热量：<strong style="color:var(--primary)">650kcal</strong>/餐，符合标准</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">⚖️ 荤素搭配</div></div>
+              <div class="card-body" style="padding:14px">
+                <div style="display:flex;justify-content:space-around;text-align:center">
+                  <div><div style="font-size:22px;font-weight:700;color:#e87040">1:1.8</div><div style="font-size:10px;color:var(--text-sub)">荤:素比例</div></div>
+                  <div><div style="font-size:22px;font-weight:700;color:var(--success)">92%</div><div style="font-size:10px;color:var(--text-sub)">达标率</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--text-sub);margin-top:10px;text-align:center">推荐比例 1:1.2~1:2，本月整体达标</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 食材采购数据汇总 -->
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;margin-top:20px">📦 食材采购数据汇总</div>
+          <div class="grid-4" style="gap:16px;margin-bottom:16px">
+            <div class="card" style="border-left:3px solid var(--success)">
+              <div class="card-body" style="padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--success)">¥12.6万</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px">月采购总额</div><div style="font-size:10px;color:var(--success);margin-top:4px">↑ 环比增长 8.2%</div></div>
+            </div>
+            <div class="card" style="border-left:3px solid var(--accent)">
+              <div class="card-body" style="padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--accent)">¥11.8万</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px">月出库总额</div><div style="font-size:10px;color:var(--success);margin-top:4px">↑ 环比增长 6.5%</div></div>
+            </div>
+            <div class="card" style="border-left:3px solid var(--warning)">
+              <div class="card-body" style="padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--warning)">¥2.8万</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px">当前库存总值</div><div style="font-size:10px;color:var(--text-sub);margin-top:4px">库存周转 4.2次</div></div>
+            </div>
+            <div class="card" style="border-left:3px solid var(--primary)">
+              <div class="card-body" style="padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--primary)">486份</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px">票证备案数</div><div style="font-size:10px;color:var(--success);margin-top:4px">合规率 98.5%</div></div>
+            </div>
+          </div>
+
+          <!-- 采购明细表格 -->
+          <table class="data-table" style="margin-bottom:16px">
+            <thead><tr><th>分类</th><th>采购金额</th><th>出库金额</th><th>库存余额</th><th>供应商数</th><th>占比</th></tr></thead>
+            <tbody>
+              <tr><td>🥬 果蔬类</td><td>¥3.2万</td><td>¥2.9万</td><td>¥0.6万</td><td>5家</td><td>25.4%</td></tr>
+              <tr><td>🥩 荤菜类</td><td>¥4.8万</td><td>¥4.5万</td><td>¥0.8万</td><td>3家</td><td>38.1%</td></tr>
+              <tr><td>🥛 肉禽蛋奶</td><td>¥2.6万</td><td>¥2.4万</td><td>¥0.5万</td><td>4家</td><td>20.6%</td></tr>
+              <tr><td>🐟 水产品</td><td>¥1.2万</td><td>¥1.1万</td><td>¥0.3万</td><td>2家</td><td>9.5%</td></tr>
+              <tr><td>🍚 粮油调料</td><td>¥0.8万</td><td>¥0.9万</td><td>¥0.6万</td><td>3家</td><td>6.4%</td></tr>
+            </tbody>
+          </table>
+
+          <!-- 预警汇总与成本分析 -->
+          <div class="grid-2" style="gap:16px;margin-bottom:16px">
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">🚨 食堂日常预警汇总</div></div>
+              <div class="card-body" style="padding:14px">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+                  <div style="background:#fff1f0;padding:8px;border-radius:4px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--danger)">28</div><div style="font-size:10px;color:var(--text-sub)">价格预警</div></div>
+                  <div style="background:#fff7e6;padding:8px;border-radius:4px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--warning)">45</div><div style="font-size:10px;color:var(--text-sub)">库存预警</div></div>
+                  <div style="background:#f0f7ff;padding:8px;border-radius:4px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--accent)">52</div><div style="font-size:10px;color:var(--text-sub)">证照预警</div></div>
+                  <div style="background:#f6ffed;padding:8px;border-radius:4px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--success)">13</div><div style="font-size:10px;color:var(--text-sub)">食安预警</div></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">预警处理情况</div>
+                <div style="background:#f5f5f5;height:8px;border-radius:4px"><div style="background:linear-gradient(90deg,var(--success) 70%,var(--warning) 20%,var(--danger) 10%);height:100%;border-radius:4px"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px"><span style="color:var(--success)">已处理 70%</span><span style="color:var(--warning)">处理中 20%</span><span style="color:var(--danger)">待处理 10%</span></div>
+                <div style="margin-top:12px;border-top:1px solid #eee;padding-top:10px">
+                  <div style="font-size:11px;color:var(--text-sub);margin-bottom:6px">⚠️ 重点预警</div>
+                  <div style="font-size:11px;color:var(--danger)">• 朝阳小学：猪肉价格连续3周超预警阈值</div>
+                  <div style="font-size:11px;color:var(--warning)">• 希望小学：蔬菜库存低于安全库存</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head" style="padding:12px 16px"><div class="card-title" style="font-size:13px">💰 食材成本分析</div></div>
+              <div class="card-body" style="padding:14px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                  <div style="background:#f0fff4;padding:10px;border-radius:6px"><div style="font-size:11px;color:var(--text-sub)">人均成本</div><div style="font-size:18px;font-weight:700;color:var(--success)">¥8.5</div><div style="font-size:10px;color:var(--success)">↓ 同比下降 3.2%</div></div>
+                  <div style="background:#fff7e6;padding:10px;border-radius:6px"><div style="font-size:11px;color:var(--text-sub)">成本波动</div><div style="font-size:18px;font-weight:700;color:var(--warning)">±5.8%</div><div style="font-size:10px;color:var(--text-sub)">在可控范围</div></div>
+                </div>
+                <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">成本构成（本月）</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <canvas id="costPieChart" width="100" height="80"></canvas>
+                  <div style="font-size:10px">
+                    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><span style="width:8px;height:8px;background:#1890ff;border-radius:2px"></span>荤菜 38%</div>
+                    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><span style="width:8px;height:8px;background:#52c41a;border-radius:2px"></span>果蔬 25%</div>
+                    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><span style="width:8px;height:8px;background:#faad14;border-radius:2px"></span>肉禽蛋奶 21%</div>
+                    <div style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#722ed1;border-radius:2px"></span>其他 16%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div style="font-size:14px;font-weight:600;margin-bottom:10px">各校本月综合评分</div>
           <table class="data-table">
             <thead><tr><th>学校</th><th>分组</th><th>食谱公示率</th><th>台账完整率</th><th>预警处理率</th><th>综合评分</th><th>评级</th><th>较上月</th></tr></thead>
@@ -2562,6 +2676,84 @@ function generateWeeklyReport() {
 function generateMonthlyReport() {
   showToast('正在生成月报...', 'info');
   setTimeout(() => showToast('✅ 月报生成完成！数据已更新', 'success'), 1500);
+}
+
+// 切换月报月份
+function switchMonthlyReport(month) {
+  showToast(`正在加载 ${month} 月报数据...`, 'info');
+  setTimeout(() => showToast('✅ 月报数据已更新', 'success'), 800);
+}
+
+// 导出月报
+function exportMonthlyReport() {
+  const month = document.querySelector('#page-monthly-report .form-input').value;
+  showToast(`📥 正在导出 ${month} 月报...`, 'info');
+
+  setTimeout(() => {
+    const content = `XX市教育局学校食堂月报 — ${month}
+
+一、月度核心指标
+- 全区平均评分：88.6
+- 食谱公示率：94.2%
+- 本月预警总数：138条
+- 预警处理率：84.1%
+- 月采购金额：12.6万元
+- 票证合规率：98.5%
+
+二、食谱公示与营养分析
+- 食谱公示率：94.2%（26所已公示，2所未公示）
+- 本月发布食谱：784份
+- 蛋白质达标率：86%
+- 维生素达标率：82%
+- 钙摄入达标率：78%
+- 荤素搭配达标率：92%
+
+三、食材采购数据汇总
+- 月采购总额：12.6万元（环比增长 8.2%）
+- 月出库总额：11.8万元（环比增长 6.5%）
+- 当前库存总值：2.8万元
+- 库存周转：4.2次
+- 票证备案数：486份
+
+四、各品类采购明细
+| 分类 | 采购金额 | 出库金额 | 库存余额 | 供应商数 | 占比 |
+|------|---------|---------|---------|---------|------|
+| 果蔬类 | ¥3.2万 | ¥2.9万 | ¥0.6万 | 5家 | 25.4% |
+| 荤菜类 | ¥4.8万 | ¥4.5万 | ¥0.8万 | 3家 | 38.1% |
+| 肉禽蛋奶 | ¥2.6万 | ¥2.4万 | ¥0.5万 | 4家 | 20.6% |
+| 水产品 | ¥1.2万 | ¥1.1万 | ¥0.3万 | 2家 | 9.5% |
+| 粮油调料 | ¥0.8万 | ¥0.9万 | ¥0.6万 | 3家 | 6.4% |
+
+五、食堂日常预警汇总
+- 价格预警：28条
+- 库存预警：45条
+- 证照预警：52条
+- 食安预警：13条
+- 预警处理情况：已处理70%，处理中20%，待处理10%
+
+六、食材成本分析
+- 人均成本：¥8.5（同比下降 3.2%）
+- 成本波动：±5.8%（在可控范围）
+- 成本构成：荤菜38%、果蔬25%、肉禽蛋奶21%、其他16%
+
+七、各校综合评分
+| 学校 | 分组 | 食谱公示率 | 台账完整率 | 预警处理率 | 综合评分 | 评级 |
+|------|------|-----------|-----------|-----------|---------|------|
+| 实验小学 | 小学组 | 100% | 96.5% | 80% | 92 | 优秀 |
+| 第一中学 | 中学组 | 98% | 97.2% | 88% | 90 | 优秀 |
+| 希望小学 | 小学组 | 96% | 93.8% | 75% | 88 | 良好 |
+| 朝阳小学 | 小学组 | 86% | 82.1% | 62% | 76 | 一般 |
+`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `食堂月报_${month}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('✅ 月报导出成功！', 'success');
+  }, 800);
 }
 
 // 导出日报详情
