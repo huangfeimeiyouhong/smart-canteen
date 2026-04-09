@@ -1672,10 +1672,49 @@ select.form-input { cursor: pointer; }
               <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekCostText">
                 本周食材总成本：<strong>¥28,640</strong>，日均成本：<strong>¥5,728</strong>，人均成本：<strong>¥6.74</strong>（按850人计）。较上周增加约3.2%，猪肉价格上涨为主因。
               </div>
-              <div class="alert warning" style="margin-top:10px;font-size:12px" id="weekCostAlert">⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）</div>
             </div>
             <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">⚠️ 四、食安预警汇总</div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">📈 四、价格预警</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekPriceAlertText">
+                本周共发出价格预警2条。⚠️猪肉价格预警：采购单价¥24，超出基准价¥20（+20%），已上报监管端。
+              </div>
+              <div class="grid-2" style="gap:8px;margin-top:10px">
+                <div style="background:#fff7e6;border-radius:6px;padding:10px;text-align:center">
+                  <div style="font-size:18px;font-weight:700;color:var(--warning)">2</div>
+                  <div style="font-size:11px;color:var(--text-sub)">预警数量</div>
+                </div>
+                <div style="background:#fff1f0;border-radius:6px;padding:10px;text-align:center">
+                  <div style="font-size:18px;font-weight:700;color:var(--danger)">1</div>
+                  <div style="font-size:11px;color:var(--text-sub)">待处理</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">📄 五、票证备案</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekCertText">
+                本周完成票证备案12份。其中：营业执照1份、健康证2份、检测报告3份、检疫证明2份、进货票据4份。
+              </div>
+              <div class="grid-4" style="gap:8px;margin-top:10px">
+                <div style="background:#f0f7ff;border-radius:6px;padding:8px;text-align:center">
+                  <div style="font-size:16px;font-weight:700;color:var(--accent)">12</div>
+                  <div style="font-size:10px;color:var(--text-sub)">总份数</div>
+                </div>
+                <div style="background:#f6ffed;border-radius:6px;padding:8px;text-align:center">
+                  <div style="font-size:16px;font-weight:700;color:var(--success)">12</div>
+                  <div style="font-size:10px;color:var(--text-sub)">已备案</div>
+                </div>
+                <div style="background:#fff7e6;border-radius:6px;padding:8px;text-align:center">
+                  <div style="font-size:16px;font-weight:700;color:var(--warning)">0</div>
+                  <div style="font-size:10px;color:var(--text-sub)">待审核</div>
+                </div>
+                <div style="background:#fff1f0;border-radius:6px;padding:8px;text-align:center">
+                  <div style="font-size:16px;font-weight:700;color:var(--danger)">0</div>
+                  <div style="font-size:10px;color:var(--text-sub)">异常</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">⚠️ 六、食安预警汇总</div>
               <ul class="timeline" id="weekWarningTimeline">
                 <li class="timeline-item"><div class="timeline-dot danger"></div><div class="timeline-time">04-03</div><div class="timeline-text">健康证过期预警（张厨师）—待处理</div></li>
                 <li class="timeline-item"><div class="timeline-dot warning"></div><div class="timeline-time">04-03</div><div class="timeline-text">菠菜临期预警（18kg）—已提醒</div></li>
@@ -1684,11 +1723,11 @@ select.form-input { cursor: pointer; }
               </ul>
             </div>
             <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🍽️ 五、陪餐情况</div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🍽️ 七、陪餐情况</div>
               <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekDiningText">本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。</div>
             </div>
             <div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🧪 六、留样数据</div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text)">🧪 八、留样数据</div>
               <div style="font-size:13px;color:var(--text-sub);line-height:1.8" id="weekSampleText">本周应留样25份（每日早午餐各1份），实际留样24份，完成率96%。2026-04-03午餐留样未录入，需尽快补录。</div>
             </div>
           </div>
@@ -6950,7 +6989,9 @@ const weekReports = {
     pubRate: '100%',
     purchaseRows: '<tr><td>肉类</td><td>250kg</td><td>230kg</td><td>20kg</td></tr><tr><td>蔬菜</td><td>400kg</td><td>395kg</td><td>5kg</td></tr><tr><td>粮油</td><td>180kg</td><td>150kg</td><td>30kg</td></tr>',
     costText: '本周食材总成本：<strong>¥28,640</strong>，日均成本：<strong>¥5,728</strong>，人均成本：<strong>¥6.74</strong>（按850人计）。较上周增加约3.2%，猪肉价格上涨为主因。',
-    costAlert: '⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）',
+    costAlert: '',
+    priceAlertText: '本周共发出价格预警2条。⚠️猪肉价格预警：采购单价¥24，超出基准价¥20（+20%），已上报监管端。',
+    certText: '本周完成票证备案12份。其中：营业执照1份、健康证2份、检测报告3份、检疫证明2份、进货票据4份。',
     warningTimeline: '<li class="timeline-item"><div class="timeline-dot danger"></div><div class="timeline-time">04-03</div><div class="timeline-text">健康证过期预警（张厨师）—待处理</div></li><li class="timeline-item"><div class="timeline-dot warning"></div><div class="timeline-time">04-03</div><div class="timeline-text">菠菜临期预警（18kg）—已提醒</div></li><li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">04-02</div><div class="timeline-text">价格预警（猪肉）—已处理</div></li><li class="timeline-item"><div class="timeline-dot"></div><div class="timeline-time">03-31</div><div class="timeline-text">餐具消毒未完成—已补录</div></li>',
     diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
     sampleText: '本周应留样25份（每日早午餐各1份），实际留样24份，完成率96%。2026-04-03午餐留样未录入，需尽快补录。'
@@ -6966,6 +7007,8 @@ const weekReports = {
     purchaseRows: '<tr><td>肉类</td><td>240kg</td><td>225kg</td><td>15kg</td></tr><tr><td>蔬菜</td><td>380kg</td><td>375kg</td><td>5kg</td></tr><tr><td>粮油</td><td>170kg</td><td>145kg</td><td>25kg</td></tr>',
     costText: '本周食材总成本：<strong>¥27,750</strong>，日均成本：<strong>¥5,550</strong>，人均成本：<strong>¥6.53</strong>（按850人计）。成本与上周持平。',
     costAlert: '',
+    priceAlertText: '本周共发出价格预警1条。蔬菜价格略高于市场均价，已关注。',
+    certText: '本周完成票证备案10份。其中：健康证2份、检测报告2份、检疫证明3份、进货票据3份。',
     warningTimeline: '<li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">03-25</div><div class="timeline-text">蔬菜农残检测预警—已处理</div></li><li class="timeline-item"><div class="timeline-dot filled"></div><div class="timeline-time">03-24</div><div class="timeline-text">库存不足预警（大米）—已补货</div></li>',
     diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
     sampleText: '本周应留样25份（每日早午餐各1份），实际留样25份，完成率100%。'
@@ -6981,6 +7024,8 @@ const weekReports = {
     purchaseRows: '<tr><td>肉类</td><td>230kg</td><td>220kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>360kg</td><td>358kg</td><td>2kg</td></tr><tr><td>粮油</td><td>160kg</td><td>140kg</td><td>20kg</td></tr>',
     costText: '本周食材总成本：<strong>¥26,820</strong>，日均成本：<strong>¥5,364</strong>，人均成本：<strong>¥6.31</strong>（按850人计）。成本略有下降。',
     costAlert: '',
+    priceAlertText: '本周无价格预警。食材价格基本稳定。',
+    certText: '本周完成票证备案8份。其中：健康证1份、检测报告2份、检疫证明2份、进货票据3份。',
     warningTimeline: '<li class="timeline-item"><div class="timeline-dot warning"></div><div class="timeline-time">03-18</div><div class="timeline-text">留样未及时录入—已补录</div></li>',
     diningText: '本周共陪餐5次，校长陪餐2次，教师陪餐3次，陪餐记录100%完整。本周无食品安全异常反馈。',
     sampleText: '本周应留样25份（每日早午餐各1份），实际留样23份，完成率92%。存在2份留样缺失，已补录说明。'
@@ -7005,6 +7050,8 @@ function changeWeekReport() {
   document.getElementById('weekWarningTimeline').innerHTML = data.warningTimeline;
   document.getElementById('weekDiningText').textContent = data.diningText;
   document.getElementById('weekSampleText').textContent = data.sampleText;
+  document.getElementById('weekPriceAlertText').innerHTML = data.priceAlertText || '本周无价格预警。';
+  document.getElementById('weekCertText').innerHTML = data.certText || '本周暂无票证备案数据。';
   
   // 更新上报按钮状态
   const btn = document.getElementById('btnReportUp');
