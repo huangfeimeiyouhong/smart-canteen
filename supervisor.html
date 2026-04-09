@@ -945,6 +945,26 @@ body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color:
                 <ul style="font-size:12px;color:var(--text-sub);padding-left:16px" id="singleWarningTimeline"></ul>
               </div>
               <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">价格预警</div>
+                <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#fff7e6;padding:12px;border-radius:6px" id="singlePriceAlertText"></div>
+                <div style="margin-top:8px;display:flex;gap:8px">
+                  <div style="background:#fff7e6;padding:6px 12px;border-radius:4px;text-align:center;flex:1">
+                    <div style="font-size:14px;font-weight:700;color:var(--warning)" id="singlePriceAlertCount">0条</div>
+                    <div style="font-size:10px;color:var(--text-sub)">预警数量</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">票证备案</div>
+                <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#f0f7ff;padding:12px;border-radius:6px" id="singleCertText"></div>
+                <div style="margin-top:8px;display:flex;gap:8px">
+                  <div style="background:#f0f7ff;padding:6px 12px;border-radius:4px;text-align:center;flex:1">
+                    <div style="font-size:14px;font-weight:700;color:var(--accent)" id="singleCertCount">0份</div>
+                    <div style="font-size:10px;color:var(--text-sub)">备案数量</div>
+                  </div>
+                </div>
+              </div>
+              <div>
                 <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary)">留样陪餐</div>
                 <div style="font-size:12px;color:var(--text-sub);line-height:1.8;background:#f8f8f8;padding:12px;border-radius:6px" id="singleDiningText"></div>
               </div>
@@ -1101,7 +1121,11 @@ const weeklyReportsData = {
       totalCost: '¥28,640',
       perCost: '¥6.74',
       costText: '本周食材总成本：<strong>¥28,640</strong>，日均成本：<strong>¥5,728</strong>，人均成本：<strong>¥6.74</strong>（按850人计）。较上周增加约3.2%，猪肉价格上涨为主因。',
-      costAlert: '⚠️ 猪肉价格预警：本周采购单价¥24，超出基准价¥20（+20%）',
+      costAlert: '',
+      priceAlertCount: 2,
+      priceAlertText: '⚠️猪肉价格预警：采购单价¥24，超出基准价¥20（+20%），已上报监管端',
+      certCount: 12,
+      certText: '营业执照1份、健康证2份、检测报告3份、检疫证明2份、进货票据4份',
       purchaseRows: '<tr><td>肉类</td><td>250kg</td><td>230kg</td><td>20kg</td></tr><tr><td>蔬菜</td><td>400kg</td><td>395kg</td><td>5kg</td></tr><tr><td>粮油</td><td>180kg</td><td>150kg</td><td>30kg</td></tr>',
       warnings: 4,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--danger)">●</span> 04-03 健康证过期预警（张厨师）— 待处理</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-03 菠菜临期预警（18kg）— 已提醒</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 04-02 价格预警（猪肉）— 已处理</li><li style="margin-bottom:6px"><span style="color:#ccc">●</span> 03-31 餐具消毒未完成— 已补录</li>',
@@ -1118,6 +1142,10 @@ const weeklyReportsData = {
       perCost: '¥6.53',
       costText: '本周食材总成本：<strong>¥27,750</strong>，日均成本：<strong>¥5,550</strong>，人均成本：<strong>¥6.53</strong>（按850人计）。成本与上周持平。',
       costAlert: '',
+      priceAlertCount: 1,
+      priceAlertText: '蔬菜价格略高于市场均价，已关注',
+      certCount: 10,
+      certText: '健康证2份、检测报告2份、检疫证明3份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>240kg</td><td>225kg</td><td>15kg</td></tr><tr><td>蔬菜</td><td>380kg</td><td>375kg</td><td>5kg</td></tr><tr><td>粮油</td><td>170kg</td><td>145kg</td><td>25kg</td></tr>',
       warnings: 2,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-25 蔬菜农残检测预警— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-24 库存不足预警（大米）— 已补货</li>',
@@ -1134,6 +1162,10 @@ const weeklyReportsData = {
       perCost: '¥6.31',
       costText: '本周食材总成本：<strong>¥26,820</strong>，日均成本：<strong>¥5,364</strong>，人均成本：<strong>¥6.31</strong>（按850人计）。成本略有下降。',
       costAlert: '',
+      priceAlertCount: 0,
+      priceAlertText: '本周无价格预警。食材价格基本稳定。',
+      certCount: 8,
+      certText: '健康证1份、检测报告2份、检疫证明2份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>230kg</td><td>220kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>360kg</td><td>358kg</td><td>2kg</td></tr><tr><td>粮油</td><td>160kg</td><td>140kg</td><td>20kg</td></tr>',
       warnings: 1,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-18 留样未及时录入— 已补录</li>',
@@ -1152,6 +1184,10 @@ const weeklyReportsData = {
       perCost: '¥7.08',
       costText: '本周食材总成本：<strong>¥42,500</strong>，日均成本：<strong>¥8,500</strong>，人均成本：<strong>¥7.08</strong>（按1,200人计）。成本较上周增加约1.5%。',
       costAlert: '',
+      priceAlertCount: 1,
+      priceAlertText: '鸡蛋价格略高于市场均价，已关注',
+      certCount: 15,
+      certText: '营业执照2份、健康证3份、检测报告4份、检疫证明3份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>380kg</td><td>370kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>550kg</td><td>540kg</td><td>10kg</td></tr><tr><td>粮油</td><td>280kg</td><td>260kg</td><td>20kg</td></tr>',
       warnings: 2,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-02 豆制品临期预警— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 04-01 库存盘点提醒— 已完成</li>',
@@ -1168,6 +1204,10 @@ const weeklyReportsData = {
       perCost: '¥6.98',
       costText: '本周食材总成本：<strong>¥41,880</strong>，日均成本：<strong>¥8,376</strong>，人均成本：<strong>¥6.98</strong>（按1,200人计）。成本稳定。',
       costAlert: '',
+      priceAlertCount: 0,
+      priceAlertText: '本周无价格预警。食材价格基本稳定。',
+      certCount: 14,
+      certText: '营业执照2份、健康证3份、检测报告3份、检疫证明3份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>370kg</td><td>365kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>540kg</td><td>535kg</td><td>5kg</td></tr><tr><td>粮油</td><td>270kg</td><td>255kg</td><td>15kg</td></tr>',
       warnings: 1,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-25 供货商资质更新— 已完成</li>',
@@ -1184,6 +1224,10 @@ const weeklyReportsData = {
       perCost: '¥6.87',
       costText: '本周食材总成本：<strong>¥41,200</strong>，日均成本：<strong>¥8,240</strong>，人均成本：<strong>¥6.87</strong>（按1,200人计）。成本控制良好。',
       costAlert: '',
+      priceAlertCount: 0,
+      priceAlertText: '本周无价格预警。食材价格稳定。',
+      certCount: 13,
+      certText: '营业执照2份、健康证2份、检测报告3份、检疫证明3份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>365kg</td><td>360kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>530kg</td><td>525kg</td><td>5kg</td></tr><tr><td>粮油</td><td>265kg</td><td>250kg</td><td>15kg</td></tr>',
       warnings: 0,
       warningTimeline: '<li style="color:var(--text-sub)">本周无预警记录</li>',
@@ -1201,7 +1245,11 @@ const weeklyReportsData = {
       totalCost: '¥18,720',
       perCost: '¥6.24',
       costText: '本周食材总成本：<strong>¥18,720</strong>，日均成本：<strong>¥3,744</strong>，人均成本：<strong>¥6.24</strong>（按600人计）。成本略有下降。',
-      costAlert: '⚠️ 蔬菜损耗偏高，本周损耗率8.3%',
+      costAlert: '',
+      priceAlertCount: 3,
+      priceAlertText: '⚠️蔬菜价格预警：采购价格偏高，超出市场均价15%；猪肉价格预警：采购单价¥23，超出基准价¥20（+15%）',
+      certCount: 8,
+      certText: '健康证1份、检测报告2份、检疫证明2份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>150kg</td><td>140kg</td><td>10kg</td></tr><tr><td>蔬菜</td><td>280kg</td><td>257kg</td><td>23kg</td></tr><tr><td>粮油</td><td>100kg</td><td>92kg</td><td>8kg</td></tr>',
       warnings: 5,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--danger)">●</span> 04-03 健康证过期预警（李师傅）— 待处理</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-02 蔬菜损耗超标— 已提醒</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-01 库存不足（食用油）— 已补货</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-31 农残检测异常— 已处理</li><li style="margin-bottom:6px"><span style="color:#ccc">●</span> 03-30 消毒记录缺失— 已补录</li>',
@@ -1218,6 +1266,10 @@ const weeklyReportsData = {
       perCost: '¥6.40',
       costText: '本周食材总成本：<strong>¥19,200</strong>，日均成本：<strong>¥3,840</strong>，人均成本：<strong>¥6.40</strong>（按600人计）。成本略有上升。',
       costAlert: '',
+      priceAlertCount: 1,
+      priceAlertText: '蔬菜价格略高于市场均价，已关注',
+      certCount: 7,
+      certText: '健康证1份、检测报告2份、检疫证明2份、进货票据2份',
       purchaseRows: '<tr><td>肉类</td><td>155kg</td><td>148kg</td><td>7kg</td></tr><tr><td>蔬菜</td><td>290kg</td><td>280kg</td><td>10kg</td></tr><tr><td>粮油</td><td>105kg</td><td>98kg</td><td>7kg</td></tr>',
       warnings: 3,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-26 食材临期预警— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-25 供应商送货延迟— 已协调</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-24 库存盘点异常— 已核实</li>',
@@ -1234,6 +1286,10 @@ const weeklyReportsData = {
       perCost: '¥6.16',
       costText: '本周食材总成本：<strong>¥18,480</strong>，日均成本：<strong>¥3,696</strong>，人均成本：<strong>¥6.16</strong>（按600人计）。成本控制良好。',
       costAlert: '',
+      priceAlertCount: 0,
+      priceAlertText: '本周无价格预警。食材价格基本稳定。',
+      certCount: 6,
+      certText: '健康证1份、检测报告1份、检疫证明2份、进货票据2份',
       purchaseRows: '<tr><td>肉类</td><td>148kg</td><td>142kg</td><td>6kg</td></tr><tr><td>蔬菜</td><td>275kg</td><td>268kg</td><td>7kg</td></tr><tr><td>粮油</td><td>98kg</td><td>92kg</td><td>6kg</td></tr>',
       warnings: 4,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-18 食谱未按时公示— 已补录</li><li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-17 留样重量不足— 已处理</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-16 设备维护提醒— 已完成</li><li style="margin-bottom:6px"><span style="color:#ccc">●</span> 03-15 健康证即将到期— 已续期</li>',
@@ -1252,6 +1308,10 @@ const weeklyReportsData = {
       perCost: '¥6.40',
       costText: '本周食材总成本：<strong>¥22,400</strong>，日均成本：<strong>¥4,480</strong>，人均成本：<strong>¥6.40</strong>（按700人计）。成本与上周持平。',
       costAlert: '',
+      priceAlertCount: 0,
+      priceAlertText: '本周无价格预警。食材价格稳定。',
+      certCount: 11,
+      certText: '营业执照1份、健康证2份、检测报告3份、检疫证明2份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>200kg</td><td>195kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>350kg</td><td>345kg</td><td>5kg</td></tr><tr><td>粮油</td><td>140kg</td><td>132kg</td><td>8kg</td></tr>',
       warnings: 1,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 04-01 大米库存不足— 已补货</li>',
@@ -1268,6 +1328,10 @@ const weeklyReportsData = {
       perCost: '¥6.31',
       costText: '本周食材总成本：<strong>¥22,100</strong>，日均成本：<strong>¥4,420</strong>，人均成本：<strong>¥6.31</strong>（按700人计）。成本略有下降。',
       costAlert: '',
+      priceAlertCount: 0,
+      priceAlertText: '本周无价格预警。食材价格稳定。',
+      certCount: 10,
+      certText: '营业执照1份、健康证2份、检测报告2份、检疫证明2份、进货票据3份',
       purchaseRows: '<tr><td>肉类</td><td>195kg</td><td>190kg</td><td>5kg</td></tr><tr><td>蔬菜</td><td>345kg</td><td>340kg</td><td>5kg</td></tr><tr><td>粮油</td><td>138kg</td><td>130kg</td><td>8kg</td></tr>',
       warnings: 0,
       warningTimeline: '<li style="color:var(--text-sub)">本周无预警记录</li>',
@@ -1284,6 +1348,10 @@ const weeklyReportsData = {
       perCost: '¥6.48',
       costText: '本周食材总成本：<strong>¥22,680</strong>，日均成本：<strong>¥4,536</strong>，人均成本：<strong>¥6.48</strong>（按700人计）。成本略有上升。',
       costAlert: '',
+      priceAlertCount: 1,
+      priceAlertText: '鸡蛋价格波动，已关注',
+      certCount: 9,
+      certText: '营业执照1份、健康证1份、检测报告3份、检疫证明2份、进货票据2份',
       purchaseRows: '<tr><td>肉类</td><td>198kg</td><td>192kg</td><td>6kg</td></tr><tr><td>蔬菜</td><td>348kg</td><td>342kg</td><td>6kg</td></tr><tr><td>粮油</td><td>140kg</td><td>132kg</td><td>8kg</td></tr>',
       warnings: 2,
       warningTimeline: '<li style="margin-bottom:6px"><span style="color:var(--warning)">●</span> 03-18 鸡蛋价格波动— 已关注</li><li style="margin-bottom:6px"><span style="color:var(--success)">●</span> 03-16 设备检修提醒— 已完成</li>',
@@ -1349,6 +1417,10 @@ function changeWeeklyReport() {
       document.getElementById('singleCostAlert').innerHTML = data.costAlert;
       document.getElementById('singleCostAlert').style.display = data.costAlert ? '' : 'none';
       document.getElementById('singleWarningTimeline').innerHTML = data.warningTimeline;
+      document.getElementById('singlePriceAlertCount').textContent = (data.priceAlertCount || 0) + '条';
+      document.getElementById('singlePriceAlertText').textContent = data.priceAlertText || '本周无价格预警。';
+      document.getElementById('singleCertCount').textContent = (data.certCount || 0) + '份';
+      document.getElementById('singleCertText').textContent = data.certText || '暂无票证备案数据。';
       document.getElementById('singleDiningText').textContent = data.diningText;
       document.getElementById('singleSampleText').textContent = data.sampleText;
     }
@@ -2166,13 +2238,20 @@ function viewFetchDetail(type) {
     document.getElementById('detailDisinfect').textContent = '已完成';
   } else {
     openModal('modal-weekly-detail');
-    // 填充周报详情数据
-    document.getElementById('weeklySchool').textContent = school;
-    document.getElementById('weeklyWeek').textContent = '第14周（3/30-4/3）';
-    document.getElementById('weeklyNutrition').textContent = 'A级';
-    document.getElementById('weeklyCost').textContent = '¥28,640';
-    document.getElementById('weeklyWarnings').textContent = '4条';
-    document.getElementById('weeklyComplete').textContent = '96.5%';
+    // 从weeklyReportsData读取周报详情数据
+    const weekData = weeklyReportsData[school] && weeklyReportsData[school]['0'];
+    if (weekData) {
+      document.getElementById('weeklySchool').textContent = school;
+      document.getElementById('weeklyWeek').textContent = '第14周（3/30-4/3）';
+      document.getElementById('weeklyNutrition').textContent = weekData.nutriLevel + '级';
+      document.getElementById('weeklyCost').textContent = weekData.totalCost;
+      document.getElementById('weeklyWarnings').textContent = weekData.warnings + '条';
+      document.getElementById('weeklyComplete').textContent = weekData.costText.match(/(\d+\.?\d*)%/)?.[1] + '%' || '96.5%';
+      document.getElementById('weeklyPriceAlertCount').textContent = (weekData.priceAlertCount || 0) + '条';
+      document.getElementById('weeklyCertCount').textContent = (weekData.certCount || 0) + '份';
+      document.getElementById('weeklyPriceAlertText').textContent = weekData.priceAlertText || '本周无价格预警。';
+      document.getElementById('weeklyCertText').textContent = weekData.certText || '暂无票证备案数据。';
+    }
   }
 }
 
@@ -2513,7 +2592,17 @@ function exportWeeklyDetail() {
   showToast(`📥 正在导出 ${school} ${week} 周报...`, 'info');
   
   setTimeout(() => {
-    const content = `${school} 周报\n周期：${week}\n\n营养评级：${document.getElementById('weeklyNutrition').textContent}\n食材成本：${document.getElementById('weeklyCost').textContent}\n本周预警：${document.getElementById('weeklyWarnings').textContent}\n台账完整率：${document.getElementById('weeklyComplete').textContent}`;
+    const content = `${school} 周报
+周期：${week}
+
+营养评级：${document.getElementById('weeklyNutrition').textContent}
+食材成本：${document.getElementById('weeklyCost').textContent}
+本周预警：${document.getElementById('weeklyWarnings').textContent}
+台账完整率：${document.getElementById('weeklyComplete').textContent}
+价格预警：${document.getElementById('weeklyPriceAlertCount').textContent}
+  ${document.getElementById('weeklyPriceAlertText').textContent}
+票证备案：${document.getElementById('weeklyCertCount').textContent}
+  ${document.getElementById('weeklyCertText').textContent}`;
     
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -2768,25 +2857,42 @@ function downloadAllCabinet() {
         <div style="margin-bottom:16px">
           <div class="grid-3" style="gap:12px">
             <div style="background:#f0fff4;border-radius:8px;padding:12px;text-align:center">
-              <div style="font-size:20px;font-weight:700;color:var(--success)">A级</div>
+              <div style="font-size:20px;font-weight:700;color:var(--success)" id="weeklyNutrition">A级</div>
               <div style="font-size:11px;color:var(--text-sub)">营养评级</div>
             </div>
             <div style="background:#fff7e6;border-radius:8px;padding:12px;text-align:center">
-              <div style="font-size:20px;font-weight:700;color:var(--warning)">¥28,640</div>
+              <div style="font-size:20px;font-weight:700;color:var(--warning)" id="weeklyCost">¥28,640</div>
               <div style="font-size:11px;color:var(--text-sub)">本周食材成本</div>
             </div>
             <div style="background:#fff1f0;border-radius:8px;padding:12px;text-align:center">
-              <div style="font-size:20px;font-weight:700;color:var(--danger)">4条</div>
+              <div style="font-size:20px;font-weight:700;color:var(--danger)" id="weeklyWarnings">4条</div>
               <div style="font-size:11px;color:var(--text-sub)">本周预警</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <div class="grid-3" style="gap:12px">
+            <div style="background:#fff7e6;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--warning)" id="weeklyPriceAlertCount">2条</div>
+              <div style="font-size:11px;color:var(--text-sub)">价格预警</div>
+            </div>
+            <div style="background:#f0f7ff;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--accent)" id="weeklyCertCount">12份</div>
+              <div style="font-size:11px;color:var(--text-sub)">票证备案</div>
+            </div>
+            <div style="background:#f6ffed;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--success)" id="weeklyComplete">96.5%</div>
+              <div style="font-size:11px;color:var(--text-sub)">台账完整率</div>
             </div>
           </div>
         </div>
         <div style="font-size:13px;color:var(--text-sub);line-height:1.8">
           <p><strong>周报周期：</strong><span id="weeklyWeek">第14周（3/30-4/3）</span></p>
           <p><strong>食谱公示率：</strong>100%（本周5天全部公示）</p>
-          <p><strong>台账完整率：</strong><span id="weeklyComplete">96.5%</span></p>
           <p><strong>食材入库：</strong>肉类 420kg / 蔬菜 680kg / 粮油 280kg</p>
           <p><strong>陪餐次数：</strong>5次（行政陪餐比例 100%）</p>
+          <p><strong>价格预警：</strong><span id="weeklyPriceAlertText">⚠️猪肉价格预警：采购单价¥24，超出基准价¥20（+20%），已上报监管端</span></p>
+          <p><strong>票证备案：</strong><span id="weeklyCertText">营业执照1份、健康证2份、检测报告3份、检疫证明2份、进货票据4份</span></p>
         </div>
       </div>
       <div class="modal-foot">
